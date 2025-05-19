@@ -1,9 +1,33 @@
-TrackMySub 
+# TrackMySubs 📊🧾
 
-People often forget how many recurring subscriptions they’re paying for—Spotify, Netflix, domains, gym memberships, cloud storage, etc. Over time, these can silently drain their monthly budget.
+**TrackMySubs** is a smart subscription tracking and budgeting system that helps users take control of their digital spending. The system monitors active subscriptions, evaluates usage behavior, provides budget management tools, and delivers actionable advice based on personalized data insights.
 
-- This software helps users:
-- Track all active subscriptions.
-- Manage their monthly budget.
-- Get alerts when spending exceeds limits.
-- Review monthly/yearly expenditure trends.
+---
+
+## 🚀 Features
+
+- 📦 Track and manage multiple subscriptions
+- 💰 Define and monitor monthly and yearly budget limits
+- 📈 Analyze subscription usage patterns over time
+- 🧠 Receive personalized recommendations to optimize spending
+- 📊 Automatically generate monthly/yearly financial reports
+- 📧 Email reports directly to the user
+
+---
+
+## Project Overview
+
+The system is designed using object-oriented principles. It includes components for handling users, subscriptions, budgets, usage patterns, reports, and advisory suggestions.
+
+A UML diagram is available to visualize the relationships between different components.
+
+
+![alt text](UML.png)
+
+## How to Use
+
+This is a design-level project for now. Implementation will follow based on the defined structure. The focus is currently on:
+
+- Class design
+- Database schema design
+- UML modeling
