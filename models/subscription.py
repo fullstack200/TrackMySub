@@ -1,3 +1,5 @@
+import re
+
 class Subscription:
     def __init__(self, service_type, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status):
         self.service_type = service_type
