@@ -21,7 +21,7 @@ class Subscription:
         if not service_type:
             raise ValueError("Service type cannot be empty")
         else:
-            self._service_type = service_type
+            self._service_type = str(service_type).capitalize()
             
     @property
     def service_name(self):
@@ -32,7 +32,7 @@ class Subscription:
         if not service_name:
             raise ValueError("Service name cannot be empty")
         else:
-            self._service_name = service_name
+            self._service_name = str(service_name).capitalize()
             
     @property
     def plan_type(self):
@@ -43,7 +43,7 @@ class Subscription:
         if not plan_type:
             raise ValueError("Plan type cannot be empty")
         else:
-            self._plan_type = plan_type
+            self._plan_type = str(plan_type).capitalize()
     
     @property
     def active_status(self):
