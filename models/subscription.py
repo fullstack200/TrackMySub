@@ -1,5 +1,6 @@
+from multiprocessing.sharedctypes import Value
 import re
-
+import datetime
 class Subscription:
     def __init__(self, service_type, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status):
         self.service_type = service_type
@@ -18,10 +19,13 @@ class Subscription:
 
     @service_type.setter
     def service_type(self, service_type):
+        correct_pattern = r"^[A-Za-z\s]+$"
         if not service_type:
             raise ValueError("Service type cannot be empty")
+        elif not re.fullmatch(correct_pattern, service_type):
+            raise ValueError("Service type can contain only letters. Example: Entertainment/Cloud Services/Video Editing")   
         else:
-            self._service_type = str(service_type).capitalize()
+            self._service_type = str(service_type).title()
             
     @property
     def service_name(self):
@@ -32,7 +36,7 @@ class Subscription:
         if not service_name:
             raise ValueError("Service name cannot be empty")
         else:
-            self._service_name = str(service_name).capitalize()
+            self._service_name = str(service_name).title()
             
     @property
     def plan_type(self):
@@ -40,11 +44,14 @@ class Subscription:
     
     @plan_type.setter
     def plan_type(self, plan_type):
+        correct_pattern = r"^[A-Za-z\s]+$"
         if not plan_type:
             raise ValueError("Plan type cannot be empty")
+        elif not re.fullmatch(correct_pattern, plan_type):
+            raise ValueError("Plan type can contain only letters. Example: Basic/Premium")   
         else:
-            self._plan_type = str(plan_type).capitalize()
-    
+            self._plan_typee = str(plan_type).title()
+            
     @property
     def active_status(self):
         return self._active_status
@@ -62,8 +69,11 @@ class Subscription:
     
     @subscription_price.setter
     def subscription_price(self, subscription_price):
-        if subscription_price is None or isinstance(subscription_price, str):
+        pattern = r"\d+\.\d+"
+        if not subscription_price:
             raise ValueError("Subscription price must be a number")
+        elif not re.fullmatch(pattern, subscription_price):
+            raise ValueError("Enter subscription price in 00.00 format")
         else:
             self._subscription_price = subscription_price
             
@@ -84,10 +94,15 @@ class Subscription:
     
     @start_date.setter
     def start_date(self, start_date):
-        if not start_date:
-            raise ValueError("Start date cannot be empty")
+        pattern = r"\d{2}/\d{2}/\d{4}"
+        if re.fullmatch(pattern, start_date):
+            try:
+                datetime.strptime(start_date, "%d/%m/%Y")
+                self._start_date = start_date
+            except:
+                raise ValueError("Invalid date")
         else:
-            self._start_date = start_date
+            raise ValueError("Enter date in DD/MM/YYYY format")
             
     @property
     def renewal_date(self):
@@ -95,10 +110,15 @@ class Subscription:
     
     @renewal_date.setter
     def renewal_date(self, renewal_date):
-        if not renewal_date:
-            raise ValueError("Renewal date cannot be empty")
+        pattern = r"\d{2}/\d{2}/\d{4}"
+        if re.fullmatch(pattern, renewal_date):
+            try:
+                datetime.strptime(renewal_date, "%d/%m/%Y")
+                self._start_date = renewal_date
+            except:
+                raise ValueError("Invalid date")
         else:
-            self._renewal_date = renewal_date
+            raise ValueError("Enter date in DD/MM/YYYY format")
             
     @property
     def auto_renewal_status(self):

@@ -19,7 +19,7 @@ class User:
         correct_pattern = r"^[A-Za-z]+$"
         if not username:
             raise ValueError("Username cannot be empty")
-        if re.match(correct_pattern, username):
+        elif re.match(correct_pattern, username):
             self._username = username
         else:
             raise ValueError("Username can contain only alphabets")
@@ -32,7 +32,7 @@ class User:
         correct_pattern = r"^[A-Za-z0-9\.]+@[A-Za-z]+\.[A-Za-z]+"
         if not email_id:
             raise ValueError("Email ID cannot be empty")
-        if re.match(correct_pattern, email_id):
+        elif re.match(correct_pattern, email_id):
             self._email_id = email_id
         else:
             raise ValueError("Invalid Email ID")
