@@ -1,9 +1,10 @@
-from multiprocessing.sharedctypes import Value
 import re
-import datetime
+from datetime import datetime
+
 class Subscription:
-    def __init__(self, service_type, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status):
+    def __init__(self, service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status):
         self.service_type = service_type
+        self.category = category
         self.service_name = service_name
         self.plan_type = plan_type
         self.active_status = active_status
@@ -23,10 +24,24 @@ class Subscription:
         if not service_type:
             raise ValueError("Service type cannot be empty")
         elif not re.fullmatch(correct_pattern, service_type):
-            raise ValueError("Service type can contain only letters. Example: Entertainment/Cloud Services/Video Editing")   
+            raise ValueError("Service type can contain only alphabets. Example: Personal/Professional")   
         else:
             self._service_type = str(service_type).title()
             
+    @property
+    def category(self):
+        return self._category
+    
+    @category.setter
+    def category(self, category):
+        correct_pattern = r"^[A-Za-z\s]+$"
+        if not category:
+            raise ValueError("Category cannot be empty")
+        elif not re.fullmatch(correct_pattern, category):
+            raise ValueError("Category can contain only alphabets. Example: Entertainment/Cloud Services/Video Editing")
+        else:
+            self._category = category
+    
     @property
     def service_name(self):
         return self._service_name
@@ -48,9 +63,9 @@ class Subscription:
         if not plan_type:
             raise ValueError("Plan type cannot be empty")
         elif not re.fullmatch(correct_pattern, plan_type):
-            raise ValueError("Plan type can contain only letters. Example: Basic/Premium")   
+            raise ValueError("Plan type can contain only alphabets. Example: Basic/Premium")   
         else:
-            self._plan_typee = str(plan_type).title()
+            self._plan_type = str(plan_type).title()
             
     @property
     def active_status(self):
@@ -61,7 +76,12 @@ class Subscription:
         if not active_status:
             raise ValueError("Active status cannot be empty")
         else:
-            self._active_status = active_status
+            if active_status == "Yes":
+                self._active_status = True
+            elif active_status == "No":
+                self._active_status = False
+            else:
+                raise ValueError("Invalid active status value")
             
     @property
     def subscription_price(self):
@@ -85,8 +105,10 @@ class Subscription:
     def billing_frequency(self, billing_frequency):
         if not billing_frequency:
             raise ValueError("Billing frequency cannot be empty")
-        else:
+        elif billing_frequency == "Monthly" or billing_frequency == "Yearly":
             self._billing_frequency = billing_frequency
+        else:
+            raise ValueError("Invalid billing frequency")
             
     @property
     def start_date(self):
@@ -110,16 +132,24 @@ class Subscription:
     
     @renewal_date.setter
     def renewal_date(self, renewal_date):
-        pattern = r"\d{2}/\d{2}/\d{4}"
-        if re.fullmatch(pattern, renewal_date):
-            try:
-                datetime.strptime(renewal_date, "%d/%m/%Y")
-                self._start_date = renewal_date
-            except:
-                raise ValueError("Invalid date")
+        billing_frequency = self.billing_frequency
+        if billing_frequency == "Yearly":
+            pattern = r"\d{2}/\d{2}/\d{4}"
+            if re.fullmatch(pattern, renewal_date):
+                try:
+                    datetime.strptime(renewal_date, "%d/%m/%Y")
+                    self._renewal_date = renewal_date
+                except:
+                    raise ValueError("Invalid date")
+            else:
+                raise ValueError("Enter date in DD/MM/YYYY format")
         else:
-            raise ValueError("Enter date in DD/MM/YYYY format")
-            
+            if int(renewal_date) > 0 and int(renewal_date) < 32:
+                self._renewal_date = renewal_date
+            else:
+                raise ValueError("Enter valid day number. Expample: 15th of every month. Enter 15")
+                    
+
     @property
     def auto_renewal_status(self):
         return self._auto_renewal_status
@@ -129,5 +159,10 @@ class Subscription:
         if not auto_renewal_status:
             raise ValueError("Auto renewal status cannot be empty")
         else:
-            self._auto_renewal_status = auto_renewal_status
+            if auto_renewal_status == "Yes":
+                self._auto_renewal_status = True
+            elif auto_renewal_status == "No":
+                self._auto_renewal_status = False
+            else:
+                raise ValueError("Invalid auto_renewal_status value")
             
