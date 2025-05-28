@@ -89,10 +89,9 @@ class Subscription:
     
     @subscription_price.setter
     def subscription_price(self, subscription_price):
-        pattern = r"\d+\.\d+"
         if not subscription_price:
-            raise ValueError("Subscription price must be a number")
-        elif not re.fullmatch(pattern, subscription_price):
+            raise ValueError("Subscription price cannot be empty")
+        elif not isinstance(eval(subscription_price), float):
             raise ValueError("Enter subscription price in 00.00 format")
         else:
             self._subscription_price = subscription_price
@@ -166,3 +165,4 @@ class Subscription:
             else:
                 raise ValueError("Invalid auto_renewal_status value")
             
+
