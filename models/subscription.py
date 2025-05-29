@@ -2,6 +2,35 @@ import re
 from datetime import datetime
 
 class Subscription:
+    """
+    Represents a subscription to a service with various attributes and validation.
+    Attributes:
+        service_type (str): The type of service (e.g., Personal, Professional). Only alphabetic characters and spaces allowed.
+        category (str): The category of the service (e.g., Entertainment, Cloud Services). Only alphabetic characters and spaces allowed.
+        service_name (str): The name of the service. Cannot be empty.
+        plan_type (str): The type of plan (e.g., Basic, Premium). Only alphabetic characters and spaces allowed.
+        active_status (bool): Whether the subscription is active. Accepts "Yes" or "No".
+        subscription_price (float): The price of the subscription in 00.00 format.
+        billing_frequency (str): The billing frequency, either "Monthly" or "Yearly".
+        start_date (str): The start date of the subscription in DD/MM/YYYY format.
+        renewal_date (str or int): For yearly billing, the renewal date in DD/MM/YYYY format. For monthly billing, the day of the month (1-31).
+        auto_renewal_status (bool): Whether the subscription is set to auto-renew. Accepts "Yes" or "No".
+    Raises:
+        ValueError: If any attribute is set with an invalid value or format.
+    Example:
+        subscription = Subscription(
+            service_type="Personal",
+            category="Entertainment",
+            service_name="Netflix",
+            plan_type="Premium",
+            active_status="Yes",
+            subscription_price="15.99",
+            billing_frequency="Monthly",
+            start_date="01/01/2024",
+            renewal_date="15",
+            auto_renewal_status="Yes"
+        )
+    """
     def __init__(self, service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status):
         self.service_type = service_type
         self.category = category
@@ -91,10 +120,12 @@ class Subscription:
     def subscription_price(self, subscription_price):
         if not subscription_price:
             raise ValueError("Subscription price cannot be empty")
+        elif str(subscription_price).isalpha():
+            raise ValueError("Subscription price must be a number. Example: 14.99")
         elif not isinstance(eval(subscription_price), float):
             raise ValueError("Enter subscription price in 00.00 format")
         else:
-            self._subscription_price = subscription_price
+            self._subscription_price = float(subscription_price)
             
     @property
     def billing_frequency(self):

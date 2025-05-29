@@ -3,6 +3,25 @@ from budget import Budget
 import re
 
 class User:
+    """
+    Represents a user in the TrackMySubs application.
+    Attributes:
+        username (str): The user's username. Must contain only alphabets.
+        email_id (str): The user's email address. Must be a valid email format.
+        password (str): The user's password. Must be at least 8 characters long.
+        subscription_list (list): List of Subscription objects associated with the user.
+        budget (Budget): The user's budget object.
+    Methods:
+        add_subscription(sub):
+            Adds a Subscription object to the user's subscription list.
+            Raises ValueError if the object is not a Subscription.
+    Properties:
+        username (str): Gets or sets the username with validation.
+        email_id (str): Gets or sets the email ID with validation.
+        password (str): Gets or sets the password with validation.
+        subscription_list (list): Gets the list of subscriptions.
+        budget (Budget): Gets or sets the user's budget with validation.
+    """
     def __init__(self, username, email_id, password):
         self.username = username
         self.email_id = email_id
@@ -23,6 +42,7 @@ class User:
             self._username = username
         else:
             raise ValueError("Username can contain only alphabets")
+        
     @property
     def email_id(self):
         return self._email_id
