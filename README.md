@@ -7,6 +7,7 @@
 ## 🚀 Features
 
 - 📦 Track and manage multiple subscriptions
+- 🔔 Smart Payment Reminders: Automatically reminds users to pay their subscription fees 3 days before the renewal date, helping them avoid missed payments.
 - 💰 Define and monitor monthly and yearly budget limits
 - 📈 Analyze subscription usage patterns over time
 - 🧠 Receive personalized recommendations to optimize spending
