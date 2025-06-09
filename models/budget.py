@@ -120,6 +120,3 @@ class Budget:
         else:
             raise ValueError("Over the limit cannot be set directly. It is calculated based on budget and total amount paid.")
             
-    def alert_over_the_limit(self):
-        pass
-

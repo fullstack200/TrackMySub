@@ -89,4 +89,4 @@ class User:
         if isinstance(budget, Budget):
             self._budget = budget
         else:
-            raise ValueError('Invalid budget')
+            raise TypeError('Invalid Budget')

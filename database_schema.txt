@@ -49,5 +49,3 @@ times_used_per_month INT
 session_duration_hours TIME
 benefit_rating INT
 
-
-# This is user branch

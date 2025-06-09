@@ -9,7 +9,7 @@ class Subscription:
         category (str): The category of the service (e.g., Entertainment, Cloud Services). Only alphabetic characters and spaces allowed.
         service_name (str): The name of the service. Cannot be empty.
         plan_type (str): The type of plan (e.g., Basic, Premium). Only alphabetic characters and spaces allowed.
-        active_status (bool): Whether the subscription is active. Accepts "Yes" or "No".
+        active_status (bool): Whether the subscription is active. Accepts "Active" or "Cancelled".
         subscription_price (float): The price of the subscription in 00.00 format.
         billing_frequency (str): The billing frequency, either "Monthly" or "Yearly".
         start_date (str): The start date of the subscription in DD/MM/YYYY format.
@@ -23,7 +23,7 @@ class Subscription:
             category="Entertainment",
             service_name="Netflix",
             plan_type="Premium",
-            active_status="Yes",
+            active_status="Active",
             subscription_price="15.99",
             billing_frequency="Monthly",
             start_date="01/01/2024",
@@ -105,9 +105,9 @@ class Subscription:
         if not active_status:
             raise ValueError("Active status cannot be empty")
         else:
-            if active_status == "Yes":
+            if active_status == "Active":
                 self._active_status = True
-            elif active_status == "No":
+            elif active_status == "Cancelled":
                 self._active_status = False
             else:
                 raise ValueError("Invalid active status value")
@@ -164,15 +164,15 @@ class Subscription:
     def renewal_date(self, renewal_date):
         billing_frequency = self.billing_frequency
         if billing_frequency == "Yearly":
-            pattern = r"\d{2}/\d{2}/\d{4}"
+            pattern = r"\d{2}/\d{2}"
             if re.fullmatch(pattern, renewal_date):
                 try:
-                    datetime.strptime(renewal_date, "%d/%m/%Y")
+                    datetime.strptime(renewal_date, "%d/%m")
                     self._renewal_date = renewal_date
                 except:
                     raise ValueError("Invalid date")
             else:
-                raise ValueError("Enter date in DD/MM/YYYY format")
+                raise ValueError("Enter date in DD/MM format")
         else:
             if int(renewal_date) > 0 and int(renewal_date) < 32:
                 self._renewal_date = renewal_date
