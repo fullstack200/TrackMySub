@@ -5,6 +5,7 @@ from subscription import Subscription
 from budget import Budget
 from datetime import date
 from reminder import Reminder
+from usage import Usage
 
 class TestUserValidation(unittest.TestCase):
     def test_valid_user(self):
@@ -314,7 +315,55 @@ class TestReminder(unittest.TestCase):
         # Restore
         reminder_module.date = original_date
 
-if __name__ == '__main__':
+class TestUsage(unittest.TestCase):
+    def setUp(self):
+        self.user = User("testuser", "test@example.com", "Bethealpha@05")
+
+    def test_valid_usage_creation(self):
+        usage = Usage(self.user, 10, 2.5, 4)
+        self.assertEqual(usage.user, self.user)
+        self.assertEqual(usage.times_used_per_month, 10)
+        self.assertEqual(usage.session_duration_hours, 2.5)
+        self.assertEqual(usage.benefit_rating, 4)
+
+    def test_times_used_per_month_casts_to_int(self):
+        usage = Usage(self.user, "7", 1.0, 3)
+        self.assertEqual(usage.times_used_per_month, 7)
+
+    def test_session_duration_hours_casts_to_float(self):
+        usage = Usage(self.user, 5, "3.5", 2)
+        self.assertEqual(usage.session_duration_hours, 3.5)
+
+    def test_benefit_rating_casts_to_int(self):
+        usage = Usage(self.user, 5, 1.0, "5")
+        self.assertEqual(usage.benefit_rating, 5)
+
+    def test_invalid_user_type_raises(self):
+        with self.assertRaises(TypeError):
+            Usage("not_a_user", 5, 1.0, 3)
+
+    def test_invalid_times_used_per_month_raises(self):
+        with self.assertRaises(ValueError):
+            Usage(self.user, "not_a_number", 1.0, 3)
+
+    def test_invalid_session_duration_hours_raises(self):
+        with self.assertRaises(ValueError):
+            Usage(self.user, 5, "not_a_float", 3)
+
+    def test_benefit_rating_out_of_range_low_raises(self):
+        with self.assertRaises(ValueError):
+            Usage(self.user, 5, 1.0, 0)
+
+    def test_benefit_rating_out_of_range_high_raises(self):
+        with self.assertRaises(ValueError):
+            Usage(self.user, 5, 1.0, 6)
+
+    def test_benefit_rating_not_a_number_raises(self):
+        with self.assertRaises(ValueError):
+            Usage(self.user, 5, 1.0, "bad")
+
+if __name__ == "__main__":
     unittest.main()
+
 
 

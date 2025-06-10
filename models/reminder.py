@@ -5,6 +5,7 @@ class Reminder:
     def __init__(self, user):
         self.user = user
         self.user_reminder_acknowledged = {}
+        
     @property
     def user(self):
         return self._user
