@@ -1,5 +1,6 @@
 from subscription import Subscription
 from budget import Budget
+from database import db_connection
 import re
 
 class User:
@@ -23,12 +24,46 @@ class User:
         budget (Budget): Gets or sets the user's budget with validation.
     """
     def __init__(self, username, email_id, password):
+        self._user_id = self.set_next_user_id()
         self.username = username
         self.email_id = email_id
         self.password = password
         self._subscription_list = []
         self._budget = None
         
+    def set_next_user_id(self):
+        """
+        Sets the user_id to the next available value based on the last record in the database.
+        Handles the database connection internally. Connection string to be filled in by user.
+        """
+        connection_string = ""  # TODO: Add your database connection string here
+        # Example: db_connection = mysql.connector.connect(connection_string)
+        next_id = None
+        if db_connection:
+            cursor = db_connection.cursor()
+            cursor.execute("SELECT user_id FROM User ORDER BY user_id DESC LIMIT 1")
+            result = cursor.fetchone()
+            if result and result[0].startswith('usr'):
+                last_num = int(result[0][3:])
+                next_id = f"usr{last_num+1:02d}"
+            else:
+                next_id = "usr01"
+            cursor.close()
+            db_connection.close()
+        else:
+            next_id = None  # Or raise an exception if DB connection is required
+        return next_id
+    
+    @property
+    def user_id(self):
+        return self._user_id
+
+    @user_id.setter
+    def user_id(self, user_id):
+        if not user_id:
+            raise ValueError("User ID cannot be empty")
+        self._user_id = user_id
+    
     @property
     def username(self):
         return self._username
