@@ -32,8 +32,6 @@ class Advisory:
         subscriptions = self._user.subscription_list
         budget = self._user.budget
         
-        
-    
     def compare_with_budget(self):
         pass
     

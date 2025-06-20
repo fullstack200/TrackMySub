@@ -1,3 +1,4 @@
+from database import db_connection
 class Budget:
     """
     Represents a user's budget and tracks subscription spending.
@@ -29,6 +30,29 @@ class Budget:
         self.total_amount_paid_monthly = None
         self.total_amount_paid_yearly = None
         self.over_the_limit = None
+        
+    def set_next_budget_id(self):
+        """
+        Sets the budget_id to the next available value based on the last record in the database.
+        Handles the database connection internally. Connection string to be filled in by user.
+        """
+        connection_string = ""  # TODO: Add your database connection string here
+        # Example: db_connection = mysql.connector.connect(connection_string)
+        next_id = None
+        if db_connection:
+            cursor = db_connection.cursor()
+            cursor.execute("SELECT budget_id FROM Budget ORDER BY budget_id DESC LIMIT 1")
+            result = cursor.fetchone()
+            if result and result[0].startswith('bud'):
+                last_num = int(result[0][3:])
+                next_id = f"bud{last_num+1:02d}"
+            else:
+                next_id = "bud01"
+            cursor.close()
+            db_connection.close()
+        else:
+            next_id = None  # Or raise an exception if DB connection is required
+        return next_id
 
     @property
     def user(self):
@@ -121,27 +145,4 @@ class Budget:
         else:
             raise ValueError("Over the limit cannot be set directly. It is calculated based on budget and total amount paid.")
         
-    def set_next_budget_id(self):
-        """
-        Sets the budget_id to the next available value based on the last record in the database.
-        Handles the database connection internally. Connection string to be filled in by user.
-        """
-        connection_string = ""  # TODO: Add your database connection string here
-        db_connection = None  # TODO: Establish your DB connection using the connection_string
-        # Example: db_connection = mysql.connector.connect(connection_string)
-        next_id = None
-        if db_connection:
-            cursor = db_connection.cursor()
-            cursor.execute("SELECT budget_id FROM Budget ORDER BY budget_id DESC LIMIT 1")
-            result = cursor.fetchone()
-            if result and result[0].startswith('bud'):
-                last_num = int(result[0][3:])
-                next_id = f"bud{last_num+1:02d}"
-            else:
-                next_id = "bud01"
-            cursor.close()
-            db_connection.close()
-        else:
-            next_id = None  # Or raise an exception if DB connection is required
-        return next_id
-
+    

@@ -1,6 +1,10 @@
 import re
 from datetime import datetime
 from database import db_connection
+from dataclasses import dataclass, field
+from typing import Optional
+
+@dataclass
 class Subscription:
     """
     Represents a subscription to a service with various attributes and validation.
@@ -31,21 +35,20 @@ class Subscription:
             auto_renewal_status="Yes"
         )
     """
+    user_id: str
+    service_type: str
+    category: str
+    service_name: str
+    plan_type: str
+    active_status: bool
+    subscription_price: float
+    billing_frequency: str
+    start_date: str
+    renewal_date: str
+    auto_renewal_status: bool
+    subscription_id: Optional[str] = field(default=None)
 
-    def __init__(self, service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status):
-        self.service_type = service_type
-        self.category = category
-        self.service_name = service_name
-        self.plan_type = plan_type
-        self.active_status = active_status
-        self.subscription_price = subscription_price
-        self.billing_frequency = billing_frequency
-        self.start_date = start_date
-        self.renewal_date = renewal_date
-        self.auto_renewal_status = auto_renewal_status
-        self._subscription_id = self.set_next_subscription_id()
-
-    def set_next_subscription_id(self):
+    def __post_init__(self):
         """
         Sets the subscription_id to the next available value based on the last record in the database.
         Handles the database connection internally. Connection string to be filled in by user.
@@ -66,15 +69,7 @@ class Subscription:
             db_connection.close()
         else:
             next_id = None  # Or raise an exception if DB connection is required
-        return next_id
-
-    @property
-    def subscription_id(self):
-        return self._subscription_id
-
-    @subscription_id.setter
-    def subscription_id(self, subscription_id):
-        self._subscription_id = subscription_id
+        self.subscription_id = next_id
 
     @property
     def service_type(self):
@@ -228,5 +223,4 @@ class Subscription:
                 self._auto_renewal_status = False
             else:
                 raise ValueError("Invalid auto_renewal_status value")
-    
-    
+
