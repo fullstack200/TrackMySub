@@ -1,38 +1,16 @@
 from user import User
-from database import db_connection
-
+from subscription import Subscription
 class Usage:
+    """
+    Represents usage details for a subscription by a user.
+    """
     def __init__(self, user, subscription, times_used_per_month, session_duration_hours, benefit_rating):
-        self._usage_id = self.set_next_usage_id()
         self.user = user
         self.subscription = subscription
         self.times_used_per_month = times_used_per_month
         self.session_duration_hours = session_duration_hours
         self.benefit_rating = benefit_rating
         
-    def set_next_usage_id(self):
-        """
-        Sets the usage_id to the next available value based on the last record in the database.
-        Handles the database connection internally. Connection string to be filled in by user.
-        """
-        connection_string = ""  # TODO: Add your database connection string here
-        # Example: db_connection = mysql.connector.connect(connection_string)
-        next_id = None
-        if db_connection:
-            cursor = db_connection.cursor()
-            cursor.execute("SELECT usage_id FROM Usage ORDER BY usage_id DESC LIMIT 1")
-            result = cursor.fetchone()
-            if result and result[0].startswith('usg'):
-                last_num = int(result[0][3:])
-                next_id = f"usg{last_num+1:02d}"
-            else:
-                next_id = "usg01"
-            cursor.close()
-            db_connection.close()
-        else:
-            next_id = None  # Or raise an exception if DB connection is required
-        return next_id
-    
     @property
     def user(self):
         return self._user 
@@ -44,6 +22,17 @@ class Usage:
         else:
             self._user = user
     
+    @property
+    def subscription(self):
+        return self._subscription
+    
+    @subscription.setter
+    def subscription(self, subscription):
+        if not isinstance(subscription, Subscription):
+            raise TypeError("Invalid subscription")
+        else:
+            self._subscription = subscription
+            
     @property
     def times_used_per_month(self):
         return self._times_used_per_month

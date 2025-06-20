@@ -6,6 +6,7 @@ from budget import Budget
 from datetime import date
 from reminder import Reminder
 from usage import Usage
+from report import Report
 
 class TestUserValidation(unittest.TestCase):
     def test_valid_user(self):
@@ -318,49 +319,232 @@ class TestReminder(unittest.TestCase):
 class TestUsage(unittest.TestCase):
     def setUp(self):
         self.user = User("testuser", "test@example.com", "Bethealpha@05")
-
+        self.sub1 = Subscription(
+            service_type="Streaming",
+            category="Entertainment",
+            service_name="Netflix",
+            plan_type="Premium",
+            active_status="Active",
+            subscription_price="17.99",
+            billing_frequency="Monthly",
+            start_date="10/01/2025",
+            renewal_date="15",
+            auto_renewal_status="Yes"
+        )
+        
     def test_valid_usage_creation(self):
-        usage = Usage(self.user, 10, 2.5, 4)
+        usage = Usage(self.user, self.sub1, 10, 2.5, 4)
         self.assertEqual(usage.user, self.user)
         self.assertEqual(usage.times_used_per_month, 10)
         self.assertEqual(usage.session_duration_hours, 2.5)
         self.assertEqual(usage.benefit_rating, 4)
 
     def test_times_used_per_month_casts_to_int(self):
-        usage = Usage(self.user, "7", 1.0, 3)
+        usage = Usage(self.user,self.sub1, "7", 1.0, 3)
         self.assertEqual(usage.times_used_per_month, 7)
 
     def test_session_duration_hours_casts_to_float(self):
-        usage = Usage(self.user, 5, "3.5", 2)
+        usage = Usage(self.user,self.sub1, 5, "3.5", 2)
         self.assertEqual(usage.session_duration_hours, 3.5)
 
     def test_benefit_rating_casts_to_int(self):
-        usage = Usage(self.user, 5, 1.0, "5")
+        usage = Usage(self.user,self.sub1, 5, 1.0, "5")
         self.assertEqual(usage.benefit_rating, 5)
 
     def test_invalid_user_type_raises(self):
         with self.assertRaises(TypeError):
-            Usage("not_a_user", 5, 1.0, 3)
+            Usage("not_a_user",self.sub1, 5, 1.0, 3)
 
+    def test_invalid_subscription_type(self):
+        with self.assertRaises(TypeError):
+            Usage(self.user, "not_a_subscription", 5, 1.0, 4)
+            
     def test_invalid_times_used_per_month_raises(self):
         with self.assertRaises(ValueError):
-            Usage(self.user, "not_a_number", 1.0, 3)
+            Usage(self.user,self.sub1, "not_a_number", 1.0, 3)
 
     def test_invalid_session_duration_hours_raises(self):
         with self.assertRaises(ValueError):
-            Usage(self.user, 5, "not_a_float", 3)
+            Usage(self.user,self.sub1, 5, "not_a_float", 3)
 
     def test_benefit_rating_out_of_range_low_raises(self):
         with self.assertRaises(ValueError):
-            Usage(self.user, 5, 1.0, 0)
+            Usage(self.user,self.sub1, 5, 1.0, 0)
 
     def test_benefit_rating_out_of_range_high_raises(self):
         with self.assertRaises(ValueError):
-            Usage(self.user, 5, 1.0, 6)
+            Usage(self.user,self.sub1, 5, 1.0, 6)
 
     def test_benefit_rating_not_a_number_raises(self):
         with self.assertRaises(ValueError):
-            Usage(self.user, 5, 1.0, "bad")
+            Usage(self.user,self.sub1, 5, 1.0, "bad")
+
+class TestAdvisory(unittest.TestCase):
+    def setUp(self):
+        self.user = User("advisoryuser", "advisory@example.com", "StrongPass123")
+        self.sub1 = Subscription(
+            service_type="Streaming",
+            category="Entertainment",
+            service_name="Netflix",
+            plan_type="Premium",
+            active_status="Active",
+            subscription_price="15.00",
+            billing_frequency="Monthly",
+            start_date="01/01/2025",
+            renewal_date="10",
+            auto_renewal_status="Yes"
+        )
+        self.user.add_subscription(self.sub1)
+        
+    def test_advisory_valid_usage(self):
+            usage1 = Usage(self.user, self.sub1, 12, 2.0, 5)
+            self.assertEqual(usage1.user, self.user)
+            self.assertEqual(usage1.times_used_per_month, 12)
+            self.assertEqual(usage1.session_duration_hours, 2.0)
+            self.assertEqual(usage1.benefit_rating, 5)
+            
+    def test_advisory_invalid_usage_type(self):
+            with self.assertRaises(TypeError):
+                Usage("not_a_user", self.sub1, 10, 2.0, 3)
+            with self.assertRaises(TypeError):
+                Usage(self.user, "not_a_subscription", 10, 2.0, 3)
+
+    def test_advisory_invalid_usage_values(self):
+        with self.assertRaises(ValueError):
+            Usage(self.user, self.sub1, "bad", 2.0, 3)
+        with self.assertRaises(ValueError):
+            Usage(self.user, self.sub1, 10, "bad", 3)
+        with self.assertRaises(ValueError):
+            Usage(self.user, self.sub1, 10, 2.0, "bad")
+        with self.assertRaises(ValueError):
+            Usage(self.user, self.sub1, 10, 2.0, 0)
+        with self.assertRaises(ValueError):
+            Usage(self.user, self.sub1, 10, 2.0, 6)
+                
+    def test_advisory_budget_assignment(self):
+        budget = Budget(self.user, "50.00")
+        self.user.budget = budget
+        self.assertEqual(self.user.budget, budget)
+        self.assertEqual(budget.monthly_budget_amount, 50.00)
+        self.assertEqual(budget.yearly_budget_amount, 600.00)
+
+    def test_advisory_invalid_budget_assignment(self):
+            with self.assertRaises(TypeError):
+                self.user.budget = "not_a_budget"
+            with self.assertRaises(ValueError):
+                Budget(self.user, "badamount")  # This will raise ValueError due to invalid float format
+            with self.assertRaises(ValueError):
+                Budget(self.user, "50")  # This will raise ValueError due to not being in 00.00 float format
+
+    def test_advisory_subscription_validation(self):
+            with self.assertRaises(ValueError):
+                Subscription("Streaming123", "Entertainment", "Netflix", "Premium", "Active", "15.00", "Monthly", "01/01/2025", 10, "Yes")
+            with self.assertRaises(ValueError):
+                Subscription("Streaming", "Entertainment$", "Netflix", "Premium", "Active", "15.00", "Monthly", "01/01/2025", 10, "Yes")
+            with self.assertRaises(ValueError):
+                Subscription("Streaming", "Entertainment", "", "Premium", "Active", "15.00", "Monthly", "01/01/2025", 10, "Yes")
+            with self.assertRaises(ValueError):
+                Subscription("Streaming", "Entertainment", "Netflix", "Premium123", "Active", "15.00", "Monthly", "01/01/2025", 10, "Yes")
+            with self.assertRaises(ValueError):
+                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Maybe", "15.00", "Monthly", "01/01/2025", 10, "Yes")
+            with self.assertRaises(ValueError):
+                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Active", "badprice", "Monthly", "01/01/2025", 10, "Yes")
+            with self.assertRaises(ValueError):
+                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Active", "15.00", "Quarterly", "01/01/2025", 10, "Yes")
+            with self.assertRaises(ValueError):
+                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Active", "15.00", "Monthly", "2025-01-01", 10, "Yes")
+            with self.assertRaises(ValueError):
+                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Active", "15.00", "Monthly", "01/01/2025", "bad", "Yes")
+            with self.assertRaises(ValueError):
+                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Active", "15.00", "Monthly", "01/01/2025", 10, "Maybe")
+
+class TestReport(unittest.TestCase):
+    def setUp(self):
+        self.user = User("advisoryuser", "advisory@example.com", "StrongPass123")
+        self.valid_kwargs = {
+            "report_of_the_month": date(2024, 6, 1),
+            "report_of_the_year": date(2024, 1, 1),
+            "date_report_generated": date(2024, 6, 15),
+            "report_data": b"test data",
+            "user": self.user
+        }
+
+    def test_report_initialization_valid(self):
+        report = Report(**self.valid_kwargs)
+        self.assertEqual(report.report_of_the_month, date(2024, 6, 1))
+        self.assertEqual(report.report_of_the_year, date(2024, 1, 1))
+        self.assertEqual(report.date_report_generated, date(2024, 6, 15))
+        self.assertEqual(report.report_data, b"test data")
+        self.assertEqual(report.user, self.user)
+
+    def test_report_invalid_report_of_the_month(self):
+        kwargs = self.valid_kwargs.copy()
+        kwargs["report_of_the_month"] = "2024-06-01"
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
+
+    def test_report_invalid_report_of_the_year(self):
+        kwargs = self.valid_kwargs.copy()
+        kwargs["report_of_the_year"] = 2024
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
+
+    def test_report_invalid_date_report_generated(self):
+        kwargs = self.valid_kwargs.copy()
+        kwargs["date_report_generated"] = None
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
+
+    def test_report_invalid_report_data_types(self):
+        for invalid in ["not bytes", 12345, 3.14, [1, 2, 3]]:
+            kwargs = self.valid_kwargs.copy()
+            kwargs["report_data"] = invalid
+            with self.assertRaises(ValueError):
+                Report(**kwargs)
+
+    def test_report_invalid_user(self):
+        kwargs = self.valid_kwargs.copy()
+        kwargs["user"] = "not a user"
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
+
+    def test_report_setters_and_getters(self):
+        report = Report(**self.valid_kwargs)
+        new_user = self.user
+        report.report_of_the_month = date(2024, 7, 1)
+        report.report_of_the_year = date(2025, 1, 1)
+        report.date_report_generated = date(2024, 7, 15)
+        report.report_data = b"new data"
+        report.user = new_user
+        self.assertEqual(report.report_of_the_month, date(2024, 7, 1))
+        self.assertEqual(report.report_of_the_year, date(2025, 1, 1))
+        self.assertEqual(report.date_report_generated, date(2024, 7, 15))
+        self.assertEqual(report.report_data, b"new data")
+        self.assertEqual(report.user, new_user)
+
+    def test_report_setter_invalid_types(self):
+        report = Report(**self.valid_kwargs)
+        with self.assertRaises(ValueError):
+            report.report_of_the_month = "2024-07-01"
+        with self.assertRaises(ValueError):
+            report.report_of_the_year = 2025
+        with self.assertRaises(ValueError):
+            report.date_report_generated = None
+        with self.assertRaises(ValueError):
+            report.report_data = 123
+        with self.assertRaises(ValueError):
+            report.user = "someone"
+
+    def test_report_data_accepts_bytearray(self):
+        kwargs = self.valid_kwargs.copy()
+        kwargs["report_data"] = bytearray(b"bytearray data")
+        report = Report(**kwargs)
+        self.assertEqual(report.report_data, bytearray(b"bytearray data"))
+
+    def test_report_repr_str(self):
+        report = Report(**self.valid_kwargs)
+        self.assertIsInstance(str(report), str)
+        self.assertIsInstance(repr(report), str)
 
 if __name__ == "__main__":
     unittest.main()

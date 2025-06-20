@@ -1,8 +1,6 @@
 import re
-from datetime import datetime
-from database import db_connection
-from dataclasses import dataclass, field
-from typing import Optional
+from datetime import datetime 
+from dataclasses import dataclass
 
 @dataclass
 class Subscription:
@@ -35,7 +33,6 @@ class Subscription:
             auto_renewal_status="Yes"
         )
     """
-    user_id: str
     service_type: str
     category: str
     service_name: str
@@ -46,30 +43,6 @@ class Subscription:
     start_date: str
     renewal_date: str
     auto_renewal_status: bool
-    subscription_id: Optional[str] = field(default=None)
-
-    def __post_init__(self):
-        """
-        Sets the subscription_id to the next available value based on the last record in the database.
-        Handles the database connection internally. Connection string to be filled in by user.
-        """
-        connection_string = ""  # TODO: Add your database connection string here
-        # Example: db_connection = mysql.connector.connect(connection_string)
-        next_id = None
-        if db_connection:
-            cursor = db_connection.cursor()
-            cursor.execute("SELECT subscription_id FROM Subscription ORDER BY subscription_id DESC LIMIT 1")
-            result = cursor.fetchone()
-            if result and result[0].startswith('sub'):
-                last_num = int(result[0][3:])
-                next_id = f"sub{last_num+1:02d}"
-            else:
-                next_id = "sub01"
-            cursor.close()
-            db_connection.close()
-        else:
-            next_id = None  # Or raise an exception if DB connection is required
-        self.subscription_id = next_id
 
     @property
     def service_type(self):
