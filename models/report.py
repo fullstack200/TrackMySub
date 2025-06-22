@@ -25,19 +25,17 @@ class Report:
 
     @report_of_the_month.setter
     def report_of_the_month(self, value):
-        if not isinstance(value, date):
-            raise ValueError("report_of_the_month must be a date object")
-        self._report_of_the_month = value
+        current_month = date.today().strftime("%B")
+        self._report_of_the_month = current_month
 
     @property
     def report_of_the_year(self):
         return self._report_of_the_year
 
     @report_of_the_year.setter
-    def report_of_the_year(self, value):
-        if not isinstance(value, date):
-            raise ValueError("report_of_the_year must be a date object")
-        self._report_of_the_year = value
+    def report_of_the_year(self, dummy_value):
+        current_year = date.today().year
+        self._report_of_the_year = current_year
 
     @property
     def date_report_generated(self):

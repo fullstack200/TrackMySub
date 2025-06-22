@@ -462,8 +462,8 @@ class TestReport(unittest.TestCase):
     def setUp(self):
         self.user = User("advisoryuser", "advisory@example.com", "StrongPass123")
         self.valid_kwargs = {
-            "report_of_the_month": date(2024, 6, 1),
-            "report_of_the_year": date(2024, 1, 1),
+            "report_of_the_month": "AnyValue",  # Will be ignored by setter
+            "report_of_the_year": 9999,          # Will be ignored by setter
             "date_report_generated": date(2024, 6, 15),
             "report_data": b"test data",
             "user": self.user
@@ -471,27 +471,30 @@ class TestReport(unittest.TestCase):
 
     def test_report_initialization_valid(self):
         report = Report(**self.valid_kwargs)
-        self.assertEqual(report.report_of_the_month, date(2024, 6, 1))
-        self.assertEqual(report.report_of_the_year, date(2024, 1, 1))
+        self.assertEqual(report.report_of_the_month, date.today().strftime("%B"))
+        self.assertEqual(report.report_of_the_year, date.today().year)
         self.assertEqual(report.date_report_generated, date(2024, 6, 15))
         self.assertEqual(report.report_data, b"test data")
         self.assertEqual(report.user, self.user)
 
-    def test_report_invalid_report_of_the_month(self):
-        kwargs = self.valid_kwargs.copy()
-        kwargs["report_of_the_month"] = "2024-06-01"
-        with self.assertRaises(ValueError):
-            Report(**kwargs)
+    def test_report_of_the_month_always_current(self):
+        report = Report(**self.valid_kwargs)
+        # Try to set to a different month, should always be current month
+        report.report_of_the_month = "January"
+        self.assertEqual(report.report_of_the_month, date.today().strftime("%B"))
 
-    def test_report_invalid_report_of_the_year(self):
-        kwargs = self.valid_kwargs.copy()
-        kwargs["report_of_the_year"] = 2024
-        with self.assertRaises(ValueError):
-            Report(**kwargs)
+    def test_report_of_the_year_always_current(self):
+        report = Report(**self.valid_kwargs)
+        # Try to set to a different year, should always be current year
+        report.report_of_the_year = 2000
+        self.assertEqual(report.report_of_the_year, date.today().year)
 
     def test_report_invalid_date_report_generated(self):
         kwargs = self.valid_kwargs.copy()
         kwargs["date_report_generated"] = None
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
+        kwargs["date_report_generated"] = "2024-06-15"
         with self.assertRaises(ValueError):
             Report(**kwargs)
 
@@ -511,23 +514,19 @@ class TestReport(unittest.TestCase):
     def test_report_setters_and_getters(self):
         report = Report(**self.valid_kwargs)
         new_user = self.user
-        report.report_of_the_month = date(2024, 7, 1)
-        report.report_of_the_year = date(2025, 1, 1)
+        report.report_of_the_month = "July"  # Should always be current month
+        report.report_of_the_year = 2025      # Should always be current year
         report.date_report_generated = date(2024, 7, 15)
         report.report_data = b"new data"
         report.user = new_user
-        self.assertEqual(report.report_of_the_month, date(2024, 7, 1))
-        self.assertEqual(report.report_of_the_year, date(2025, 1, 1))
+        self.assertEqual(report.report_of_the_month, date.today().strftime("%B"))
+        self.assertEqual(report.report_of_the_year, date.today().year)
         self.assertEqual(report.date_report_generated, date(2024, 7, 15))
         self.assertEqual(report.report_data, b"new data")
         self.assertEqual(report.user, new_user)
 
     def test_report_setter_invalid_types(self):
         report = Report(**self.valid_kwargs)
-        with self.assertRaises(ValueError):
-            report.report_of_the_month = "2024-07-01"
-        with self.assertRaises(ValueError):
-            report.report_of_the_year = 2025
         with self.assertRaises(ValueError):
             report.date_report_generated = None
         with self.assertRaises(ValueError):

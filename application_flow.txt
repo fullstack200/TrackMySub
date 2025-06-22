@@ -18,7 +18,14 @@
    - When the user adds, edits, or deletes data, update the database immediately (recommended) or batch changes to be saved on logout.
    - Use INSERT, UPDATE, or DELETE queries as appropriate, passing the user_id and other relevant attributes from the class instances.
 
-5. **User Logout**
+5. **Usage Details Collection** (Newly Added)
+   - When prompting the user to enter usage details:
+     - Loop over the user's subscription_list.
+     - For each subscription, prompt the user to enter usage details (times used, session duration, benefit rating).
+     - Create a Usage instance for each subscription with the provided details.
+     - Collect all Usage instances and insert them into the database in a batch or transaction for efficiency.
+
+6. **User Logout**
    - If using batch updates, persist all in-memory changes to the database before logging the user out.
    - Clear sensitive data (like passwords) from memory.
 

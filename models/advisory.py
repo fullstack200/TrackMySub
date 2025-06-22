@@ -29,8 +29,7 @@ class Advisory:
             raise ValueError("Invalid usage object")
         
     def analyze_subscription_value(self):
-        subscriptions = self._user.subscription_list
-        budget = self._user.budget
+        pass
         
     def compare_with_budget(self):
         pass

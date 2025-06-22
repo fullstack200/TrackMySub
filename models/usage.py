@@ -67,3 +67,11 @@ class Usage:
             self._benefit_rating = int(benefit_rating)
         except ValueError:
             raise ValueError("Benefit rating should be a number")
+
+    def reset_usage(self):
+        """
+        Resets the usage details to default values.
+        """
+        self.times_used_per_month = 0
+        self.session_duration_hours = 0.0
+        self.benefit_rating = 0
