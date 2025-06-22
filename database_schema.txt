@@ -61,5 +61,3 @@ user_id VARCHAR(10) NOT NULL REFERENCES User(user_id)
 subscription_id VARCHAR(10) NOT NULL REFERENCES Subscription(subscription_id)
 acknowledged BOOLEAN NOT NULL DEFAULT FALSE
 UNIQUE KEY (user_id, subscription_id)
-
-
