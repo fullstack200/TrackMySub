@@ -1,0 +1,41 @@
+# Application Data Flow for TrackMySubs
+
+1. **User Login**
+   - Prompt the user for username/email and password.
+   - Run a SELECT query to fetch the user's record from the User table.
+   - Retrieve and store the user_id from the result for use in all subsequent operations.
+
+2. **Load User Data**
+   - Use the user_id to query all related tables (Subscription, Budget, Usage, Report, etc.) where user_id is a foreign key.
+   - For each table, fetch the relevant records and create corresponding class instances (e.g., Subscription, Budget, etc.).
+   - Store these objects in memory, associated with the logged-in user.
+
+3. **User Interaction**
+   - Allow the user to view, add, edit, or remove their data (subscriptions, budget, usage, etc.) through the application interface.
+   - Use the class methods and property setters for validation and business logic whenever the user interacts with their data.
+
+4. **Persist Changes**
+   - When the user adds, edits, or deletes data, update the database immediately (recommended) or batch changes to be saved on logout.
+   - Use INSERT, UPDATE, or DELETE queries as appropriate, passing the user_id and other relevant attributes from the class instances.
+
+5. **Usage Details Collection** (Newly Added)
+   - When prompting the user to enter usage details:
+     - Loop over the user's subscription_list.
+     - For each subscription, prompt the user to enter usage details (times used, session duration, benefit rating).
+     - Create a Usage instance for each subscription with the provided details.
+     - Collect all Usage instances and insert them into the database in a batch or transaction for efficiency.
+
+6. **User Logout**
+   - If using batch updates, persist all in-memory changes to the database before logging the user out.
+   - Clear sensitive data (like passwords) from memory.
+
+---
+
+**Best Practices:**
+- Always use class methods for validation and business logic.
+- Keep the user_id available throughout the session for all user-specific operations.
+- Use transactions for batch updates to ensure data integrity.
+- Update the database as soon as changes are made to prevent data loss.
+- Use hashed passwords for authentication and never store plain text passwords.
+
+This flow ensures a clean separation between your application's logic and database operations, while maintaining data integrity and a good user experience.
