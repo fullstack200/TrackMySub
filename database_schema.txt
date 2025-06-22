@@ -11,6 +11,8 @@ password VARCHAR(10)
 -----------------------------------------
 subscription_id VARCHAR(10) PRIMARY KEY
 user_id VARCHAR(10) REFERENCES User(user_id)
+service_type VARCHAR(20)
+category VARCHAR(20)
 service_name VARCHAR(50)
 plan_type CHAR(20)
 active_status BOOLEAN
@@ -27,6 +29,8 @@ budget_id VARCHAR(10) PRIMARY KEY
 user_id VARCHAR(10) REFERENCES User(user_id)
 monthly_budget_amount DECIMAL(8,2)
 yearly_budget_amount DECIMAL(8,2)
+total_amount_paid_mothly DECIMAL(8,2)
+total_amount_paid_yearly DECIMAL(8,2)
 over_the_limit BOOLEAN
 
 -----------------------------------------
