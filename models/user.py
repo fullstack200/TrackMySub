@@ -1,6 +1,7 @@
-from subscription import Subscription
-from budget import Budget
+from models.subscription import Subscription
+from models.budget import Budget
 import re
+
 
 class User:
     """
@@ -35,13 +36,13 @@ class User:
     
     @username.setter
     def username(self, username):
-        correct_pattern = r"^[A-Za-z]+$"
+        correct_pattern = r"^[A-Za-z0-9]+$"
         if not username:
             raise ValueError("Username cannot be empty")
         elif re.match(correct_pattern, username):
             self._username = username
         else:
-            raise ValueError("Username can contain only alphabets")
+            raise ValueError("Username can contain only alphabets and numbers")
         
     @property
     def email_id(self):
