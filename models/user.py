@@ -35,7 +35,7 @@ class User:
     
     @username.setter
     def username(self, username):
-        correct_pattern = r"^[A-Za-z]+$"
+        correct_pattern = r"^[A-Za-z0-9]+$"
         if not username:
             raise ValueError("Username cannot be empty")
         elif re.match(correct_pattern, username):

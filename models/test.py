@@ -10,43 +10,43 @@ from report import Report
 
 class TestUserValidation(unittest.TestCase):
     def test_valid_user(self):
-        user = User("Ahmed", "ahmed@example.com", "StrongPass123")
+        user = User("Ahmed123123", "ahmed@example.com", "StrongPass123")
         budget = Budget(user, "100.00")
         user.budget = budget
-        self.assertEqual(user.username, "Ahmed")
+        self.assertEqual(user.username, "Ahmed123123")
         self.assertEqual(user.email_id, "ahmed@example.com")
         self.assertEqual(user.password, "StrongPass123")
         self.assertEqual(user.budget, budget)
 
     def test_invalid_username(self):
         with self.assertRaises(ValueError):
-            User("Ahmed123", "ahmed@example.com", "StrongPass123")
+            User("Ahmed123@123", "ahmed@example.com", "StrongPass123")
 
     def test_invalid_email(self):
         with self.assertRaises(ValueError):
-            User("Ahmed", "ahmedexample.com", "StrongPass123")
+            User("Ahmed123", "ahmedexample.com", "StrongPass123")
 
     def test_short_password(self):
         with self.assertRaises(ValueError):
-            User("Ahmed", "ahmed@example.com", "123")
+            User("Ahmed123", "ahmed@example.com", "123")
 
     def test_update_email_invalid(self):
-        user = User("Ahmed", "ahmed@example.com", "StrongPass123")
+        user = User("Ahmed123", "ahmed@example.com", "StrongPass123")
         with self.assertRaises(ValueError):
             user.email_id = "wrongformat"
 
     def test_update_username_invalid(self):
-        user = User("Ahmed", "ahmed@example.com", "StrongPass123")
+        user = User("Ahmed123", "ahmed@example.com", "StrongPass123")
         with self.assertRaises(ValueError):
-            user.username = "Ahmed99"
+            user.username = "Ahmed123@99"
 
     def test_update_password_invalid(self):
-        user = User("Ahmed", "ahmed@example.com", "StrongPass123")
+        user = User("Ahmed123", "ahmed@example.com", "StrongPass123")
         with self.assertRaises(ValueError):
             user.password = "short"
     
     def test_invalid_budget_type(self):
-        user = User("Ahmed", "ahmed@example.com", "StrongPass123")
+        user = User("Ahmed123", "ahmed@example.com", "StrongPass123")
         with self.assertRaises(TypeError) as context:
             user.budget = "100.00"  # Invalid: not a Budget instance
         self.assertEqual(str(context.exception), "Invalid Budget")            
