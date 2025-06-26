@@ -1,3 +1,4 @@
+from services.email import send_email
 class Budget:
     """
     Represents a user's budget and tracks subscription spending.
@@ -35,7 +36,7 @@ class Budget:
 
     @user.setter
     def user(self, user):
-        from user import User
+        from models.user import User
         if isinstance(user, User):
             self._user = user
         else:
