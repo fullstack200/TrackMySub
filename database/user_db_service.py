@@ -28,7 +28,7 @@ def fetch_user(user_id):
         cursor.close()
         if result:
             username, email_id, password = result
-            return User(user_id=user_id, username=username, email_id=email_id, password=password)
+            return User(username, email_id, password)
         else:
             return None
     except Exception as e:

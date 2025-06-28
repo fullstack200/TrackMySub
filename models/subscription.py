@@ -178,8 +178,7 @@ class Subscription:
             if int(renewal_date) > 0 and int(renewal_date) < 32:
                 self._renewal_date = renewal_date
             else:
-                raise ValueError("Enter valid day number. Expample: 15th of every month. Enter 15")
-                    
+                raise ValueError("Enter valid day number. Expample: 15th of every month. Enter 15")    
 
     @property
     def auto_renewal_status(self):

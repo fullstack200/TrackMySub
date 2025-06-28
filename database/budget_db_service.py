@@ -3,6 +3,8 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db_connection import db_connection
 from models.budget import Budget
+from models.user import User
+from user_db_service import fetch_user
 
 def get_latest_budget_id():
     try:
@@ -11,7 +13,7 @@ def get_latest_budget_id():
         latest_budget_id = cursor.fetchone()
         cursor.close()
         if latest_budget_id and latest_budget_id[0].startswith('bud'):
-            last_num = int(latest_budget_id[0][3:]) + 1
+            last_num = int(latest_budget_id[0][4:]) + 1
             return f"bud{last_num:02d}"
         else:
             return "bud01"
@@ -22,24 +24,25 @@ def get_latest_budget_id():
 def fetch_budget(budget_id):
     try:
         cursor = db_connection.cursor()
-        query = "SELECT user_id, monthly_budget_amount, yearly_budget_amount, total_amount_paid_monthly, total_amount_paid_yearly, over_the_limit FROM budget WHERE budget_id = %s"
+        query = "SELECT user_id, monthly_budget_amount FROM budget WHERE budget_id = %s"
         cursor.execute(query, (budget_id,))
         result = cursor.fetchone()
         cursor.close()
+        user = fetch_user(result[0])
         if result:
-            return Budget(*result)
+            return Budget(user, str(result[1]))
         else:
             return None
     except Exception as e:
         print(f"Error fetching budget: {e}")
         return None
 
-def insert_budget(budget, budget_id):
+def insert_budget(budget, budget_id, user_id):
     try:
         cursor = db_connection.cursor()
         cursor.execute(
             "INSERT INTO budget (budget_id, user_id, monthly_budget_amount, yearly_budget_amount, total_amount_paid_monthly, total_amount_paid_yearly, over_the_limit) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-            (budget_id, budget.user.user_id, budget.monthly_budget_amount, budget.yearly_budget_amount, budget.total_amount_paid_monthly, budget.total_amount_paid_yearly, budget.over_the_limit)
+            (budget_id, user_id, budget.monthly_budget_amount, budget.yearly_budget_amount, budget.total_amount_paid_monthly, budget.total_amount_paid_yearly, budget.over_the_limit)
         )
         db_connection.commit()
         cursor.close()
