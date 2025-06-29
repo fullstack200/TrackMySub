@@ -1,10 +1,22 @@
 import unittest
-from user_db_service import get_latest_user_id, fetch_user, insert_user, update_user, delete_user
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# import necessary models
 from models.user import User
 from models.subscription import Subscription
 from models.budget import Budget
+from models.usage import Usage
+from models.report import Report
+
+# import necessary database services
+from user_db_service import get_latest_user_id, fetch_user, insert_user, update_user, delete_user
 from subscription_db_service import get_latest_subscription_id, fetch_subscription, insert_subscription, update_subscription, delete_subscription
 from budget_db_service import delete_budget, fetch_budget, insert_budget, update_budget, get_latest_budget_id
+from usage_db_service import get_latest_usage_id, fetch_usage, insert_usage, update_usage, delete_usage
+from report_db_service import get_latest_report_id, fetch_report, insert_report, delete_report
+
 class TestUserDBService(unittest.TestCase):
     def setUp(self):
         # Create a test user
@@ -121,6 +133,139 @@ class TestBudgetDBService(unittest.TestCase):
         self.assertIsNone(deleted)
         # Re-insert for tearDown
         insert_budget(self.budget, self.test_budget_id, self.test_user_id)
+
+class TestUsageDBService(unittest.TestCase):
+    def setUp(self):
+        # Insert a user and subscription first, since usage requires both
+        self.test_user_id = get_latest_user_id()
+        self.user = User(username="usagetestuser", email_id="usagetest@example.com", password="testpass123")
+        insert_user(self.user, self.test_user_id)
+        self.test_subscription_id = get_latest_subscription_id()
+        self.subscription = Subscription(
+            service_type="Personal",
+            category="Entertainment",
+            service_name="UsageTestService",
+            plan_type="Premium",
+            active_status="Active",
+            subscription_price="9.99",
+            billing_frequency="Monthly",
+            start_date="01/01/2025",
+            renewal_date="15",
+            auto_renewal_status="Yes"
+        )
+        insert_subscription(self.subscription, self.test_subscription_id, self.test_user_id)
+        # Prepare usage
+        self.test_usage_id = get_latest_usage_id()
+        
+        self.usage = Usage(
+            user=self.user,
+            subscription=self.subscription,
+            times_used_per_month=5,
+            session_duration_hours="2.00",
+            benefit_rating=4
+        )
+        insert_usage(self.usage, self.test_usage_id, self.test_user_id, self.test_subscription_id)
+
+    def tearDown(self):
+        delete_usage(self.test_usage_id)
+        delete_subscription(self.test_subscription_id)
+        delete_user(self.test_user_id)
+
+    def test_insert_and_fetch_usage(self):
+        fetched = fetch_usage(self.test_usage_id)
+        self.assertIsNotNone(fetched)
+        self.assertEqual(fetched.times_used_per_month, self.usage.times_used_per_month)
+        self.assertEqual(str(fetched.session_duration_hours), str(self.usage.session_duration_hours))
+        self.assertEqual(fetched.benefit_rating, self.usage.benefit_rating)
+
+    def test_update_usage(self):
+        update_usage({"times_used_per_month": 10}, self.test_usage_id)
+        updated = fetch_usage(self.test_usage_id)
+        self.assertEqual(updated.times_used_per_month, 10)
+
+    def test_delete_usage(self):
+        delete_usage(self.test_usage_id)
+        deleted = fetch_usage(self.test_usage_id)
+        self.assertIsNone(deleted)
+        # Re-insert for tearDown
+        insert_usage(self.usage, self.test_usage_id, self.test_user_id, self.test_subscription_id)
+
+class TestReportDBService(unittest.TestCase):
+    def setUp(self):
+        # Insert a user first, since report requires user
+        self.test_user_id = get_latest_user_id()
+        self.user = User(username="reporttestuser", email_id="reporttest@example.com", password="testpass123")
+        insert_user(self.user, self.test_user_id)
+        # Prepare report
+        self.test_report_id = get_latest_report_id()
+        from datetime import date
+        self.report = Report(
+            report_of_the_month=date.today().replace(day=1),
+            report_of_the_year=date.today().replace(month=1, day=1),
+            date_report_generated=date.today(),
+            report_data=b"Test report data",
+            user=self.user
+        )
+        insert_report(self.report, self.test_report_id, self.test_user_id)
+
+    def tearDown(self):
+        delete_report(self.test_report_id)
+        delete_user(self.test_user_id)
+
+    def test_insert_and_fetch_report(self):
+        fetched = fetch_report(self.test_user_id)
+        self.assertIsNotNone(fetched)
+        self.assertEqual(fetched.user.email_id, self.user.email_id)
+        self.assertEqual(fetched.report_data, self.report.report_data)
+
+    def test_delete_report(self):
+        delete_report(self.test_report_id)
+        deleted = fetch_report(self.test_user_id)
+        self.assertIsNone(deleted)
+        # Re-insert for tearDown
+        insert_report(self.report, self.test_report_id, self.test_user_id)
+
+class TestReminderDBService(unittest.TestCase):
+    def setUp(self):
+        # Insert a user and subscription first, since reminder requires both
+        self.test_user_id = get_latest_user_id()
+        self.user = User(username="remindertestuser", email_id="remindertest@example.com", password="testpass123")
+        insert_user(self.user, self.test_user_id)
+        self.test_subscription_id = get_latest_subscription_id()
+        self.subscription = Subscription(
+            service_type="Personal",
+            category="Entertainment",
+            service_name="ReminderTestService",
+            plan_type="Premium",
+            active_status="Active",
+            subscription_price="9.99",
+            billing_frequency="Monthly",
+            start_date="01/01/2025",
+            renewal_date="15",
+            auto_renewal_status="Yes"
+        )
+        insert_subscription(self.subscription, self.test_subscription_id, self.test_user_id)
+        # Prepare reminder
+        from models.reminder import Reminder
+        self.user.subscription_list.append(self.subscription)  # Ensure subscription is in user's list
+        self.reminder = Reminder(self.user)
+        self.reminder.user_reminder_acknowledged = {self.subscription.service_name: False}
+        from reminder_db_service import insert_reminder_acknowledgements
+        insert_reminder_acknowledgements(self.reminder, self.test_user_id)
+
+    def tearDown(self):
+        from reminder_db_service import delete_reminder_acknowledgement
+        delete_reminder_acknowledgement(self.test_user_id, self.test_subscription_id)
+        delete_subscription(self.test_subscription_id)
+        delete_user(self.test_user_id)
+
+    def test_insert_and_delete_reminder_acknowledgement(self):
+        # Test insert (already done in setUp)
+        # Now test delete
+        from reminder_db_service import delete_reminder_acknowledgement
+        delete_reminder_acknowledgement(self.test_user_id, self.test_subscription_id)
+        # No fetch function, so just ensure no exceptions and cleanup
+        self.assertTrue(True)
 
 if __name__ == "__main__":
     unittest.main()

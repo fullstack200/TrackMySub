@@ -28,8 +28,8 @@ def fetch_budget(budget_id):
         cursor.execute(query, (budget_id,))
         result = cursor.fetchone()
         cursor.close()
-        user = fetch_user(result[0])
         if result:
+            user = fetch_user(result[0])
             return Budget(user, str(result[1]))
         else:
             return None
