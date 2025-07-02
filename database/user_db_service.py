@@ -4,26 +4,12 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db_connection import db_connection
 from models.user import User
 
-def get_latest_user_id():
-    try:
-        cursor = db_connection.cursor()
-        cursor.execute("SELECT user_id from user ORDER BY user_id DESC LIMIT 1")
-        latest_user_id = cursor.fetchone()
-        cursor.close()
-        if latest_user_id and latest_user_id[0].startswith('user'):
-            last_num = int(latest_user_id[0][4:]) + 1
-            return f"user{last_num:02d}"
-        else:
-            return "user01"
-    except Exception as e:
-        print(f"Error fetching latest user_id: {e}")
-        return None
 
-def fetch_user(user_id):
+def fetch_user(username):
     try:
         cursor = db_connection.cursor()
-        query = "SELECT username, email_id, password FROM user WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
+        query = "SELECT username, email_id, password FROM user WHERE username = %s"
+        cursor.execute(query, (username,))
         result = cursor.fetchone()
         cursor.close()
         if result:
@@ -35,34 +21,40 @@ def fetch_user(user_id):
         print(f"Error fetching user: {e}")
         return None
 
-def insert_user(user, user_id):
+def insert_user(user):
     try:
         cursor = db_connection.cursor()
+        
+        is_unique = fetch_user(user.username)
+        if is_unique:
+            print(f"User with username {user.username} already exists.")
+            return
+        
         cursor.execute(
-            "INSERT INTO user (user_id, username, email_id, password) VALUES (%s, %s, %s, %s)",
-            (user_id, user.username, user.email_id, user.password)
+            "INSERT INTO user (username, email_id, password) VALUES (%s, %s, %s)",
+            (user.username, user.email_id, user.password)
         )
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error inserting user: {e}")
 
-def update_user(dic, user_id):
+def update_user(dic, username):
     try:
         cursor = db_connection.cursor()
         for i, j in dic.items():
-            query = f"UPDATE user SET {i} = %s WHERE user_id = %s"
-            cursor.execute(query, (j, user_id))
+            query = f"UPDATE user SET {i} = %s WHERE username = %s"
+            cursor.execute(query, (j, username))
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error updating user: {e}")
 
-def delete_user(user_id):
+def delete_user(username):
     try:
         cursor = db_connection.cursor()
-        query = f"DELETE FROM user WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
+        query = f"DELETE FROM user WHERE username = %s"
+        cursor.execute(query, (username,))
         db_connection.commit()
         cursor.close()
     except Exception as e:

@@ -1,16 +1,15 @@
 -----------------------------------------
 1. User Table
 -----------------------------------------
-user_id VARCHAR(10) PRIMARY KEY
-username CHAR(20)
+username VARCHAR(20)
 email_id VARCHAR(20)
-password VARCHAR(10)
+password VARCHAR(20)
 
 -----------------------------------------
 2. Subscription Table
 -----------------------------------------
 subscription_id VARCHAR(10) PRIMARY KEY
-user_id VARCHAR(10) REFERENCES User(user_id)
+username VARCHAR(20) REFERENCES User(username)
 service_type VARCHAR(20)
 category VARCHAR(20)
 service_name VARCHAR(50)
@@ -26,7 +25,7 @@ auto_renewal_status BOOLEAN
 3. Budget Table
 -----------------------------------------
 budget_id VARCHAR(10) PRIMARY KEY
-user_id VARCHAR(10) REFERENCES User(user_id)
+username VARCHAR(20) REFERENCES User(username)
 monthly_budget_amount DECIMAL(8,2)
 yearly_budget_amount DECIMAL(8,2)
 total_amount_paid_mothly DECIMAL(8,2)
@@ -41,23 +40,23 @@ report_of_the_month DATE
 report_of_the_year DATE
 date_report_generated DATE
 report_data BLOB
-user_id VARCHAR(10) REFERENCES User(user_id)
+username VARCHAR(20) REFERENCES User(username)
 
 -----------------------------------------
 5. Usage Table
 -----------------------------------------
 usage_id VARCHAR(10) PRIMARY KEY
-user_id VARCHAR(10) REFERENCES User(user_id)
+username VARCHAR(20) REFERENCES User(username)
 subscription_id VARCHAR(10) REFERENCES Subscription(subscription_id)
 times_used_per_month INT
-session_duration_hours TIME
+session_duration_hours FLOAT
 benefit_rating INT
 
 -----------------------------------------
 6. ReminderAcknowledgement Table
 -----------------------------------------
 ack_id INT AUTO_INCREMENT PRIMARY KEY
-user_id VARCHAR(10) NOT NULL REFERENCES User(user_id)
+username VARCHAR(20) NOT NULL REFERENCES User(username)
 subscription_id VARCHAR(10) NOT NULL REFERENCES Subscription(subscription_id)
 acknowledged BOOLEAN NOT NULL DEFAULT FALSE
-UNIQUE KEY (user_id, subscription_id)
+UNIQUE KEY (username, subscription_id)

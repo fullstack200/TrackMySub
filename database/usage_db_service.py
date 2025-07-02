@@ -21,17 +21,33 @@ def get_latest_usage_id():
         print(f"Error fetching latest usage_id: {e}")
         return None
 
-def fetch_usage(usage_id):
+def fetch_usage(username, service_name):
     try:
+        # Fetch subscription_id for the given username and service_name
         cursor = db_connection.cursor()
-        query = "SELECT user_id, subscription_id, times_used_per_month, session_duration_hours, benefit_rating FROM subscriptionusage WHERE usage_id = %s"
-        cursor.execute(query, (usage_id,))
+        cursor.execute(
+            "SELECT subscription_id FROM subscription WHERE username = %s AND service_name = %s",
+            (username, service_name)
+        )
+        sub_result = cursor.fetchone()
+        if not sub_result:
+            print(f"No subscription found for service '{service_name}' and user '{username}'")
+            cursor.close()
+            return None
+        subscription_id = sub_result[0]
+        cursor = db_connection.cursor()
+        query = """
+            SELECT username, subscription_id, times_used_per_month, session_duration_hours, benefit_rating
+            FROM subscriptionusage
+            WHERE username = %s AND subscription_id = %s
+        """
+        cursor.execute(query, (username, subscription_id))
         result = cursor.fetchone()
         cursor.close()
         if result:
             user = fetch_user(result[0])
-            subscription = fetch_subscription(result[1], result[0])
-            times_used_per_month, session_duration_hours, benefit_rating = result[2:]  
+            subscription = fetch_subscription(result[0], service_name)
+            times_used_per_month, session_duration_hours, benefit_rating = result[2:]
             return Usage(user, subscription, times_used_per_month, session_duration_hours, benefit_rating)
         else:
             return None
@@ -39,35 +55,60 @@ def fetch_usage(usage_id):
         print(f"Error fetching usage: {e}")
         return None
 
-def insert_usage(usage, usage_id, user_id, subscription_id):
+def insert_usage(usage, usage_id, username, subscription_id):
     try:
         cursor = db_connection.cursor()
         cursor.execute(
-            "INSERT INTO subscriptionusage (usage_id, user_id, subscription_id, times_used_per_month, session_duration_hours, benefit_rating) VALUES (%s, %s, %s, %s, %s, %s)",
-            (usage_id, user_id, subscription_id, usage.times_used_per_month, usage.session_duration_hours, usage.benefit_rating)
+            "INSERT INTO subscriptionusage (usage_id, username, subscription_id, times_used_per_month, session_duration_hours, benefit_rating) VALUES (%s, %s, %s, %s, %s, %s)",
+            (usage_id, username, subscription_id, usage.times_used_per_month, usage.session_duration_hours, usage.benefit_rating)
         )
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error inserting usage: {e}")
 
-def update_usage(dic, usage_id):
+def update_usage(dic, username, service_name):
     try:
+        # Fetch subscription_id for the given username and service_name
         cursor = db_connection.cursor()
+        cursor.execute(
+            "SELECT subscription_id FROM subscription WHERE username = %s AND service_name = %s",
+            (username, service_name)
+        )
+        sub_result = cursor.fetchone()
+        if not sub_result:
+            print(f"No subscription found for service '{service_name}' and user '{username}'")
+            cursor.close()
+            return
+        subscription_id = sub_result[0]
+
         for i, j in dic.items():
-            query = f"UPDATE subscriptionusage SET {i} = %s WHERE usage_id = %s"
-            cursor.execute(query, (j, usage_id))
+            query = f"UPDATE subscriptionusage SET {i} = %s WHERE username = %s AND subscription_id = %s"
+            cursor.execute(query, (j, username, subscription_id))
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error updating usage: {e}")
 
-def delete_usage(usage_id):
+def delete_usage(username, service_name):
     try:
+        # Fetch subscription_id for the given username and service_name
         cursor = db_connection.cursor()
-        query = "DELETE FROM subscriptionusage WHERE usage_id = %s"
-        cursor.execute(query, (usage_id,))
+        cursor.execute(
+            "SELECT subscription_id FROM subscription WHERE username = %s AND service_name = %s",
+            (username, service_name)
+        )
+        sub_result = cursor.fetchone()
+        if not sub_result:
+            print(f"No subscription found for service '{service_name}' and user '{username}'")
+            cursor.close()
+            return
+        subscription_id = sub_result[0]
+
+        query = "DELETE FROM subscriptionusage WHERE username = %s AND subscription_id = %s"
+        cursor.execute(query, (username, subscription_id))
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error deleting usage: {e}")
+

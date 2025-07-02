@@ -20,14 +20,14 @@ def get_latest_report_id():
         print(f"Error fetching latest report_id: {e}")
         return None
 
-def fetch_report(user_id):
+def fetch_report(username, month, year):
     try:
         cursor = db_connection.cursor()
-        query = "SELECT report_of_the_month, report_of_the_year, date_report_generated, report_data FROM report WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
+        query = "SELECT report_of_the_month, report_of_the_year, date_report_generated, report_data FROM report WHERE username = %s AND report_of_the_month = %s AND report_of_the_year = %s"
+        cursor.execute(query, (username, month, year))
         result = cursor.fetchone()
         cursor.close()
-        user = fetch_user(user_id)
+        user = fetch_user(username)
         if result:
             return Report(*result, user)
         else:
@@ -36,23 +36,23 @@ def fetch_report(user_id):
         print(f"Error fetching report: {e}")
         return None
 
-def insert_report(report, report_id, user_id):
+def insert_report(report, report_id, username):
     try:
         cursor = db_connection.cursor()
         cursor.execute(
-            "INSERT INTO report (report_id, report_of_the_month, report_of_the_year, date_report_generated, report_data, user_id) VALUES (%s, %s, %s, %s, %s, %s)",
-            (report_id, report.report_of_the_month, report.report_of_the_year, report.date_report_generated, report.report_data, user_id)
+            "INSERT INTO report (report_id, report_of_the_month, report_of_the_year, date_report_generated, report_data, username) VALUES (%s, %s, %s, %s, %s, %s)",
+            (report_id, report.report_of_the_month, report.report_of_the_year, report.date_report_generated, report.report_data, username)
         )
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error inserting report: {e}")
 
-def delete_report(report_id):
+def delete_report(username, month, year):
     try:
         cursor = db_connection.cursor()
-        query = "DELETE FROM report WHERE report_id = %s"
-        cursor.execute(query, (report_id,))
+        query = "DELETE FROM report WHERE username = %s AND report_of_the_month = %s AND report_of_the_year = %s"
+        cursor.execute(query, (username, month, year))
         db_connection.commit()
         cursor.close()
     except Exception as e:
