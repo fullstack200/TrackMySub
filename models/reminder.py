@@ -2,6 +2,25 @@ from models.user import User
 from datetime import timedelta, date
 
 class Reminder:
+    '''
+    Reminder class for managing and sending payment reminders for user subscriptions.
+    Attributes:
+        user (User): The user associated with the reminders. Must be an instance of User.
+        user_reminder_acknowledged (dict): A dictionary mapping subscription names (str) to a boolean flag indicating whether the payment reminder has been acknowledged.
+    Methods:
+        check_payment_date():
+            Checks all active subscriptions for the user and determines if a payment reminder should be sent based on the subscription's renewal date and billing frequency.
+            Sends a reminder 3 days before the renewal date if not already acknowledged, and resets the acknowledgement flag once the renewal date has arrived or passed.
+        remind_payment(subscription):
+            Sends (prints) a payment reminder for the given subscription.
+    Properties:
+        user:
+            Getter and setter for the user attribute. Ensures the user is an instance of User.
+        user_reminder_acknowledged:
+            Getter and setter for the user_reminder_acknowledged attribute. Ensures the value is a dictionary mapping str keys to bool values.
+    Raises:
+        TypeError: If the user is not an instance of User, or if user_reminder_acknowledged is not a dict mapping str to bool.
+    '''
     def __init__(self, user):
         self.user = user
         self.user_reminder_acknowledged = {}

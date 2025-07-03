@@ -3,8 +3,29 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db_connection import db_connection
 from models.subscription import Subscription
-from models.user import User
-from user_db_service import insert_user
+
+"""
+subscription_db_service.py
+This module provides services for managing subscription records in the database.
+It includes functions to fetch, insert, update, and delete subscription entries,
+as well as to generate new subscription IDs.
+Functions:
+    get_latest_subscription_id():
+        Retrieves the latest subscription ID from the database and generates the next ID in sequence.
+        Returns a string in the format 'subXX', where XX is a zero-padded number.
+    fetch_subscription(username, service_name):
+        Fetches a subscription record for a given username and service name.
+        Returns a Subscription object with formatted fields, or None if not found.
+    insert_subscription(subscription, subscription_id, username):
+        Inserts a new subscription record into the database using the provided Subscription object,
+        subscription ID, and username. Handles date formatting as required.
+    update_subscription(dic, username, service_name):
+        Updates fields of a subscription record for the given username and service name.
+        Accepts a dictionary of field-value pairs to update.
+    delete_subscription(username, service_name):
+        Deletes a subscription record for the given username and service name from the database.
+        Also intended to delete related reminder acknowledgement records (currently commented out).
+"""
 
 def get_latest_subscription_id():
     try:

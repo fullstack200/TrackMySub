@@ -6,6 +6,24 @@ from models.usage import Usage
 from user_db_service import fetch_user
 from subscription_db_service import fetch_subscription
 
+"""
+usage_db_service.py
+This module provides database service functions for managing subscription usage data in the application.
+It interacts with the database to perform CRUD operations on the 'subscriptionusage' table, as well as
+fetching related user and subscription information.
+Functions:
+    get_latest_usage_id():
+        Retrieves the latest usage_id from the 'subscriptionusage' table and generates the next usage_id.
+    fetch_usage(username, service_name):
+        Fetches the usage record for a given username and service name, returning a Usage object if found.
+    insert_usage(usage, usage_id, username, subscription_id):
+        Inserts a new usage record into the 'subscriptionusage' table.
+    update_usage(dic, username, service_name):
+        Updates fields in the usage record for a given username and service name based on the provided dictionary.
+    delete_usage(username, service_name):
+        Deletes the usage record for a given username and service name from the 'subscriptionusage' table.
+"""
+
 def get_latest_usage_id():
     try:
         cursor = db_connection.cursor()

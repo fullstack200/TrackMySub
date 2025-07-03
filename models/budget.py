@@ -1,4 +1,3 @@
-from services.email import send_email
 class Budget:
     """
     Represents a user's budget and tracks subscription spending.

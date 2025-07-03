@@ -6,6 +6,24 @@ from models.budget import Budget
 from models.user import User
 from user_db_service import fetch_user
 
+"""
+budget_db_service.py
+This module provides services for interacting with the 'budget' table in the database.
+It includes functions to fetch, insert, update, and delete budget records, as well as
+to generate the next available budget ID.
+Functions:
+    get_latest_budget_id():
+        Retrieves the latest budget ID from the database and generates the next ID in sequence.
+    fetch_budget(username):
+        Fetches the budget information for a given username and returns a Budget object.
+    insert_budget(budget, budget_id, usename):
+        Inserts a new budget record into the database for the specified user.
+    update_budget(dic, username):
+        Updates specified fields in the budget record for the given username.
+    delete_budget(username):
+        Deletes the budget record associated with the given username.
+"""
+
 def get_latest_budget_id():
     try:
         cursor = db_connection.cursor()

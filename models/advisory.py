@@ -2,6 +2,19 @@ from user import User
 from usage import Usage
 
 class Advisory:
+    """
+    Represents an advisory entity that analyzes a user's subscription usage and provides advice.
+    Attributes:
+        user (User): The user associated with this advisory. Must be an instance of the User class.
+        usage (Usage): The usage data associated with this advisory. Must be an instance of the Usage class.
+    Methods:
+        analyze_subscription_value():
+            Analyzes the value of the user's subscription based on usage data.
+        compare_with_budget():
+            Compares the user's subscription usage or spending with their budget.
+        generate_advice():
+            Generates personalized advice for the user based on analysis and comparison.
+    """
     def __init__(self):
         self._user = None
         self._usage = None

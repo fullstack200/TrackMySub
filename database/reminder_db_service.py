@@ -3,13 +3,21 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from db_connection import db_connection
 
-# INSERT function for reminder_acknowledgement table
+"""
+reminder_db_service.py
+This module provides services for managing reminder acknowledgements in the database.
+Functions:
+    insert_reminder_acknowledgements(reminder, username):
+        Inserts or updates reminder acknowledgement records for a given user and their subscriptions.
+        For each subscription in the reminder, it fetches the corresponding subscription_id and
+        inserts or updates the acknowledgement status in the 'reminder_acknowledgement' table.
+        If a subscription is not found for the user, it skips that entry and prints a warning.
+    delete_reminder_acknowledgement(username, subscription_id):
+        Deletes a reminder acknowledgement record for the specified user and subscription_id
+        from the 'reminder_acknowledgement' table.
+"""
 
 def insert_reminder_acknowledgements(reminder, username):
-    """
-    Inserts acknowledgement records for all subscriptions in the reminder's user_reminder_acknowledged dict.
-    Fetches username from the user attribute of the Reminder instance.
-    """
     try:
         for sub_name, acknowledged in reminder.user_reminder_acknowledged.items():
             # Fetch subscription_id for this username and service_name
@@ -36,10 +44,6 @@ def insert_reminder_acknowledgements(reminder, username):
         db_connection.rollback()
 
 def delete_reminder_acknowledgement(username, subscription_id):
-    """
-    Deletes a reminder acknowledgement record for a given user and subscription.
-    Call this when a subscription is removed from the user's subscription list.
-    """
     cursor = db_connection.cursor()
     try:
         sql = "DELETE FROM reminder_acknowledgement WHERE username = %s AND subscription_id = %s"

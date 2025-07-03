@@ -4,6 +4,36 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db_connection import db_connection
 from models.user import User
 
+"""
+user_db_service.py
+This module provides database service functions for user management.
+Functions:
+    fetch_user(username):
+        Fetches a user from the database by username.
+        Args:
+            username (str): The username of the user to fetch.
+        Returns:
+            User: A User object if found, otherwise None.
+    insert_user(user):
+        Inserts a new user into the database if the username is unique.
+        Args:
+            user (User): The User object to insert.
+        Returns:
+            None
+    update_user(dic, username):
+        Updates user information in the database for the given username.
+        Args:
+            dic (dict): A dictionary of fields to update with their new values.
+            username (str): The username of the user to update.
+        Returns:
+            None
+    delete_user(username):
+        Deletes a user from the database by username.
+        Args:
+            username (str): The username of the user to delete.
+        Returns:
+            None
+"""
 
 def fetch_user(username):
     try:

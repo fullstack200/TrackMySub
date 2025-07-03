@@ -5,7 +5,6 @@ class Report:
     """
     Represents a report generated for a user.
     Attributes:
-        report_id (str): Unique identifier for the report (auto-generated).
         report_of_the_month (date): The month the report is for.
         report_of_the_year (date): The year the report is for.
         date_report_generated (date): The date the report was generated.
