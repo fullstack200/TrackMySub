@@ -1,6 +1,7 @@
-from subscription import Subscription
-from budget import Budget
+from models.subscription import Subscription
+from models.budget import Budget
 import re
+
 
 class User:
     """
@@ -41,7 +42,7 @@ class User:
         elif re.match(correct_pattern, username):
             self._username = username
         else:
-            raise ValueError("Username can contain only alphabets")
+            raise ValueError("Username can contain only alphabets and numbers")
         
     @property
     def email_id(self):

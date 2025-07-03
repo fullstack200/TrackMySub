@@ -35,7 +35,7 @@ class Budget:
 
     @user.setter
     def user(self, user):
-        from user import User
+        from models.user import User
         if isinstance(user, User):
             self._user = user
         else:
@@ -92,16 +92,13 @@ class Budget:
     @total_amount_paid_yearly.setter
     def total_amount_paid_yearly(self, value):
         if value is None:
-    
             self._total_amount_paid_yearly = 0
             subscriptions = self.user.subscription_list
-
             for sub in subscriptions:
                 if sub.billing_frequency == "Yearly":
                     self._total_amount_paid_yearly += sub.subscription_price
                 elif sub.billing_frequency == "Monthly":
                     self._total_amount_paid_yearly += (sub.subscription_price * 12)
-
             self._total_amount_paid_yearly = float(self._total_amount_paid_yearly)
         else:
             raise ValueError("Total amount paid yearly cannot be set directly. It is calculated based on subscriptions.")

@@ -1,9 +1,18 @@
-from user import User
-from subscription import Subscription
+from models.user import User
+from models.subscription import Subscription
 class Usage:
-    """
-    Represents usage details for a subscription by a user.
-    """
+    '''
+    Represents the usage details of a user's subscription.
+    Attributes:
+        user (User): The user associated with the usage record.
+        subscription (Subscription): The subscription being used.
+        times_used_per_month (int): Number of times the subscription is used per month.
+        session_duration_hours (float): Average duration of each session in hours.
+        benefit_rating (int): User's rating of the benefit received from the subscription (1 to 5).
+    Methods:
+        reset_usage():
+            Resets the usage details to default values (0 for times used and session duration, 0 for benefit rating).
+    '''
     def __init__(self, user, subscription, times_used_per_month, session_duration_hours, benefit_rating):
         self.user = user
         self.subscription = subscription

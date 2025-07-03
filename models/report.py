@@ -1,11 +1,10 @@
-from user import User
+from models.user import User
 from datetime import date
 
 class Report:
     """
     Represents a report generated for a user.
     Attributes:
-        report_id (str): Unique identifier for the report (auto-generated).
         report_of_the_month (date): The month the report is for.
         report_of_the_year (date): The year the report is for.
         date_report_generated (date): The date the report was generated.
@@ -25,17 +24,21 @@ class Report:
 
     @report_of_the_month.setter
     def report_of_the_month(self, value):
-        current_month = date.today().strftime("%B")
-        self._report_of_the_month = current_month
+        if value:
+            self._report_of_the_month = value.title()
+        else:
+            self._report_of_the_month = date.today().strftime("%B")
 
     @property
     def report_of_the_year(self):
         return self._report_of_the_year
 
     @report_of_the_year.setter
-    def report_of_the_year(self, dummy_value):
-        current_year = date.today().year
-        self._report_of_the_year = current_year
+    def report_of_the_year(self, value):
+        if value:
+            self._report_of_the_year = value
+        else:
+            self._report_of_the_year = date.today().year
 
     @property
     def date_report_generated(self):
