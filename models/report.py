@@ -1,4 +1,4 @@
-from models.user import User
+from user import User
 from datetime import date
 
 class Report:

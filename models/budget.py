@@ -1,3 +1,5 @@
+import boto3
+import json
 class Budget:
     """
     Represents a user's budget and tracks subscription spending.
@@ -35,7 +37,7 @@ class Budget:
 
     @user.setter
     def user(self, user):
-        from models.user import User
+        from user import User
         if isinstance(user, User):
             self._user = user
         else:
@@ -116,4 +118,38 @@ class Budget:
                 self._over_the_limit = False
         else:
             raise ValueError("Over the limit cannot be set directly. It is calculated based on budget and total amount paid.")
+
+    def alert_over_the_limit(self):
+        """
+        Invokes an AWS Lambda function to send an alert if the budget is exceeded.
+        Sends monthly/yearly budget, total paid, and the difference as payload.
+        """
+        if not self.over_the_limit:
+            print("Budget is not over the limit. No alert sent.")
+            return None
+
+        lambda_client = boto3.client('lambda', region_name='ap-south-1')
+        function_name = 'alert-over-budget'
+        payload = {
+            "monthly_budget_amount": self.monthly_budget_amount,
+            "yearly_budget_amount": self.yearly_budget_amount,
+            "total_amount_paid_monthly": self.total_amount_paid_monthly,
+            "total_amount_paid_yearly": self.total_amount_paid_yearly,
+            "monthly_difference": self.total_amount_paid_monthly - self.monthly_budget_amount,
+            "yearly_difference": self.total_amount_paid_yearly - self.yearly_budget_amount,
+            "username": getattr(self.user, "username", None),
+            "email_to": getattr(self.user, "email_id", None),
+            "subject":"Budget Alert: Over the Limit"
+        }
+        try:
+            response = lambda_client.invoke(
+                FunctionName=function_name,
+                InvocationType='Event',
+                Payload=json.dumps(payload).encode('utf-8')
+            )
+            print("Alert Lambda invoked.")
+            return response
+        except Exception as e:
+            print(f"Error invoking Lambda function: {e}")
+            return None
 

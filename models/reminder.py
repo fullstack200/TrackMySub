@@ -1,4 +1,4 @@
-from models.user import User
+from user import User
 from datetime import timedelta, date
 
 class Reminder:
@@ -68,7 +68,7 @@ class Reminder:
                 continue
 
             freq  = sub.billing_frequency.lower()
-            rdate = sub.renewal_date()  # already validated by the setter
+            rdate = sub.renewal_date  # already validated by the setter
 
             # ── Build the next renewal_date as a real `date` object ──
             if freq == "monthly":
