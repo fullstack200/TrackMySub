@@ -253,9 +253,9 @@ class TestReminder(unittest.TestCase):
             self.reminder.user_reminder_acknowledged = {"Netflix": "yes"}
 
     def test_check_payment_date_monthly(self):
-        # Set up for 3 days before renewal (simulate today as 9th)
         self.sub1.renewal_date = "12"
         self.reminder.user_reminder_acknowledged = {self.sub1.service_name: False}
+
         # Patch date.today to June 9, 2025
         original_date = date
         class MockDate(date):
@@ -264,20 +264,23 @@ class TestReminder(unittest.TestCase):
                 return cls(2025, 6, 9)
         reminder_module = __import__('reminder')
         reminder_module.date = MockDate
-        # Should trigger reminder
+
+        # Track call
         called = []
-        def fake_remind_payment(sub, renewal_date):
-            called.append((sub.service_name, renewal_date))
+        def fake_remind_payment(sub):
+            called.append(sub.service_name)
+
         self.reminder.remind_payment = fake_remind_payment
         self.reminder.check_payment_date()
-        self.assertIn((self.sub1.service_name, MockDate(2025, 6, 12)), called)
+        self.assertIn(self.sub1.service_name, called)
+
         # Restore
         reminder_module.date = original_date
 
     def test_check_payment_date_yearly(self):
-        # Set up for 3 days before yearly renewal (simulate today as June 12, 2025)
         self.sub2.renewal_date = "15/06"
         self.reminder.user_reminder_acknowledged = {self.sub2.service_name: False}
+
         # Patch date.today to June 12, 2025
         original_date = date
         class MockDate(date):
@@ -286,19 +289,26 @@ class TestReminder(unittest.TestCase):
                 return cls(2025, 6, 12)
         reminder_module = __import__('reminder')
         reminder_module.date = MockDate
-        # Should trigger reminder
+
         called = []
-        def fake_remind_payment(sub, renewal_date):
-            called.append((sub.service_name, renewal_date))
+        def fake_remind_payment(sub):
+            called.append(sub.service_name)
+
         self.reminder.remind_payment = fake_remind_payment
         self.reminder.check_payment_date()
-        self.assertIn((self.sub2.service_name, MockDate(2025, 6, 15)), called)
+        self.assertIn(self.sub2.service_name, called)
+
         # Restore
         reminder_module.date = original_date
 
     def test_check_payment_date_inactive_subscription(self):
-        self.sub1.active_status = "Cancelled"
-        self.reminder.user_reminder_acknowledged = {self.sub1.service_name: False}
+        # Set status BEFORE creating Reminder object
+        self.user.subscription_list.remove(self.sub1)
+        # Now create Reminder object
+        self.sub1.active_status = "Cancelled" # Ensure it's marked inactive
+        self.user.add_subscription(self.sub1)  # Re-add to user
+        self.reminder = Reminder(self.user)  # Create AFTER sub1 is marked inactive
+
         # Patch date.today to June 9, 2025
         original_date = date
         class MockDate(date):
@@ -307,14 +317,18 @@ class TestReminder(unittest.TestCase):
                 return cls(2025, 6, 9)
         reminder_module = __import__('reminder')
         reminder_module.date = MockDate
+
         called = []
-        def fake_remind_payment(sub, renewal_date):
-            called.append((sub.service_name, renewal_date))
+        def fake_remind_payment(sub):
+            called.append(sub.service_name)
+
         self.reminder.remind_payment = fake_remind_payment
         self.reminder.check_payment_date()
-        self.assertNotIn((self.sub1.service_name, MockDate(2025, 6, 12)), called)
+        self.assertNotIn(self.sub1.service_name, called)
+
         # Restore
         reminder_module.date = original_date
+
 
 class TestUsage(unittest.TestCase):
     def setUp(self):

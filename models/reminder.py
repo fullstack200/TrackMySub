@@ -23,7 +23,11 @@ class Reminder:
     '''
     def __init__(self, user):
         self.user = user
-        self.user_reminder_acknowledged = {}
+        self.user_reminder_acknowledged = {
+        sub.service_name: False
+        for sub in self.user.subscription_list
+        if getattr(sub, "active_status") == True
+    }
         
     @property
     def user(self):
@@ -56,19 +60,16 @@ class Reminder:
                 raise TypeError(
                     "user_reminder_acknowledged must map str keys to bool values"
                 )
-
         self._user_reminder_acknowledged = value
 
     def check_payment_date(self):
         today = date.today()
 
         for sub in self._user.subscription_list:
-            # Skip anything that isn't Active
-            if not getattr(sub, "active_status", True):  # default to True
+            if not sub.active_status:  
                 continue
-
             freq  = sub.billing_frequency.lower()
-            rdate = sub.renewal_date  # already validated by the setter
+            rdate = sub.renewal_date  
 
             # ── Build the next renewal_date as a real `date` object ──
             if freq == "monthly":
@@ -102,7 +103,7 @@ class Reminder:
                 today == reminder_date
                 and not self.user_reminder_acknowledged.get(sub.service_name, False)
             ):
-                self.remind_payment(sub, renewal_date)
+                self.remind_payment(sub)
                 self.user_reminder_acknowledged[sub.service_name] = True
                 
     def remind_payment(self, subscription):
