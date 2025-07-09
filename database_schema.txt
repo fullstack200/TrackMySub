@@ -41,7 +41,7 @@ report_of_the_year DATE
 date_report_generated DATE
 report_data BLOB
 username VARCHAR(20) REFERENCES User(username)
-
+total_amount DECIMAL(8,2)
 -----------------------------------------
 5. Usage Table
 -----------------------------------------

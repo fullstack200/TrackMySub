@@ -59,7 +59,7 @@ def get_latest_report_id():
 def fetch_report(username, month, year):
     try:
         cursor = db_connection.cursor()
-        query = "SELECT report_of_the_month, report_of_the_year, date_report_generated, report_data FROM report WHERE username = %s AND report_of_the_month = %s AND report_of_the_year = %s"
+        query = "SELECT report_of_the_month, report_of_the_year, date_report_generated, total_amount, report_data FROM report WHERE username = %s AND report_of_the_month = %s AND report_of_the_year = %s"
         cursor.execute(query, (username, month, year))
         result = cursor.fetchone()
         cursor.close()
@@ -76,8 +76,8 @@ def insert_report(report, report_id, username):
     try:
         cursor = db_connection.cursor()
         cursor.execute(
-            "INSERT INTO report (report_id, report_of_the_month, report_of_the_year, date_report_generated, report_data, username) VALUES (%s, %s, %s, %s, %s, %s)",
-            (report_id, report.report_of_the_month, report.report_of_the_year, report.date_report_generated, report.report_data, username)
+            "INSERT INTO report (report_id, report_of_the_month, report_of_the_year, date_report_generated, report_data, username, total_amount) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (report_id, report.report_of_the_month, report.report_of_the_year, report.date_report_generated, report.report_data, username, report.total_amount)
         )
         db_connection.commit()
         cursor.close()

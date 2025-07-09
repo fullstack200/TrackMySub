@@ -479,6 +479,7 @@ class TestReport(unittest.TestCase):
             "report_of_the_month": None,
             "report_of_the_year": None,
             "date_report_generated": date(2024, 6, 15),
+            "total_amount": 100.00,
             "report_data": b"test data",
             "user": self.user
         }
@@ -540,6 +541,15 @@ class TestReport(unittest.TestCase):
         report = Report(**self.valid_kwargs)
         self.assertIsInstance(str(report), str)
         self.assertIsInstance(repr(report), str)
+        
+    def test_invalid_total_amount(self):
+        kwargs = self.valid_kwargs.copy()
+        kwargs["total_amount"] = "not a float"
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
+        kwargs["total_amount"] = -100.00
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
 
 if __name__ == "__main__":
     unittest.main()

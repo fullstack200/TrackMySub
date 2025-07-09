@@ -199,8 +199,9 @@ class TestReportDBService(unittest.TestCase):
             report_of_the_month=None,
             report_of_the_year=None,
             date_report_generated=date.today(),
+            total_amount=100.00,
             report_data=b"Test report data",
-            user=self.user
+            user=self.user,
         )
         insert_report(self.report, self.test_report_id, self.user.username)
 

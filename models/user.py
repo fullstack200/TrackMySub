@@ -1,5 +1,5 @@
-from subscription import Subscription
-from budget import Budget
+from models.subscription import Subscription
+from models.budget import Budget
 import re
 
 

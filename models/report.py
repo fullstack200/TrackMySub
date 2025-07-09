@@ -1,7 +1,9 @@
-from user import User
+from models.user import User
 from datetime import date
 import boto3
 import json
+from decimal import Decimal
+
 
 class Report:
     """
@@ -10,13 +12,15 @@ class Report:
         report_of_the_month (date): The month the report is for.
         report_of_the_year (date): The year the report is for.
         date_report_generated (date): The date the report was generated.
+        total_amount(int): Total amount paid by the user in that month.
         report_data (bytes): The report data (BLOB).
         user (User): The user associated with this report.
     """
-    def __init__(self, report_of_the_month, report_of_the_year, date_report_generated, report_data, user):
+    def __init__(self, report_of_the_month, report_of_the_year, date_report_generated, total_amount, report_data, user):
         self.report_of_the_month = report_of_the_month
         self.report_of_the_year = report_of_the_year
         self.date_report_generated = date_report_generated
+        self.total_amount = total_amount
         self.report_data = report_data
         self.user = user
 
@@ -53,6 +57,20 @@ class Report:
         self._date_report_generated = value
 
     @property
+    def total_amount(self):
+        return self._total_amount
+    
+    @total_amount.setter
+    def total_amount(self, value):
+        if isinstance(value, Decimal):
+            value = float(value)
+        if not isinstance(value, float):
+            raise ValueError("total_amount must be a float")
+        if value < 0:
+            raise ValueError("total_amount cannot be negative")
+        self._total_amount = value
+        
+    @property
     def report_data(self):
         return self._report_data
 
@@ -72,7 +90,7 @@ class Report:
             raise ValueError("user must be a User object")
         self._user = value
         
-    def generate_report_for_month(self):
+    def generate_monthly_report(self):
         """
         Invokes the AWS Lambda function to generate a monthly report PDF using the user's data.
         Returns:
@@ -119,5 +137,7 @@ class Report:
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")
             return {"error": str(e)}
+        
+    
 
 
