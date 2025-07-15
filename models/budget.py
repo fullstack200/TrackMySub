@@ -37,7 +37,7 @@ class Budget:
 
     @user.setter
     def user(self, user):
-        from models.user import User
+        from user import User
         if isinstance(user, User):
             self._user = user
         else:

@@ -1,5 +1,5 @@
-from models.user import User
-from models.usage import Usage
+from user import User
+from usage import Usage
 
 class Advisory:
     """

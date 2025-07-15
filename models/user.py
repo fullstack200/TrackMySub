@@ -1,7 +1,6 @@
-from models.subscription import Subscription
-from models.budget import Budget
+from subscription import Subscription
+from budget import Budget
 import re
-
 
 class User:
     """

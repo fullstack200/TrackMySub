@@ -1,5 +1,6 @@
-from models.user import User
-from models.subscription import Subscription
+from user import User
+from subscription import Subscription
+
 class Usage:
     '''
     Represents the usage details of a user's subscription.

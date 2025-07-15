@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import unittest
 from unittest.mock import patch
 from user import User
@@ -7,6 +10,10 @@ from datetime import date
 from reminder import Reminder
 from usage import Usage
 from report import Report
+from monthly_report import MonthlyReport
+from yearly_report import YearlyReport
+from unittest.mock import patch, MagicMock
+
 
 class TestUserValidation(unittest.TestCase):
     def test_valid_user(self):
@@ -476,8 +483,6 @@ class TestReport(unittest.TestCase):
     def setUp(self):
         self.user = User("advisoryuser", "advisory@example.com", "StrongPass123")
         self.valid_kwargs = {
-            "report_of_the_month": None,
-            "report_of_the_year": None,
             "date_report_generated": date(2024, 6, 15),
             "total_amount": 100.00,
             "report_data": b"test data",
@@ -551,8 +556,194 @@ class TestReport(unittest.TestCase):
         with self.assertRaises(ValueError):
             Report(**kwargs)
 
+class TestMonthlyReport(unittest.TestCase):
+    def setUp(self):
+        # Create actual Subscription instances
+        self.sub1 = Subscription(
+            service_type="Streaming",
+            category="Entertainment",
+            service_name="Netflix",
+            plan_type="Premium",
+            active_status="Active",
+            subscription_price="15.00",
+            billing_frequency="Monthly",
+            start_date="01/01/2024",
+            renewal_date="15",
+            auto_renewal_status="Yes"
+        )
+        self.sub2 = Subscription(
+            service_type="Music",
+            category="Entertainment",
+            service_name="Spotify",
+            plan_type="Premium",
+            active_status="Active",
+            subscription_price="10.00",
+            billing_frequency="Monthly",
+            start_date="01/01/2024",
+            renewal_date="10",
+            auto_renewal_status="Yes"
+        )
+        self.sub3 = Subscription(
+            service_type="Streaming",
+            category="Entertainment",
+            service_name="Disney+",
+            plan_type="Standard",
+            active_status="Cancelled",
+            subscription_price="8.00",
+            billing_frequency="Monthly",
+            start_date="01/01/2024",
+            renewal_date="20",
+            auto_renewal_status="No"
+        )
+        # Create actual User and Budget instances
+        self.user = User("testuser", "testuser@example.com", "StrongPass123")
+        
+        self.user.subscription_list.append(self.sub1)
+        self.user.subscription_list.append(self.sub2)
+        self.user.subscription_list.append(self.sub3)
+        self.budget = Budget(self.user, "30.00")
+        self.user.budget = self.budget
+        self.report_data = b"dummy"
+        self.month = "January"
+        self.mr = MonthlyReport(
+            date_report_generated=date(2024, 6, 1),
+            total_amount=0.0,
+            report_data=self.report_data,
+            user=self.user,
+            month=self.month
+        )
+
+    def test_month_property_valid(self):
+        self.mr.month = "February"
+        self.assertEqual(self.mr.month, "February")
+
+    def test_month_property_invalid(self):
+        with self.assertRaises(ValueError):
+            self.mr.month = "NotAMonth"
+
+    @patch("boto3.client")
+    def test_generate_monthly_report_within_budget(self, mock_boto_client):
+        mock_lambda = MagicMock()
+        mock_lambda.invoke.return_value = {
+            "Payload": MagicMock(read=MagicMock(return_value=b'{"pdf": "base64data"}'))
+        }
+        mock_boto_client.return_value = mock_lambda
+
+        self.mr.report_of_the_month = "January"
+        result = self.mr.generate_monthly_report()
+        self.assertIn("pdf", result)
+        self.assertEqual(self.mr.total_amount, 25.0)  # Only active subscriptions
+
+    @patch("boto3.client")
+    def test_generate_monthly_report_exceeds_budget(self, mock_boto_client):
+        self.user.budget.monthly_budget_amount = "20.0"
+        mock_lambda = MagicMock()
+        mock_lambda.invoke.return_value = {
+            "Payload": MagicMock(read=MagicMock(return_value=b'{"pdf": "base64data"}'))
+        }
+        mock_boto_client.return_value = mock_lambda
+
+        self.mr.report_of_the_month = "January"
+        result = self.mr.generate_monthly_report()
+        self.assertIn("pdf", result)
+        self.assertEqual(self.mr.total_amount, 25.0)
+
+    @patch("boto3.client")
+    def test_generate_monthly_report_lambda_exception(self, mock_boto_client):
+        mock_lambda = MagicMock()
+        mock_lambda.invoke.side_effect = Exception("Lambda error")
+        mock_boto_client.return_value = mock_lambda
+
+        self.mr.report_of_the_month = "January"
+        result = self.mr.generate_monthly_report()
+        self.assertIn("error", result)
+        self.assertEqual(result["error"], "Lambda error")
+
+class TestYearlyReportExtended(unittest.TestCase):
+    def setUp(self):
+        self.user = User(username="testuser", email_id="test@example.com", password="Qwerty@12345")
+        self.year = 2024
+        self.report_data = b"test"
+        self.total_amount = 0.0
+        self.yearly_report = YearlyReport(date_report_generated=date.today(), total_amount=self.total_amount, report_data=self.report_data, user=self.user, year=self.year)
+    
+    def test_init_sets_attributes(self):
+        self.assertEqual(self.yearly_report.year, self.year)
+        self.assertEqual(self.yearly_report.user.username, "testuser")
+        self.assertEqual(self.yearly_report.monthly_reports, [])
+        self.assertEqual(self.yearly_report.total_amount, 0.0)
+
+    def test_monthly_reports_accepts_monthly_report_instances(self):
+        mr1 = MonthlyReport(
+            date_report_generated=date.today(),
+            total_amount=10.0,
+            report_data=b"data1",
+            user=self.user,
+            month="January"
+        )
+        mr2 = MonthlyReport(
+            date_report_generated=date.today(),
+            total_amount=20.0,
+            report_data=b"data2",
+            user=self.user,
+            month="February"
+        )
+        self.yearly_report.monthly_reports = [mr1, mr2]
+        self.assertEqual(len(self.yearly_report.monthly_reports), 2)
+        self.assertIsInstance(self.yearly_report.monthly_reports[0], MonthlyReport)
+        self.assertTrue(issubclass(type(self.yearly_report.monthly_reports[0]), Report))
+
+    def test_fetch_all_monthly_reports_handles_db_error(self):
+        # Patch db_connection to raise an exception
+        class DummyCursor:
+            def execute(self, *a, **kw): raise Exception("DB error")
+            def close(self): pass
+        class DummyDBConn:
+            def cursor(self): return DummyCursor()
+        orig_db_conn = YearlyReport.__dict__['fetch_all_monthly_reports'].__globals__['db_connection']
+        YearlyReport.__dict__['fetch_all_monthly_reports'].__globals__['db_connection'] = DummyDBConn()
+        try:
+            self.yearly_report.fetch_all_monthly_reports()
+        finally:
+            YearlyReport.__dict__['fetch_all_monthly_reports'].__globals__['db_connection'] = orig_db_conn
+
+    def test_generate_yearly_report_lambda_error(self):
+        # Patch boto3 client to raise exception
+        class DummyLambdaClient:
+            def invoke(self, **kwargs): raise Exception("Lambda error")
+        orig_boto3 = YearlyReport.__dict__['generate_yearly_report'].__globals__['boto3']
+        YearlyReport.__dict__['generate_yearly_report'].__globals__['boto3'] = type("Boto3", (), {"client": lambda *a, **kw: DummyLambdaClient()})
+        # Patch fetch_budget to return a valid Budget
+        from database.budget_db_service import Budget
+        YearlyReport.__dict__['generate_yearly_report'].__globals__['fetch_budget'] = lambda username: Budget(self.user, "100.0")
+        r1 = MonthlyReport(date.today(), 10.0, b"data", self.user, "January")
+        self.yearly_report.monthly_reports = [r1]
+        self.yearly_report._total_yearly_amount = 10.0
+        result = self.yearly_report.generate_yearly_report()
+        self.assertIn("error", result)
+        YearlyReport.__dict__['generate_yearly_report'].__globals__['boto3'] = orig_boto3
+
+    def test_generate_yearly_report_with_actual_budget(self):
+        # Patch fetch_budget to return actual Budget
+        from database.budget_db_service import Budget
+        YearlyReport.__dict__['generate_yearly_report'].__globals__['fetch_budget'] = lambda username: Budget(self.user, "50.0")
+        # Patch boto3 client to return a dummy response
+        class DummyLambdaClient:
+            def invoke(self, **kwargs):
+                return {"Payload": type("DummyPayload", (), {"read": lambda self: kwargs["Payload"]})()}
+        YearlyReport.__dict__['generate_yearly_report'].__globals__['boto3'] = type("Boto3", (), {"client": lambda *a, **kw: DummyLambdaClient()})
+        r1 = MonthlyReport(date.today(), 20.0, b"data", self.user, "January")
+        r2 = MonthlyReport(date.today(), 25.0, b"data", self.user, "February")
+        self.yearly_report.monthly_reports = [r1, r2]
+        self.yearly_report._total_yearly_amount = 45.0
+        result = self.yearly_report.generate_yearly_report()
+        self.assertEqual(result["year"], self.year)
+        self.assertEqual(result["total_amount"], 45.0)
+        self.assertEqual(result["yearly_budget_amount"], 600.0)
+        self.assertEqual(result["grand_total"], 45.0)
+        self.assertEqual(result["note"], "Your subscriptions amount is within your yearly budget.")
+
 if __name__ == "__main__":
     unittest.main()
-
 
 
