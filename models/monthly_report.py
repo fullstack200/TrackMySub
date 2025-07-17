@@ -1,6 +1,7 @@
 from report import Report
 import json
 import boto3
+
 class MonthlyReport(Report):
     """
     Represents a monthly report generated for a user.
@@ -9,7 +10,7 @@ class MonthlyReport(Report):
         year (int): The year of the report.
     """
     def __init__(self, date_report_generated, total_amount, report_data, user, month):
-        super().__init__(date_report_generated, total_amount, report_data,user)
+        super().__init__(date_report_generated, total_amount, report_data, user)
         self.month = month
     
     @property
@@ -71,4 +72,3 @@ class MonthlyReport(Report):
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")
             return {"error": str(e)}
-        

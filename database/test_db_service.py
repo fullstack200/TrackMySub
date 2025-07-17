@@ -17,7 +17,7 @@ from user_db_service import fetch_user, insert_user, update_user, delete_user
 from subscription_db_service import get_latest_subscription_id, fetch_subscription, insert_subscription, update_subscription, delete_subscription
 from budget_db_service import get_latest_budget_id, fetch_budget, insert_budget, update_budget, delete_budget
 from usage_db_service import get_latest_usage_id, fetch_usage, insert_usage, update_usage, delete_usage
-from report_db_service import get_latest_report_id, fetch_report, insert_report, delete_report
+from database.monthly_report_db_service import get_latest_report_id, fetch_report, insert_report, delete_report
 from reminder_db_service import insert_reminder_acknowledgements, delete_reminder_acknowledgement
 
 class TestUserDBService(unittest.TestCase):
