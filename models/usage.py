@@ -1,5 +1,5 @@
-from user import User
-from subscription import Subscription
+from models.user import User
+from models.subscription import Subscription
 
 class Usage:
     '''

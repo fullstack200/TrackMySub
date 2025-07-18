@@ -1,4 +1,4 @@
-from report import Report
+from models.report import Report
 import json
 import boto3
 

@@ -30,11 +30,11 @@ def get_latest_budget_id():
         cursor.execute("SELECT budget_id FROM budget ORDER BY budget_id DESC LIMIT 1")
         latest_budget_id = cursor.fetchone()
         cursor.close()
-        if latest_budget_id and latest_budget_id[0].startswith('bud'):
+        if latest_budget_id and latest_budget_id[0].startswith('budg'):
             last_num = int(latest_budget_id[0][4:]) + 1
-            return f"bud{last_num:02d}"
+            return f"budg{last_num:02d}"
         else:
-            return "bud01"
+            return "budg01"
     except Exception as e:
         print(f"Error fetching latest budget_id: {e}")
         return None

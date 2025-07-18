@@ -9,7 +9,8 @@ from models.user import User
 from models.subscription import Subscription
 from models.budget import Budget
 from models.usage import Usage
-from models.report import Report
+from models.monthly_report import MonthlyReport
+from models.yearly_report import YearlyReport
 from models.reminder import Reminder
 
 # import necessary database services
@@ -17,7 +18,8 @@ from user_db_service import fetch_user, insert_user, update_user, delete_user
 from subscription_db_service import get_latest_subscription_id, fetch_subscription, insert_subscription, update_subscription, delete_subscription
 from budget_db_service import get_latest_budget_id, fetch_budget, insert_budget, update_budget, delete_budget
 from usage_db_service import get_latest_usage_id, fetch_usage, insert_usage, update_usage, delete_usage
-from database.monthly_report_db_service import get_latest_report_id, fetch_report, insert_report, delete_report
+from monthly_report_db_service import get_latest_monthly_report_id, fetch_monthly_report, insert_monthly_report, delete_monthly_report
+from yearly_report_db_service import get_latest_yearly_report_id, fetch_yearly_report, insert_yearly_report, delete_yearly_report
 from reminder_db_service import insert_reminder_acknowledgements, delete_reminder_acknowledgement
 
 class TestUserDBService(unittest.TestCase):
@@ -187,41 +189,7 @@ class TestUsageDBService(unittest.TestCase):
         self.usage.times_used_per_month = 10
         self.test_usage_id = get_latest_usage_id()
         insert_usage(self.usage, self.test_usage_id, self.user.username, self.test_subscription_id)
-        
-class TestReportDBService(unittest.TestCase):
-    def setUp(self):
-        # Insert a user first, since report requires user
-        self.user = User(username="reporttestuser", email_id="reporttest@example.com", password="testpass123")
-        insert_user(self.user)
-        # Prepare report
-        self.test_report_id = get_latest_report_id()
-        self.report = Report(
-            report_of_the_month=None,
-            report_of_the_year=None,
-            date_report_generated=date.today(),
-            total_amount=100.00,
-            report_data=b"Test report data",
-            user=self.user,
-        )
-        insert_report(self.report, self.test_report_id, self.user.username)
 
-    def tearDown(self):
-        delete_report(self.user.username, self.report.report_of_the_month, self.report.report_of_the_year)
-        delete_user(self.user.username)
-
-    def test_insert_and_fetch_report(self):
-        fetched = fetch_report(self.user.username, self.report.report_of_the_month, self.report.report_of_the_year)
-        self.assertIsNotNone(fetched)
-        self.assertEqual(fetched.user.email_id, self.user.email_id)
-        self.assertEqual(fetched.report_data, self.report.report_data)
-
-    def test_delete_report(self):
-        delete_report(self.user.username, self.report.report_of_the_month, self.report.report_of_the_year)
-        deleted = fetch_report(self.user.username, self.report.report_of_the_month, self.report.report_of_the_year)
-        self.assertIsNone(deleted)
-        # Re-insert for tearDown
-        insert_report(self.report, self.test_report_id, self.user.username)
-        
 class TestReminderDBService(unittest.TestCase):
     def setUp(self):
         # Insert a user and subscription first, since reminder requires both
@@ -259,5 +227,71 @@ class TestReminderDBService(unittest.TestCase):
         # No fetch function, so just ensure no exceptions and cleanup
         self.assertTrue(True)
         
+class TestMonthlyReportDBService(unittest.TestCase):
+    def setUp(self):
+        # Insert a user first, since report requires user
+        self.user = User(username="reporttestuser", email_id="reporttest@example.com", password="testpass123")
+        insert_user(self.user)
+        # Prepare report
+        self.test_report_id = get_latest_monthly_report_id()
+        self.report = MonthlyReport(
+            date_report_generated=date.today(),
+            total_amount=100.00,
+            report_data=b"Test report data",
+            user=self.user,
+            month=date.today().strftime("%B"),
+        )
+        insert_monthly_report(self.report, self.test_report_id, self.user.username)
+
+    def tearDown(self):
+        delete_monthly_report(self.user.username, self.report.month)
+        delete_user(self.user.username)
+
+    def test_insert_and_fetch_report(self):
+        fetched = fetch_monthly_report(self.user.username, self.report.month)
+        self.assertIsNotNone(fetched)
+        self.assertEqual(fetched.user.email_id, self.user.email_id)
+        self.assertEqual(fetched.report_data, self.report.report_data)
+
+    def test_delete_report(self):
+        delete_monthly_report(self.user.username, self.report.month)
+        deleted = fetch_monthly_report(self.user.username, self.report.month)
+        self.assertIsNone(deleted)
+        # Re-insert for tearDown
+        insert_monthly_report(self.report, self.test_report_id, self.user.username)
+
+class TestYearlyReportDBService(unittest.TestCase):
+    def setUp(self):
+        # Insert a user first, since report requires user
+        self.user = User(username="reporttestuser", email_id="reporttest@example.com", password="testpass123")
+        insert_user(self.user)
+        # Prepare report
+        self.test_report_id = get_latest_yearly_report_id()
+        self.report = YearlyReport(
+            date_report_generated=date.today(),
+            total_amount=100.00,
+            report_data=b"Test report data",
+            user=self.user,
+            year=date.today().year,
+        )
+        insert_yearly_report(self.report, self.test_report_id, self.user.username)
+
+    def tearDown(self):
+        delete_yearly_report(self.user.username, self.report.year)
+        delete_user(self.user.username)
+
+    def test_insert_and_fetch_report(self):
+        fetched = fetch_yearly_report(self.user.username, self.report.year)
+        self.assertIsNotNone(fetched)
+        self.assertEqual(fetched.user.email_id, self.user.email_id)
+        self.assertEqual(fetched.report_data, self.report.report_data)
+
+    def test_delete_report(self):
+        delete_yearly_report(self.user.username, self.report.year)
+        deleted = fetch_yearly_report(self.user.username, self.report.year)
+        self.assertIsNone(deleted)
+        # Re-insert for tearDown
+        insert_yearly_report(self.report, self.test_report_id, self.user.username)
+
 if __name__ == "__main__":
     unittest.main()

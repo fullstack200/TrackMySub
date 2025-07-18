@@ -1,8 +1,8 @@
 from database.db_connection import db_connection
 from database.budget_db_service import fetch_budget
 from database.user_db_service import fetch_user
-from user import User
-from report import Report
+from models.user import User
+from models.report import Report
 import boto3, json
 
 class YearlyReport(Report):
