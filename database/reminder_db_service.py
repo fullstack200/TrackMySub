@@ -1,7 +1,4 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from db_connection import db_connection
+from database.db_connection import db_connection
 
 """
 reminder_db_service.py

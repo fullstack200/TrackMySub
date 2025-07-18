@@ -55,7 +55,7 @@ class MonthlyReport(Report):
         function_name = 'generate-monthly-report'
         payload = {
             "subscriptions": subscriptions,
-            "month": self.report_of_the_month,
+            "month": self.month,
             "date_generated": self.date_report_generated.strftime("%d/%m/%Y"),
             "grand_total":grand_total,
             "budget": budget_amount,

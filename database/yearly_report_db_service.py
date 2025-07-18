@@ -1,5 +1,4 @@
-from db_connection import db_connection
-from models.yearly_report import YearlyReport
+from database.db_connection import db_connection
 from database.user_db_service import fetch_user
 
 def get_latest_yearly_report_id():
@@ -18,6 +17,7 @@ def get_latest_yearly_report_id():
         return None
 
 def fetch_yearly_report(username, year):
+    from models.yearly_report import YearlyReport
     try:
         cursor = db_connection.cursor()
         query = "SELECT date_report_generated, total_amount, report_data, username, year FROM yearly_report WHERE username = %s AND year = %s"

@@ -1,10 +1,5 @@
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from db_connection import db_connection
-from models.monthly_report import MonthlyReport
+from database.db_connection import db_connection
 from database.user_db_service import fetch_user
-from datetime import date
 
 def get_latest_monthly_report_id():
     try:
@@ -22,6 +17,7 @@ def get_latest_monthly_report_id():
         return None
 
 def fetch_monthly_report(username, month):
+    from models.monthly_report import MonthlyReport
     try:
         cursor = db_connection.cursor()
         query = "SELECT date_report_generated, total_amount, report_data, username, month_name FROM monthly_report WHERE username = %s AND month_name = %s"
@@ -58,15 +54,3 @@ def delete_monthly_report(username, month):
         cursor.close()
     except Exception as e:
         print(f"Error deleting report: {e}")
-
-# user = fetch_user("fahad05")
-# report =  MonthlyReport(
-#             date_report_generated=date.today(),
-#             total_amount=100.00,
-#             report_data=b"Test report data",
-#             user=user,
-#             month=date.today().strftime("%B"),
-#         )
-# #insert_monthly_report(report, get_latest_monthly_report_id(), report.user.username)
-# print(fetch_monthly_report(user.username, report.month))
-# delete_monthly_report(user.username, report.month)

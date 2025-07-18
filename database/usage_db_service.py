@@ -1,10 +1,7 @@
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from db_connection import db_connection
+from database.db_connection import db_connection
 from models.usage import Usage
-from user_db_service import fetch_user
-from subscription_db_service import fetch_subscription
+from database.user_db_service import fetch_user
+from database.subscription_db_service import fetch_subscription
 
 """
 usage_db_service.py

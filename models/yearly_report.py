@@ -1,6 +1,7 @@
 from database.db_connection import db_connection
 from database.budget_db_service import fetch_budget
 from database.user_db_service import fetch_user
+from models.monthly_report import MonthlyReport
 from models.user import User
 from models.report import Report
 import boto3, json
@@ -57,34 +58,25 @@ class YearlyReport(Report):
             self._monthly_reports = value
         else:
             raise ValueError("monthly_reports must be a list of Report objects")
-    
-    @property
-    def total_yearly_amount(self):
-        return self._total_yearly_amount
-    
-    @total_yearly_amount.setter
-    def total_yearly_amount(self, value):
-        if isinstance(value, (int, float)):
-            self._total_yearly_amount = value
-        else:
-            raise ValueError("total_yearly_amount must be a number. Example: 100.50")
 
     def fetch_all_monthly_reports(self):
         try:
             cursor = db_connection.cursor()
             query = """
-                SELECT report_of_the_month, report_of_the_year, date_report_generated,
-                total_amount, report_data
-                FROM report
-                WHERE username = %s AND report_of_the_year = %s
+                SELECT date_report_generated,
+                total_amount, report_data, username, month_name
+                FROM monthly_report
+                WHERE username = %s
+                AND YEAR(date_report_generated) = %s
             """
             cursor.execute(query, (self.user.username, self.year))
             results = cursor.fetchall()
             cursor.close()
             for row in results:
-                monthly_report = Report(*row, self.user)
+                date_report_generated, total_amount, report_data, username, month = row
+                monthly_report = MonthlyReport(date_report_generated, total_amount, report_data, fetch_user(username), month)
                 self.monthly_reports.append(monthly_report)
-                self.total_yearly_amount += monthly_report.total_amount
+                self.total_amount += monthly_report.total_amount
         
         except Exception as e:
             print(f"Error fetching yearly reports: {e}")
@@ -112,7 +104,7 @@ class YearlyReport(Report):
             
         payload = {
             "year": self.year,
-            "total_amount": self.total_yearly_amount,
+            "total_amount": self.total_amount,
             "monthly_reports": monthly_reports_data,
             "yearly_budget_amount": yearly_budget_amount,
             "grand_total": grand_total,
@@ -132,4 +124,3 @@ class YearlyReport(Report):
             print(f"Error invoking Lambda function: {e}")
             return {"error": str(e)} 
         
-
