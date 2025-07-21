@@ -39,7 +39,53 @@ def get_latest_subscription_id():
         print(f"Error fetching latest subscription_id: {e}")
         return None
 
-def fetch_subscription(username, service_name):
+def fetch_all_subscription(username):
+    try:
+        cursor = db_connection.cursor()
+        query = "SELECT service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status FROM subscription WHERE username = %s;"
+        cursor.execute(query, (username,))
+        result = cursor.fetchall()
+        cursor.close()
+        if not result:
+            return f"User with username: {username} doesn't exist."
+        else:
+            subscription_list = []
+            for sub in result:
+                sub = list(sub)
+                if sub[4] == 1 or sub[4] is True:
+                    sub[4] = "Active"
+                else:
+                    sub[4] = "Cancelled"
+                # Convert start_date from YYYY-MM-DD to DD/MM/YYYY
+                from datetime import datetime
+                if sub[7]:
+                    try:
+                        if isinstance(sub[7], str):
+                            sub[7] = datetime.strptime(sub[7], "%Y-%m-%d").strftime("%d/%m/%Y")
+                        elif hasattr(sub[7], 'strftime'):
+                            sub[7] = sub[7].strftime("%d/%m/%Y")
+                    except Exception:
+                        pass
+                # Convert renewal_date from YYYY-MM-DD to DD/MM if yearly, else keep as is
+                billing_frequency = sub[6]
+                if billing_frequency == "Yearly" and sub[8] and "-" in str(sub[8]):
+                    try:
+                        dt = datetime.strptime(sub[8], "%Y-%m-%d")
+                        sub[8] = dt.strftime("%d/%m")
+                    except Exception:
+                        pass
+                sub[5] = str(sub[5]) 
+                if sub[9] == 1:
+                    sub[9] = "Yes"
+                else:
+                    sub[9] = "No"
+                subscription_list.append(Subscription(*sub))
+            return subscription_list
+    except Exception as e:
+        print(f"Error fetching subscription: {e}")
+        return None
+        
+def fetch_specific_subscription(username, service_name):
     try:
         cursor = db_connection.cursor()
         query = "SELECT service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status FROM subscription WHERE username = %s AND service_name = %s"
@@ -79,7 +125,7 @@ def fetch_subscription(username, service_name):
             result[9] = "No"
         return Subscription(*result)
     except Exception as e:
-        print(f"Error fetching subscription: {e}")
+        print(f"Error fetching {service_name} subscription: {e}")
         return None
 
 def insert_subscription(subscription, subscription_id, username):
@@ -109,7 +155,7 @@ def insert_subscription(subscription, subscription_id, username):
         db_connection.commit()
         cursor.close()
     except Exception as e:
-        print(f"Error inserting subscription: {e}")
+        print(f"Error inserting {subscription.service_name} subscription: {e}")
 
 def update_subscription(dic, username, service_name):
     try:
@@ -120,7 +166,7 @@ def update_subscription(dic, username, service_name):
         db_connection.commit()
         cursor.close()
     except Exception as e:
-        print(f"Error updating subscription: {e}")
+        print(f"Error updating {service_name} subscription: {e}")
 
 def delete_subscription(username, service_name):
     try:
@@ -139,5 +185,5 @@ def delete_subscription(username, service_name):
         db_connection.commit()
         cursor.close()
     except Exception as e:
-        print(f"Error deleting subscription: {e}")
+        print(f"Error deleting {service_name} subscription: {e}")
         

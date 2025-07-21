@@ -74,11 +74,15 @@ class User:
     def subscription_list(self):
         return self._subscription_list
 
-    def add_subscription(self, sub):
-        if isinstance(sub, Subscription):
-            self._subscription_list.append(sub)
+    def add_subscription(self, sub_list):
+        if isinstance(sub_list, list):
+            for each_sub in sub_list:
+                if isinstance(each_sub, Subscription):
+                    self._subscription_list.append(each_sub)
+                else:
+                    raise ValueError("Invalid Subscription")
         else:
-            raise ValueError("Invalid Subscription")
+            raise ValueError("Subscription objects should be in a list")
             
     @property
     def budget(self):

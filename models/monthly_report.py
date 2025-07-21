@@ -7,7 +7,6 @@ class MonthlyReport(Report):
     Represents a monthly report generated for a user.
     Attributes:
         month (int): The month of the report (1-12).
-        year (int): The year of the report.
     """
     def __init__(self, date_report_generated, total_amount, report_data, user, month):
         super().__init__(date_report_generated, total_amount, report_data, user)
@@ -33,15 +32,22 @@ class MonthlyReport(Report):
         subscriptions = []
         for sub in self.user.subscription_list:
             if sub.active_status:
-                subscriptions.append({
-                    "name": sub.service_name,
-                    "price": sub.subscription_price
-                })
+                if sub.billing_frequency == "Yearly":
+                    subscriptions.append({
+                        "name": sub.service_name,
+                        "price": (sub.subscription_price / 12)
+                    })
+                else:
+                    subscriptions.append({
+                        "name": sub.service_name,
+                        "price": sub.subscription_price
+                    })
         
         # Calculating the sum of amount of all the subscriptions
         grand_total = 0
         for i in subscriptions:
             grand_total += i["price"]
+            
         self.total_amount = grand_total
         
         budget_amount = self.user.budget.monthly_budget_amount
@@ -72,3 +78,4 @@ class MonthlyReport(Report):
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")
             return {"error": str(e)}
+

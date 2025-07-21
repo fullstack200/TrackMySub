@@ -87,5 +87,3 @@ def delete_budget(username):
         cursor.close()
     except Exception as e:
         print(f"Error deleting budget: {e}")
-
-update_budget({"total_amount_paid_monthly":80.00}, "budg01")

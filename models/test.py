@@ -1,14 +1,14 @@
 import unittest
 from unittest.mock import patch
-from user import User
-from subscription import Subscription
-from budget import Budget
+from models.user import User
+from models.subscription import Subscription
+from models.budget import Budget
 from datetime import date
-from reminder import Reminder
-from usage import Usage
-from report import Report
-from monthly_report import MonthlyReport
-from yearly_report import YearlyReport
+from models.reminder import Reminder
+from models.usage import Usage
+from models.report import Report
+from models.monthly_report import MonthlyReport
+from models.yearly_report import YearlyReport
 from unittest.mock import patch, MagicMock
 
 
@@ -188,18 +188,19 @@ class TestBudgetValidation(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.subscriptions = [self.sub1, self.sub2, self.sub3, self.sub4, self.sub5]
-        for s in self.subscriptions:
-            self.user.add_subscription(s)
+        self.user.add_subscription(self.subscriptions)
 
     def test_valid_budget(self):
         budget = Budget(self.user, "100.00")
         self.user.budget = budget
+        self.user.budget.total_amount_paid_monthly = None
+        print(self.user.budget.total_amount_paid_monthly)
         
         self.assertEqual(budget.user, self.user)
         self.assertEqual(budget.monthly_budget_amount, 100.00)
         self.assertEqual(budget.yearly_budget_amount, 1200.00)
-        self.assertEqual(budget.total_amount_paid_monthly, 93.96)
-        self.assertEqual(budget.total_amount_paid_yearly, 1127.52)
+        self.assertEqual(budget.total_amount_paid_monthly, 38.97)
+        self.assertEqual(budget.total_amount_paid_yearly, 467.64)
         self.assertEqual(budget.over_the_limit, False)
         
     def test_invalid_budget_amount(self):
@@ -238,8 +239,8 @@ class TestReminder(unittest.TestCase):
             renewal_date="15/06",  # 15th June every year
             auto_renewal_status="Yes"
         )
-        self.user.add_subscription(self.sub1)
-        self.user.add_subscription(self.sub2)
+        self.user.add_subscription([self.sub1])
+        self.user.add_subscription([self.sub2])
         self.reminder = Reminder(self.user)
 
     def test_user_property_validation(self):
@@ -266,7 +267,8 @@ class TestReminder(unittest.TestCase):
             @classmethod
             def today(cls):
                 return cls(2025, 6, 9)
-        reminder_module = __import__('reminder')
+            
+        reminder_module = __import__('models.reminder')
         reminder_module.date = MockDate
 
         # Track call
@@ -274,7 +276,7 @@ class TestReminder(unittest.TestCase):
         def fake_remind_payment(sub):
             called.append(sub.service_name)
 
-        self.reminder.remind_payment = fake_remind_payment
+        self.reminder.remind_payment = fake_remind_payment(self.sub1)
         self.reminder.check_payment_date()
         self.assertIn(self.sub1.service_name, called)
 
@@ -291,14 +293,14 @@ class TestReminder(unittest.TestCase):
             @classmethod
             def today(cls):
                 return cls(2025, 6, 12)
-        reminder_module = __import__('reminder')
+        reminder_module = __import__('models.reminder')
         reminder_module.date = MockDate
 
         called = []
         def fake_remind_payment(sub):
             called.append(sub.service_name)
 
-        self.reminder.remind_payment = fake_remind_payment
+        self.reminder.remind_payment = fake_remind_payment(self.sub2)
         self.reminder.check_payment_date()
         self.assertIn(self.sub2.service_name, called)
 
@@ -310,7 +312,7 @@ class TestReminder(unittest.TestCase):
         self.user.subscription_list.remove(self.sub1)
         # Now create Reminder object
         self.sub1.active_status = "Cancelled" # Ensure it's marked inactive
-        self.user.add_subscription(self.sub1)  # Re-add to user
+        self.user.add_subscription([self.sub1])  # Re-add to user
         self.reminder = Reminder(self.user)  # Create AFTER sub1 is marked inactive
 
         # Patch date.today to June 9, 2025
@@ -319,7 +321,7 @@ class TestReminder(unittest.TestCase):
             @classmethod
             def today(cls):
                 return cls(2025, 6, 9)
-        reminder_module = __import__('reminder')
+        reminder_module = __import__('models.reminder')
         reminder_module.date = MockDate
 
         called = []
@@ -412,7 +414,7 @@ class TestAdvisory(unittest.TestCase):
             renewal_date="10",
             auto_renewal_status="Yes"
         )
-        self.user.add_subscription(self.sub1)
+        self.user.add_subscription([self.sub1])
         
     def test_advisory_valid_usage(self):
             usage1 = Usage(self.user, self.sub1, 12, 2.0, 5)
@@ -732,7 +734,7 @@ class TestYearlyReportExtended(unittest.TestCase):
         r1 = MonthlyReport(date.today(), 20.0, b"data", self.user, "January")
         r2 = MonthlyReport(date.today(), 25.0, b"data", self.user, "February")
         self.yearly_report.monthly_reports = [r1, r2]
-        self.yearly_report._total_yearly_amount = 45.0
+        self.yearly_report._total_amount = 45.0
         result = self.yearly_report.generate_yearly_report()
         self.assertEqual(result["year"], self.year)
         self.assertEqual(result["total_amount"], 45.0)

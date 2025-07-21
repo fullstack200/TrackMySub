@@ -79,10 +79,13 @@ class Budget:
             self._total_amount_paid_monthly = 0
             subscriptions = self.user.subscription_list
             for sub in subscriptions:
-                if sub.billing_frequency == "Monthly":
-                    self._total_amount_paid_monthly += sub.subscription_price
-                elif sub.billing_frequency == "Yearly":
-                    self._total_amount_paid_monthly += (sub.subscription_price / 12)
+                if sub.active_status == True:
+                    if sub.billing_frequency == "Monthly":
+                        self._total_amount_paid_monthly += sub.subscription_price
+                    elif sub.billing_frequency == "Yearly":
+                        self._total_amount_paid_monthly += (sub.subscription_price / 12)
+                else:
+                    continue
             self._total_amount_paid_monthly = float(self._total_amount_paid_monthly)
         else:
             raise ValueError("Total amount paid monthly cannot be set directly. It is calculated based on subscriptions.")
@@ -90,18 +93,11 @@ class Budget:
     @property
     def total_amount_paid_yearly(self):
         return self._total_amount_paid_yearly
-
+    
     @total_amount_paid_yearly.setter
     def total_amount_paid_yearly(self, value):
         if value is None:
-            self._total_amount_paid_yearly = 0
-            subscriptions = self.user.subscription_list
-            for sub in subscriptions:
-                if sub.billing_frequency == "Yearly":
-                    self._total_amount_paid_yearly += sub.subscription_price
-                elif sub.billing_frequency == "Monthly":
-                    self._total_amount_paid_yearly += (sub.subscription_price * 12)
-            self._total_amount_paid_yearly = float(self._total_amount_paid_yearly)
+            self._total_amount_paid_yearly = self.total_amount_paid_monthly * 12
         else:
             raise ValueError("Total amount paid yearly cannot be set directly. It is calculated based on subscriptions.")
         

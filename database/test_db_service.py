@@ -14,13 +14,13 @@ from models.yearly_report import YearlyReport
 from models.reminder import Reminder
 
 # import necessary database services
-from user_db_service import fetch_user, insert_user, update_user, delete_user
-from subscription_db_service import get_latest_subscription_id, fetch_subscription, insert_subscription, update_subscription, delete_subscription
-from budget_db_service import get_latest_budget_id, fetch_budget, insert_budget, update_budget, delete_budget
-from usage_db_service import get_latest_usage_id, fetch_usage, insert_usage, update_usage, delete_usage
-from monthly_report_db_service import get_latest_monthly_report_id, fetch_monthly_report, insert_monthly_report, delete_monthly_report
-from yearly_report_db_service import get_latest_yearly_report_id, fetch_yearly_report, insert_yearly_report, delete_yearly_report
-from reminder_db_service import insert_reminder_acknowledgements, delete_reminder_acknowledgement
+from database.user_db_service import fetch_user, insert_user, update_user, delete_user
+from database.subscription_db_service import get_latest_subscription_id, fetch_specific_subscription, insert_subscription, update_subscription, delete_subscription
+from database.budget_db_service import get_latest_budget_id, fetch_budget, insert_budget, update_budget, delete_budget
+from database.usage_db_service import get_latest_usage_id, fetch_usage, insert_usage, update_usage, delete_usage
+from database.monthly_report_db_service import get_latest_monthly_report_id, fetch_monthly_report, insert_monthly_report, delete_monthly_report
+from database.yearly_report_db_service import get_latest_yearly_report_id, fetch_yearly_report, insert_yearly_report, delete_yearly_report
+from database.reminder_db_service import insert_reminder_acknowledgements, delete_reminder_acknowledgement
 
 class TestUserDBService(unittest.TestCase):
     def setUp(self):
@@ -78,19 +78,19 @@ class TestSubscriptionDBService(unittest.TestCase):
         delete_user(self.user.username)
 
     def test_insert_and_fetch_subscription(self):
-        fetched = fetch_subscription(self.user.username, self.subscription.service_name)
+        fetched = fetch_specific_subscription(self.user.username, self.subscription.service_name)
         self.assertIsNotNone(fetched) 
         self.assertEqual(fetched.service_name, self.subscription.service_name)
         self.assertEqual(fetched.subscription_price, float(self.subscription.subscription_price))
         
     def test_update_subscription(self):
         update_subscription({"plan_type": "Basic"}, self.user.username, self.subscription.service_name)
-        updated = fetch_subscription(self.user.username, self.subscription.service_name)
+        updated = fetch_specific_subscription(self.user.username, self.subscription.service_name)
         self.assertEqual(updated.plan_type, "Basic")
 
     def test_delete_subscription(self):
         delete_subscription(self.user.username, self.subscription.service_name)
-        deleted = fetch_subscription(self.user.username, self.subscription.service_name)
+        deleted = fetch_specific_subscription(self.user.username, self.subscription.service_name)
         self.assertIsNone(deleted)
         # Re-insert for tearDown
         insert_subscription(self.subscription, self.test_subscription_id, self.user.username)

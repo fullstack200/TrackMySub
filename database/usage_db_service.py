@@ -1,7 +1,7 @@
 from database.db_connection import db_connection
 from models.usage import Usage
 from database.user_db_service import fetch_user
-from database.subscription_db_service import fetch_subscription
+from database.subscription_db_service import fetch_specific_subscription
 
 """
 usage_db_service.py
@@ -61,7 +61,7 @@ def fetch_usage(username, service_name):
         cursor.close()
         if result:
             user = fetch_user(result[0])
-            subscription = fetch_subscription(result[0], service_name)
+            subscription = fetch_specific_subscription(result[0], service_name)
             times_used_per_month, session_duration_hours, benefit_rating = result[2:]
             return Usage(user, subscription, times_used_per_month, session_duration_hours, benefit_rating)
         else:
