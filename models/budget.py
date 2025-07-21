@@ -148,4 +148,3 @@ class Budget:
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")
             return None
-
