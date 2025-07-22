@@ -1,0 +1,48 @@
+import smtplib
+from email.message import EmailMessage
+import os
+
+def lambda_handler(event, context):
+    try:
+        monthly_budget = event['monthly_budget_amount']
+        yearly_budget = event['yearly_budget_amount']
+        total_paid_monthly = event['total_amount_paid_monthly']
+        total_paid_yearly = event['total_amount_paid_yearly']
+        monthly_diff = event['monthly_difference']
+        yearly_diff = event['yearly_difference']
+        username = event['username']
+        
+        email_to = event['email_to']
+        subject = event['subject']
+        body = (
+            f"Hello {username},\n\n"
+            f"Your subscription spending has exceeded your budget limits.\n\n"
+            f"Monthly Budget: ${monthly_budget}\n"
+            f"Total Paid Monthly: ${total_paid_monthly}\n"
+            f"Monthly Difference: ${monthly_diff}\n\n"
+            f"Yearly Budget: ${yearly_budget}\n"
+            f"Total Paid Yearly: ${total_paid_yearly}\n"
+            f"Yearly Difference: ${yearly_diff}\n\n"
+            "Please review your subscriptions.\n\n"
+            "Team Trackmysubs"
+        )
+        email_from = 'fullstackdeveloper404@gmail.com'
+        password = os.environ['password']
+
+        msg = EmailMessage()
+        msg['Subject'] = subject
+        msg['From'] = email_from
+        msg['To'] = email_to
+        msg.set_content(body)
+
+        smtp_server = 'smtp.gmail.com'
+        port = 587
+
+        with smtplib.SMTP(smtp_server, port) as server:
+            server.starttls()
+            server.login(email_from, password)
+            server.send_message(msg)
+            print("Email sent successfully")
+        return {'status': 'Email sent'}
+    except Exception as e:
+        return {'status': 'Error', 'message': str(e)}
