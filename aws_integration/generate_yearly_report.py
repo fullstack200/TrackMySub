@@ -42,7 +42,7 @@ def lambda_handler(event, context):
 
     c.setFont("Montserrat", 12)
     c.drawString(280, 654, str(event['year'])) # e.g., 2025
-    c.drawString(280, 630, str(date.today())) # e.g., "25/06/2025"
+    c.drawString(280, 630, event['date_generated']) # e.g., "25/06/2025"
 
     y = 510
     for idx, month in enumerate(event['monthly_reports'], start=1):

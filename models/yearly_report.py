@@ -102,6 +102,7 @@ class YearlyReport(Report):
             
         payload = {
             "year": self.year,
+            "date_report_generated": self.date_report_generated.strftime('%Y-%m-%d'),
             "monthly_reports": monthly_reports_data,
             "yearly_budget_amount": yearly_budget_amount,
             "grand_total": self.total_amount,
