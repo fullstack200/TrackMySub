@@ -35,24 +35,17 @@ class MonthlyReport(Report):
                 if sub.billing_frequency == "Yearly":
                     subscriptions.append({
                         "name": sub.service_name,
-                        "price": (sub.subscription_price / 12)
+                        "price": round(float(sub.subscription_price / 12), 2)
                     })
                 else:
                     subscriptions.append({
                         "name": sub.service_name,
-                        "price": sub.subscription_price
+                        "price": round(float(sub.subscription_price), 2)
                     })
         
-        # Calculating the sum of amount of all the subscriptions
-        grand_total = 0
-        for i in subscriptions:
-            grand_total += i["price"]
-            
-        self.total_amount = grand_total
-        
         budget_amount = self.user.budget.monthly_budget_amount
-        
-        if grand_total > budget_amount:
+
+        if self.total_amount > budget_amount:
             note = "Your subscriptions amount has exceeded your monthly budget! Please verify your subscriptions."
         else:
             note = "Your subscriptions amount is within your monthly budget."
@@ -63,7 +56,7 @@ class MonthlyReport(Report):
             "subscriptions": subscriptions,
             "month": self.month,
             "date_generated": self.date_report_generated.strftime("%d/%m/%Y"),
-            "grand_total":grand_total,
+            "grand_total":self.total_amount,
             "budget": budget_amount,
             "note":note
         }
@@ -75,6 +68,7 @@ class MonthlyReport(Report):
             )
             result = json.loads(response['Payload'].read())
             return result
+            
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")
             return {"error": str(e)}

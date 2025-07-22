@@ -3,8 +3,8 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from database.db_connection import db_connection
 from models.budget import Budget
-from models.user import User
 from database.user_db_service import fetch_user
+from database.subscription_db_service import fetch_all_subscription
 
 """
 budget_db_service.py
@@ -48,6 +48,8 @@ def fetch_budget(username):
         cursor.close()
         if result:
             user = fetch_user(result[0])
+            subs = fetch_all_subscription(user.username)
+            user.add_subscription(subs)
             return Budget(user, str(result[1]))
         else:
             return None
@@ -87,3 +89,4 @@ def delete_budget(username):
         cursor.close()
     except Exception as e:
         print(f"Error deleting budget: {e}")
+

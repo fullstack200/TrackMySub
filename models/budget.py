@@ -56,7 +56,7 @@ class Budget:
         elif not isinstance(eval(monthly_budget_amount), float):
             raise ValueError("Enter budget amount in 00.00 format. Example: 100.00 dollars")
         else:
-            self._monthly_budget_amount = float(monthly_budget_amount)
+            self._monthly_budget_amount = round(float(monthly_budget_amount), 2)
             
     @property
     def yearly_budget_amount(self):
@@ -86,7 +86,7 @@ class Budget:
                         self._total_amount_paid_monthly += (sub.subscription_price / 12)
                 else:
                     continue
-            self._total_amount_paid_monthly = float(self._total_amount_paid_monthly)
+            self._total_amount_paid_monthly = round(float(self._total_amount_paid_monthly), 2)
         else:
             raise ValueError("Total amount paid monthly cannot be set directly. It is calculated based on subscriptions.")
     
