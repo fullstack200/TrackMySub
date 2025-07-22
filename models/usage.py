@@ -1,6 +1,8 @@
+from dataclasses import dataclass, field
 from models.user import User
 from models.subscription import Subscription
 
+@dataclass
 class Usage:
     '''
     Represents the usage details of a user's subscription.
@@ -14,69 +16,25 @@ class Usage:
         reset_usage():
             Resets the usage details to default values (0 for times used and session duration, 0 for benefit rating).
     '''
-    def __init__(self, user, subscription, times_used_per_month, session_duration_hours, benefit_rating):
-        self.user = user
-        self.subscription = subscription
-        self.times_used_per_month = times_used_per_month
-        self.session_duration_hours = session_duration_hours
-        self.benefit_rating = benefit_rating
-        
-    @property
-    def user(self):
-        return self._user 
-    
-    @user.setter
-    def user(self, user):
-        if not isinstance(user, User):
+    user: User
+    subscription: Subscription
+    times_used_per_month: int = field(default=0)
+    session_duration_hours: float = field(default=0.0)
+    benefit_rating: int = field(default=0)
+
+    def __post_init__(self):
+        if not isinstance(self.user, User):
             raise TypeError("Invalid user")
-        else:
-            self._user = user
-    
-    @property
-    def subscription(self):
-        return self._subscription
-    
-    @subscription.setter
-    def subscription(self, subscription):
-        if not isinstance(subscription, Subscription):
+        if not isinstance(self.subscription, Subscription):
             raise TypeError("Invalid subscription")
-        else:
-            self._subscription = subscription
-            
-    @property
-    def times_used_per_month(self):
-        return self._times_used_per_month
-    
-    @times_used_per_month.setter
-    def times_used_per_month(self, times_used_per_month):
-        try:
-            self._times_used_per_month = int(times_used_per_month)
-        except ValueError:
-            raise ValueError("Times used per month should be a number") 
-        
-    @property
-    def session_duration_hours(self):
-        return self._session_duration_hours
-    
-    @session_duration_hours.setter
-    def session_duration_hours(self, session_duration_hours):
-        try:
-            self._session_duration_hours = float(session_duration_hours)
-        except ValueError:
+        if not isinstance(self.times_used_per_month, int):
+            raise ValueError("Times used per month should be a number")
+        if not isinstance(self.session_duration_hours, (float, int)):
             raise ValueError("Session duration should be a number")
-        
-    @property
-    def benefit_rating(self):
-        return self._benefit_rating
-    
-    @benefit_rating.setter
-    def benefit_rating(self, benefit_rating):
-        try:
-            if int(benefit_rating) < 1 or int(benefit_rating) > 5:
-                raise ValueError("Benefit rating should be between 1 and 5")
-            self._benefit_rating = int(benefit_rating)
-        except ValueError:
+        if not isinstance(self.benefit_rating, int):
             raise ValueError("Benefit rating should be a number")
+        if not (0 <= self.benefit_rating <= 5):
+            raise ValueError("Benefit rating should be between 1 and 5")
 
     def reset_usage(self):
         """
