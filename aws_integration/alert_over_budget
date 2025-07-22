@@ -1,3 +1,8 @@
+# The function requires the following packages:
+# boto3, smtplib, email, and their dependencies.
+# The function sends an email alert when the user's subscription spending exceeds their budget.
+# The function uses environment variables for sensitive data like email credentials.
+
 import smtplib
 from email.message import EmailMessage
 import os

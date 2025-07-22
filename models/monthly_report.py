@@ -1,6 +1,7 @@
 from models.report import Report
 import json
 import boto3
+import base64
 
 class MonthlyReport(Report):
     """
@@ -67,7 +68,12 @@ class MonthlyReport(Report):
                 Payload=json.dumps(payload).encode('utf-8')
             )
             result = json.loads(response['Payload'].read())
-            return result
+            pdf_b64 = result.get("pdf", None)
+            if pdf_b64:
+                self.report_data = base64.b64decode(pdf_b64)
+            else:
+                self.report_data = None
+            return
             
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")

@@ -1,3 +1,13 @@
+# The function requires the following packages:
+# boto3, pdfrw, reportlab, and their dependencies.
+# Ensure these packages are included in your Lambda layer or deployment package.
+# The Montserrat font files should be placed in the /opt/fonts directory in the Lambda layer
+# or deployment package.
+# The function generates a monthly report PDF based on the provided event data,
+# merges it with a template PDF, uploads the final PDF to an S3 bucket and returns the pdf back 
+# to the function call.
+
+
 import boto3
 import io
 import pdfrw
