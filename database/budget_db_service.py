@@ -48,6 +48,8 @@ def fetch_budget(username):
         cursor.close()
         if result:
             user = fetch_user(result[0])
+            subs = fetch_all_subscription(user.username)
+            user.add_subscription(subs)
             return Budget(user, str(result[1]))
         else:
             return None

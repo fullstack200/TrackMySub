@@ -100,6 +100,22 @@ class TestBudgetDBService(unittest.TestCase):
         # Insert a user first, since budget requires user
         self.user = User(username="budgettestuser", email_id="budgettest@example.com", password="testpass123")
         insert_user(self.user)
+        
+        #Prepare Subscription
+        self.test_subscription_id = get_latest_subscription_id()
+        self.subscription = Subscription(
+            service_type="Personal",
+            category="Entertainment",
+            service_name="BudgetTestService",
+            plan_type="Premium",
+            active_status="Active",
+            subscription_price="9.99",
+            billing_frequency="Monthly",
+            start_date="01/01/2025",
+            renewal_date="15",
+            auto_renewal_status="Yes"
+        )
+        insert_subscription(self.subscription, self.test_subscription_id, self.user.username)
         # Prepare budget
         self.test_budget_id = get_latest_budget_id()
         self.budget = Budget(user=self.user, monthly_budget_amount="100.0")
@@ -111,6 +127,7 @@ class TestBudgetDBService(unittest.TestCase):
 
     def tearDown(self):
         delete_budget(self.user.username)
+        delete_subscription(self.user.username, self.subscription.service_name)
         delete_user(self.user.username)
 
     def test_insert_and_fetch_budget(self):

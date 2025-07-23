@@ -85,6 +85,7 @@ class YearlyReport(Report):
     def generate_yearly_report(self):
         lambda_client = boto3.client('lambda', region_name='ap-south-1')
         function_name = 'generate-yearly-report'
+        function_name2 = 'send_report'
         monthly_reports_data = []
         for report in self.monthly_reports:
             monthly_reports_data.append({
@@ -122,6 +123,28 @@ class YearlyReport(Report):
                 self.report_data = base64.b64decode(pdf_b64)
             else:
                 self.report_data = None
+            
+            payload2 = {
+                "report_data": pdf_b64,
+                "email_to": getattr(self.user, "email_id", None),
+                "subject": f"Yearly Report for {self.year}",
+                "username": getattr(self.user, "username", None),
+                "body": f"Dear {getattr(self.user, 'username', 'User')},\n\nPlease find attached your yearly report for {self.year}.\n\nBest regards,\nTrackMySubs Team"
+            }
+            
+            try:
+                print("Sending report via Lambda function...")
+                response2 = lambda_client.invoke(
+                    FunctionName=function_name2,
+                    InvocationType='Event',
+                    Payload=json.dumps(payload2).encode('utf-8')
+                )
+                print("Report sent successfully.")
+            
+            except Exception as e:
+                print(f"Error sending report: {e}")
+                return {"error": str(e)}
+            
             return result
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")
