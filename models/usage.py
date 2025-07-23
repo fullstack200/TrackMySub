@@ -33,7 +33,7 @@ class Usage:
             raise ValueError("Session duration should be a number")
         if not isinstance(self.benefit_rating, int):
             raise ValueError("Benefit rating should be a number")
-        if not (0 <= self.benefit_rating <= 5):
+        if not (1 <= self.benefit_rating <= 5):
             raise ValueError("Benefit rating should be between 1 and 5")
 
     def reset_usage(self):

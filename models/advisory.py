@@ -12,8 +12,8 @@ class Advisory:
             Generates personalized advice for the user based on analysis and comparison.
     """
     def __init__(self, user, usage):
-        self._user = user
-        self._usage = usage
+        self.user = user
+        self.usage = usage
         
     @property
     def user(self):
@@ -105,3 +105,5 @@ class Advisory:
             f"- Final score: {final_score:.2f}/10\n"
             f"\n{recommendation}"
         )
+
+

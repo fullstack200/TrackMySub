@@ -122,7 +122,7 @@ class YearlyReport(Report):
                 self.report_data = base64.b64decode(pdf_b64)
             else:
                 self.report_data = None
-            return
+            return result
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")
             return {"error": str(e)} 

@@ -122,6 +122,7 @@ class TestBudgetDBService(unittest.TestCase):
     def test_update_budget(self):
         update_budget({"monthly_budget_amount": 200.0}, self.user.username)
         updated = fetch_budget(self.user.username)
+        
         self.assertEqual(updated.monthly_budget_amount, 200.0)
 
     def test_delete_budget(self):
@@ -157,7 +158,7 @@ class TestUsageDBService(unittest.TestCase):
             user=self.user,
             subscription=self.subscription,
             times_used_per_month=5,
-            session_duration_hours="2.00",
+            session_duration_hours=2.00,
             benefit_rating=4
         )
         insert_usage(self.usage, self.test_usage_id, self.user.username, self.test_subscription_id)
