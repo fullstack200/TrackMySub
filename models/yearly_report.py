@@ -5,6 +5,7 @@ from models.monthly_report import MonthlyReport
 from models.user import User
 from models.report import Report
 import boto3, json
+import base64
 
 class YearlyReport(Report):
     def __init__(self, date_report_generated, total_amount, report_data, user, year):
@@ -81,33 +82,30 @@ class YearlyReport(Report):
         except Exception as e:
             print(f"Error fetching yearly reports: {e}")
             
-
     def generate_yearly_report(self):
         lambda_client = boto3.client('lambda', region_name='ap-south-1')
         function_name = 'generate-yearly-report'
         monthly_reports_data = []
-        grand_total = 0
         for report in self.monthly_reports:
             monthly_reports_data.append({
                 "month_name": report.month,
                 "total_amount": report.total_amount
             })
-            grand_total += report.total_amount
             
         budget = fetch_budget(self.user.username)
         yearly_budget_amount = budget.yearly_budget_amount
         
-        if grand_total > yearly_budget_amount:
+        if self.total_amount > yearly_budget_amount:
             note = "Your subscriptions amount has exceeded your yearly budget! Please verify your subscriptions."
         else:
             note = "Your subscriptions amount is within your yearly budget."
             
         payload = {
             "year": self.year,
-            "total_amount": self.total_amount,
+            "date_report_generated": self.date_report_generated.strftime('%Y-%m-%d'),
             "monthly_reports": monthly_reports_data,
             "yearly_budget_amount": yearly_budget_amount,
-            "grand_total": grand_total,
+            "grand_total": self.total_amount,
             "note": note
             }
         try:
@@ -119,6 +117,11 @@ class YearlyReport(Report):
             )
             # Then we convert the response got from the lambda function to a dictionary
             result = json.loads(response['Payload'].read())
+            pdf_b64 = result.get("pdf", None)
+            if pdf_b64:
+                self.report_data = base64.b64decode(pdf_b64)
+            else:
+                self.report_data = None
             return result
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")

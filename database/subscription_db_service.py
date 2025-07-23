@@ -42,7 +42,7 @@ def get_latest_subscription_id():
 def fetch_all_subscription(username):
     try:
         cursor = db_connection.cursor()
-        query = "SELECT service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status FROM subscription WHERE username = %s;"
+        query = "SELECT subscription_id, service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status FROM subscription WHERE username = %s;"
         cursor.execute(query, (username,))
         result = cursor.fetchall()
         cursor.close()
@@ -52,33 +52,33 @@ def fetch_all_subscription(username):
             subscription_list = []
             for sub in result:
                 sub = list(sub)
-                if sub[4] == 1 or sub[4] is True:
-                    sub[4] = "Active"
+                if sub[5] == 1 or sub[5] is True:
+                    sub[5] = "Active"
                 else:
-                    sub[4] = "Cancelled"
+                    sub[5] = "Cancelled"
                 # Convert start_date from YYYY-MM-DD to DD/MM/YYYY
                 from datetime import datetime
-                if sub[7]:
+                if sub[8]:
                     try:
-                        if isinstance(sub[7], str):
-                            sub[7] = datetime.strptime(sub[7], "%Y-%m-%d").strftime("%d/%m/%Y")
-                        elif hasattr(sub[7], 'strftime'):
-                            sub[7] = sub[7].strftime("%d/%m/%Y")
+                        if isinstance(sub[8], str):
+                            sub[8] = datetime.strptime(sub[8], "%Y-%m-%d").strftime("%d/%m/%Y")
+                        elif hasattr(sub[8], 'strftime'):
+                            sub[8] = sub[8].strftime("%d/%m/%Y")
                     except Exception:
                         pass
                 # Convert renewal_date from YYYY-MM-DD to DD/MM if yearly, else keep as is
-                billing_frequency = sub[6]
-                if billing_frequency == "Yearly" and sub[8] and "-" in str(sub[8]):
+                billing_frequency = sub[7]
+                if billing_frequency == "Yearly" and sub[9] and "-" in str(sub[9]):
                     try:
-                        dt = datetime.strptime(sub[8], "%Y-%m-%d")
-                        sub[8] = dt.strftime("%d/%m")
+                        dt = datetime.strptime(sub[9], "%Y-%m-%d")
+                        sub[9] = dt.strftime("%d/%m")
                     except Exception:
                         pass
-                sub[5] = str(sub[5]) 
-                if sub[9] == 1:
-                    sub[9] = "Yes"
+                sub[6] = str(sub[6]) 
+                if sub[10] == 1:
+                    sub[10] = "Yes"
                 else:
-                    sub[9] = "No"
+                    sub[10] = "No"
                 subscription_list.append(Subscription(*sub))
             return subscription_list
     except Exception as e:
@@ -88,7 +88,7 @@ def fetch_all_subscription(username):
 def fetch_specific_subscription(username, service_name):
     try:
         cursor = db_connection.cursor()
-        query = "SELECT service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status FROM subscription WHERE username = %s AND service_name = %s"
+        query = "SELECT subscription_id, service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status FROM subscription WHERE username = %s AND service_name = %s"
         cursor.execute(query, (username, service_name))
         result = cursor.fetchone()
         cursor.close()
@@ -96,33 +96,33 @@ def fetch_specific_subscription(username, service_name):
             return None
         # Convert active_status from int/bool to string for Subscription
         result = list(result)
-        if result[4] == 1 or result[4] is True:
-            result[4] = "Active"
+        if result[5] == 1 or result[5] is True:
+            result[5] = "Active"
         else:
-            result[4] = "Cancelled"
+            result[5] = "Cancelled"
         # Convert start_date from YYYY-MM-DD to DD/MM/YYYY
         from datetime import datetime
         if result[7]:
             try:
-                if isinstance(result[7], str):
-                    result[7] = datetime.strptime(result[7], "%Y-%m-%d").strftime("%d/%m/%Y")
-                elif hasattr(result[7], 'strftime'):
-                    result[7] = result[7].strftime("%d/%m/%Y")
+                if isinstance(result[8], str):
+                    result[8] = datetime.strptime(result[8], "%Y-%m-%d").strftime("%d/%m/%Y")
+                elif hasattr(result[8], 'strftime'):
+                    result[8] = result[8].strftime("%d/%m/%Y")
             except Exception:
                 pass
         # Convert renewal_date from YYYY-MM-DD to DD/MM if yearly, else keep as is
-        billing_frequency = result[6]
-        if billing_frequency == "Yearly" and result[8] and "-" in str(result[8]):
+        billing_frequency = result[7]
+        if billing_frequency == "Yearly" and result[9] and "-" in str(result[9]):
             try:
-                dt = datetime.strptime(result[8], "%Y-%m-%d")
+                dt = datetime.strptime(result[9], "%Y-%m-%d")
                 result[8] = dt.strftime("%d/%m")
             except Exception:
                 pass
-        result[5] = str(result[5]) 
-        if result[9] == 1:
-            result[9] = "Yes"
+        result[6] = str(result[6]) 
+        if result[10] == 1:
+            result[10] = "Yes"
         else:
-            result[9] = "No"
+            result[10] = "No"
         return Subscription(*result)
     except Exception as e:
         print(f"Error fetching {service_name} subscription: {e}")

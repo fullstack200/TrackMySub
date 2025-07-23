@@ -7,6 +7,7 @@ class Subscription:
     """
     Represents a subscription to a service with various attributes and validation.
     Attributes:
+        subscription_id (str): Unique identifier for the subscription. If None, it will be auto-generated.
         service_type (str): The type of service (e.g., Personal, Professional). Only alphabetic characters and spaces allowed.
         category (str): The category of the service (e.g., Entertainment, Cloud Services). Only alphabetic characters and spaces allowed.
         service_name (str): The name of the service. Cannot be empty.
@@ -21,6 +22,7 @@ class Subscription:
         ValueError: If any attribute is set with an invalid value or format.
     Example:
         subscription = Subscription(
+            subscription_id=None,
             service_type="Personal",
             category="Entertainment",
             service_name="Netflix",
@@ -33,6 +35,7 @@ class Subscription:
             auto_renewal_status="Yes"
         )
     """
+    subscription_id: str = None
     service_type: str
     category: str
     service_name: str
@@ -43,7 +46,19 @@ class Subscription:
     start_date: str
     renewal_date: str
     auto_renewal_status: bool
-
+    
+    @property
+    def subscription_id(self):  
+        return self._subscription_id
+    
+    @subscription_id.setter
+    def subscription_id(self, subscription_id):
+        from database.subscription_db_service import get_latest_subscription_id
+        if subscription_id is None:
+            self._subscription_id = get_latest_subscription_id()
+        else:
+            self._subscription_id = subscription_id
+        
     @property
     def service_type(self):
         return self._service_type

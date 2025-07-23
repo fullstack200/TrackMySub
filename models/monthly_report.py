@@ -1,6 +1,7 @@
 from models.report import Report
 import json
 import boto3
+import base64
 
 class MonthlyReport(Report):
     """
@@ -67,6 +68,11 @@ class MonthlyReport(Report):
                 Payload=json.dumps(payload).encode('utf-8')
             )
             result = json.loads(response['Payload'].read())
+            pdf_b64 = result.get("pdf", None)
+            if pdf_b64:
+                self.report_data = base64.b64decode(pdf_b64)
+            else:
+                self.report_data = None
             return result
             
         except Exception as e:

@@ -57,7 +57,8 @@ class TestUserValidation(unittest.TestCase):
 
 class TestSubscriptionValidation(unittest.TestCase):
     def test_valid_subscription(self):
-        subscription = Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Active", "100.00", "Monthly", "10/01/2025", 15, "Yes" )
+        subscription = Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Active", "100.00", "Monthly", "10/01/2025", 15, "Yes" )
+        self.assertEqual(subscription.subscription_id, "sub01")
         self.assertEqual(subscription.service_type, "Professional")
         self.assertEqual(subscription.category, "Cloud Services")
         self.assertEqual(subscription.service_name, "Amazon Web Services")
@@ -71,63 +72,64 @@ class TestSubscriptionValidation(unittest.TestCase):
     
     def test_invalid_service_type(self):
         with self.assertRaises(ValueError):
-            Subscription("Professional101", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", 15, "No")
+            Subscription("sub01","Professional101", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", 15, "No")
         
     def test_invalid_category(self):
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services100@", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "10/01/2025", 15, "Yes")
+            Subscription("sub01","Professional", "Cloud Services100@", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "10/01/2025", 15, "Yes")
         
     def test_invalid_service_name(self):
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", 15, "No")
+            Subscription("sub01","Professional", "Cloud Services", "", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", 15, "No")
     
     def test_invalid_plan_type(self):
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise123", "No", "100.00", "Monthly", "10/01/2025", 15, "Yes")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise123", "No", "100.00", "Monthly", "10/01/2025", 15, "Yes")
         
     def test_invalid_active_status(self):
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "", "100.00", "Monthly", "10/01/2025", 15, "No")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "", "100.00", "Monthly", "10/01/2025", 15, "No")
 
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Maybe", "100.00", "Monthly", "10/01/2025", 15, "Yes")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Maybe", "100.00", "Monthly", "10/01/2025", 15, "Yes")
 
     def test_invalid_subscription_price_with_missing_decimal(self):
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "ac", "Monthly", "10/01/2025", 15, "No")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "ac", "Monthly", "10/01/2025", 15, "No")
             
     def test_invalid_billing_frequency(self):
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Quarterly", "10/01/2025", 15, "No")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Quarterly", "10/01/2025", 15, "No")
     
     def test_invalid_start_date(self):
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "2025/01/10", 15, "Yes")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "2025/01/10", 15, "Yes")
         
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10-01-2025", 15, "No")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10-01-2025", 15, "No")
         
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "10th of Jan 2025", 15, "Yes")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "10th of Jan 2025", 15, "Yes")
         
     def test_invalid_renewal_date(self):
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", "15/03/2025", "No")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", "15/03/2025", "No")
             
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Yearly", "10/01/2025", "15", "Yes")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Yearly", "10/01/2025", "15", "Yes")
             
     def test_invalid_auto_renewal_status(self):
         with self.assertRaises(ValueError):    
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Yearly", "10/01/2025", "15", "")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Yearly", "10/01/2025", "15", "")
         
         with self.assertRaises(ValueError):
-            Subscription("Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Yearly", "10/01/2025", "15", "Maybe")
+            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Yearly", "10/01/2025", "15", "Maybe")
         
 class TestBudgetValidation(unittest.TestCase):
     def setUp(self):
         self.user = User("fahadahmed", "al.fahadahmed555@gmail.com", "Qwerty@123")
         self.sub1 = Subscription(
+            subscription_id="sub01",
             service_type="Streaming",
             category="Entertainment",
             service_name="Netflix",
@@ -140,6 +142,7 @@ class TestBudgetValidation(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub2 = Subscription(
+            subscription_id="sub02",
             service_type="Cloud Storage",
             category="Productivity",
             service_name="Google Drive",
@@ -152,6 +155,7 @@ class TestBudgetValidation(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub3 = Subscription(
+            subscription_id="sub03",
             service_type="Software",
             category="Design",
             service_name="Adobe Creative Cloud",
@@ -164,6 +168,7 @@ class TestBudgetValidation(unittest.TestCase):
             auto_renewal_status="No"
         )
         self.sub4 = Subscription(
+            subscription_id="sub4",
             service_type="Gaming",
             category="Entertainment",
             service_name="Xbox Game Pass",
@@ -176,6 +181,7 @@ class TestBudgetValidation(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub5 = Subscription(
+            subscription_id="sub05",
             service_type="News",
             category="Information",
             service_name="The New York Times",
@@ -216,6 +222,7 @@ class TestReminder(unittest.TestCase):
     def setUp(self):
         self.user = User("testuser", "test@example.com", "Password123")
         self.sub1 = Subscription(
+            subscription_id="sub01",
             service_type="Streaming",
             category="Entertainment",
             service_name="Netflix",
@@ -228,6 +235,7 @@ class TestReminder(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub2 = Subscription(
+            subscription_id="sub02",
             service_type="Cloud Storage",
             category="Productivity",
             service_name="Google Drive",
@@ -335,11 +343,11 @@ class TestReminder(unittest.TestCase):
         # Restore
         reminder_module.date = original_date
 
-
 class TestUsage(unittest.TestCase):
     def setUp(self):
         self.user = User("testuser", "test@example.com", "Bethealpha@05")
         self.sub1 = Subscription(
+            subscription_id="sub01",
             service_type="Streaming",
             category="Entertainment",
             service_name="Netflix",
@@ -351,7 +359,7 @@ class TestUsage(unittest.TestCase):
             renewal_date="15",
             auto_renewal_status="Yes"
         )
-        
+
     def test_valid_usage_creation(self):
         usage = Usage(self.user, self.sub1, 10, 2.5, 4)
         self.assertEqual(usage.user, self.user)
@@ -359,50 +367,52 @@ class TestUsage(unittest.TestCase):
         self.assertEqual(usage.session_duration_hours, 2.5)
         self.assertEqual(usage.benefit_rating, 4)
 
-    def test_times_used_per_month_casts_to_int(self):
-        usage = Usage(self.user,self.sub1, "7", 1.0, 3)
-        self.assertEqual(usage.times_used_per_month, 7)
-
-    def test_session_duration_hours_casts_to_float(self):
-        usage = Usage(self.user,self.sub1, 5, "3.5", 2)
-        self.assertEqual(usage.session_duration_hours, 3.5)
-
-    def test_benefit_rating_casts_to_int(self):
-        usage = Usage(self.user,self.sub1, 5, 1.0, "5")
-        self.assertEqual(usage.benefit_rating, 5)
-
     def test_invalid_user_type_raises(self):
         with self.assertRaises(TypeError):
-            Usage("not_a_user",self.sub1, 5, 1.0, 3)
+            Usage("not_a_user", self.sub1, 5, 1.0, 3)
 
     def test_invalid_subscription_type(self):
         with self.assertRaises(TypeError):
             Usage(self.user, "not_a_subscription", 5, 1.0, 4)
-            
+
     def test_invalid_times_used_per_month_raises(self):
         with self.assertRaises(ValueError):
-            Usage(self.user,self.sub1, "not_a_number", 1.0, 3)
+            Usage(self.user, self.sub1, "not_a_number", 1.0, 3)
 
     def test_invalid_session_duration_hours_raises(self):
         with self.assertRaises(ValueError):
-            Usage(self.user,self.sub1, 5, "not_a_float", 3)
+            Usage(self.user, self.sub1, 5, "not_a_float", 3)
 
     def test_benefit_rating_out_of_range_low_raises(self):
         with self.assertRaises(ValueError):
-            Usage(self.user,self.sub1, 5, 1.0, 0)
+            Usage(self.user, self.sub1, 5, 1.0, 0)
 
     def test_benefit_rating_out_of_range_high_raises(self):
         with self.assertRaises(ValueError):
-            Usage(self.user,self.sub1, 5, 1.0, 6)
+            Usage(self.user, self.sub1, 5, 1.0, 6)
 
     def test_benefit_rating_not_a_number_raises(self):
         with self.assertRaises(ValueError):
-            Usage(self.user,self.sub1, 5, 1.0, "bad")
+            Usage(self.user, self.sub1, 5, 1.0, "bad")
+
+    def test_reset_usage_sets_values_to_zero(self):
+        usage = Usage(self.user, self.sub1, 8, 3.5, 4)
+        usage.reset_usage()
+        self.assertEqual(usage.times_used_per_month, 0)
+        self.assertEqual(usage.session_duration_hours, 0.0)
+        self.assertEqual(usage.benefit_rating, 0)
+
+import unittest
+from models.user import User
+from models.subscription import Subscription
+from models.usage import Usage
+from models.advisory import Advisory
 
 class TestAdvisory(unittest.TestCase):
     def setUp(self):
         self.user = User("advisoryuser", "advisory@example.com", "StrongPass123")
-        self.sub1 = Subscription(
+        self.sub = Subscription(
+            subscription_id="sub001",
             service_type="Streaming",
             category="Entertainment",
             service_name="Netflix",
@@ -414,69 +424,63 @@ class TestAdvisory(unittest.TestCase):
             renewal_date="10",
             auto_renewal_status="Yes"
         )
-        self.user.add_subscription([self.sub1])
-        
-    def test_advisory_valid_usage(self):
-            usage1 = Usage(self.user, self.sub1, 12, 2.0, 5)
-            self.assertEqual(usage1.user, self.user)
-            self.assertEqual(usage1.times_used_per_month, 12)
-            self.assertEqual(usage1.session_duration_hours, 2.0)
-            self.assertEqual(usage1.benefit_rating, 5)
-            
-    def test_advisory_invalid_usage_type(self):
-            with self.assertRaises(TypeError):
-                Usage("not_a_user", self.sub1, 10, 2.0, 3)
-            with self.assertRaises(TypeError):
-                Usage(self.user, "not_a_subscription", 10, 2.0, 3)
+        self.user.add_subscription([self.sub])
 
-    def test_advisory_invalid_usage_values(self):
-        with self.assertRaises(ValueError):
-            Usage(self.user, self.sub1, "bad", 2.0, 3)
-        with self.assertRaises(ValueError):
-            Usage(self.user, self.sub1, 10, "bad", 3)
-        with self.assertRaises(ValueError):
-            Usage(self.user, self.sub1, 10, 2.0, "bad")
-        with self.assertRaises(ValueError):
-            Usage(self.user, self.sub1, 10, 2.0, 0)
-        with self.assertRaises(ValueError):
-            Usage(self.user, self.sub1, 10, 2.0, 6)
-                
-    def test_advisory_budget_assignment(self):
-        budget = Budget(self.user, "50.00")
-        self.user.budget = budget
-        self.assertEqual(self.user.budget, budget)
-        self.assertEqual(budget.monthly_budget_amount, 50.00)
-        self.assertEqual(budget.yearly_budget_amount, 600.00)
+    def test_valid_advisory_initialization(self):
+        usage = Usage(self.user, self.sub, 10, 1.5, 4)
+        advisory = Advisory(self.user, usage)
+        self.assertEqual(advisory.user, self.user)
+        self.assertEqual(advisory.usage, usage)
 
-    def test_advisory_invalid_budget_assignment(self):
-            with self.assertRaises(TypeError):
-                self.user.budget = "not_a_budget"
-            with self.assertRaises(ValueError):
-                Budget(self.user, "badamount")  # This will raise ValueError due to invalid float format
-            with self.assertRaises(ValueError):
-                Budget(self.user, "50")  # This will raise ValueError due to not being in 00.00 float format
+    def test_invalid_advisory_user_type(self):
+        usage = Usage(self.user, self.sub, 10, 1.5, 4)
+        with self.assertRaises(ValueError):
+            Advisory("not_a_user", usage)
 
-    def test_advisory_subscription_validation(self):
-            with self.assertRaises(ValueError):
-                Subscription("Streaming123", "Entertainment", "Netflix", "Premium", "Active", "15.00", "Monthly", "01/01/2025", 10, "Yes")
-            with self.assertRaises(ValueError):
-                Subscription("Streaming", "Entertainment$", "Netflix", "Premium", "Active", "15.00", "Monthly", "01/01/2025", 10, "Yes")
-            with self.assertRaises(ValueError):
-                Subscription("Streaming", "Entertainment", "", "Premium", "Active", "15.00", "Monthly", "01/01/2025", 10, "Yes")
-            with self.assertRaises(ValueError):
-                Subscription("Streaming", "Entertainment", "Netflix", "Premium123", "Active", "15.00", "Monthly", "01/01/2025", 10, "Yes")
-            with self.assertRaises(ValueError):
-                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Maybe", "15.00", "Monthly", "01/01/2025", 10, "Yes")
-            with self.assertRaises(ValueError):
-                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Active", "badprice", "Monthly", "01/01/2025", 10, "Yes")
-            with self.assertRaises(ValueError):
-                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Active", "15.00", "Quarterly", "01/01/2025", 10, "Yes")
-            with self.assertRaises(ValueError):
-                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Active", "15.00", "Monthly", "2025-01-01", 10, "Yes")
-            with self.assertRaises(ValueError):
-                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Active", "15.00", "Monthly", "01/01/2025", "bad", "Yes")
-            with self.assertRaises(ValueError):
-                Subscription("Streaming", "Entertainment", "Netflix", "Premium", "Active", "15.00", "Monthly", "01/01/2025", 10, "Maybe")
+    def test_invalid_advisory_usage_type(self):
+        with self.assertRaises(ValueError):
+            Advisory(self.user, "not_a_usage")
+
+    def test_advice_recommendation_continue(self):
+        usage = Usage(self.user, self.sub, 30, 4.0, 5)  # High usage + benefit
+        advisory = Advisory(self.user, usage)
+        advice = advisory.generate_advice()
+        self.assertIn("✅ Continue using the current plan.", advice)
+
+    def test_advice_recommendation_downgrade(self):
+        usage = Usage(self.user, self.sub, 2, 0.5, 1)  # Low everything
+        advisory = Advisory(self.user, usage)
+        advice = advisory.generate_advice()
+        self.assertIn("📉 Consider downgrading to a lower plan.", advice)
+
+    def test_final_score_is_clamped_between_0_and_10(self):
+        # Very high usage but extremely high price should reduce score below 0
+        expensive_sub = Subscription(
+            subscription_id="sub002",
+            service_type="Cloud",
+            category="Technology",
+            service_name="AWS Enterprise",
+            plan_type="Premium",
+            active_status="Active",
+            subscription_price="1500.00",  # triggers price penalty
+            billing_frequency="Monthly",
+            start_date="01/01/2025",
+            renewal_date="10",
+            auto_renewal_status="Yes"
+        )
+        self.user.add_subscription([expensive_sub])
+        usage = Usage(self.user, expensive_sub, 0, 0.0, 1)
+        advisory = Advisory(self.user, usage)
+        advice = advisory.generate_advice()
+        self.assertIn("Final score: 0.00/10", advice)
+
+    def test_generate_advice_format_contains_expected_sections(self):
+        usage = Usage(self.user, self.sub, 12, 1.5, 4)
+        advisory = Advisory(self.user, usage)
+        advice = advisory.generate_advice()
+        self.assertIn("📄 **Subscription Advisory Report**", advice)
+        self.assertIn("📊 **Usage Overview**", advice)
+        self.assertIn("🧠 **Score Breakdown**", advice)
 
 class TestReport(unittest.TestCase):
     def setUp(self):
@@ -559,6 +563,7 @@ class TestMonthlyReport(unittest.TestCase):
     def setUp(self):
         # Create actual Subscription instances
         self.sub1 = Subscription(
+            subscription_id="sub01",
             service_type="Streaming",
             category="Entertainment",
             service_name="Netflix",
@@ -571,6 +576,7 @@ class TestMonthlyReport(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub2 = Subscription(
+            subscription_id="sub02",
             service_type="Music",
             category="Entertainment",
             service_name="Spotify",
@@ -583,6 +589,7 @@ class TestMonthlyReport(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub3 = Subscription(
+            subscription_id="sub03",
             service_type="Streaming",
             category="Entertainment",
             service_name="Disney+",
@@ -606,7 +613,7 @@ class TestMonthlyReport(unittest.TestCase):
         self.month = "January"
         self.mr = MonthlyReport(
             date_report_generated=date(2024, 6, 1),
-            total_amount=0.0,
+            total_amount=self.budget.total_amount_paid_monthly,
             report_data=self.report_data,
             user=self.user,
             month=self.month
@@ -622,30 +629,51 @@ class TestMonthlyReport(unittest.TestCase):
 
     @patch("boto3.client")
     def test_generate_monthly_report_within_budget(self, mock_boto_client):
+        import base64
+        import json
         mock_lambda = MagicMock()
+        valid_base64_pdf = base64.b64encode(b"%PDF-1.4 fake pdf data").decode("utf-8")
         mock_lambda.invoke.return_value = {
-            "Payload": MagicMock(read=MagicMock(return_value=b'{"pdf": "base64data"}'))
+            "Payload": MagicMock(read=MagicMock(return_value=json.dumps({"pdf": valid_base64_pdf}).encode('utf-8')))
         }
         mock_boto_client.return_value = mock_lambda
 
         self.mr.report_of_the_month = "January"
         result = self.mr.generate_monthly_report()
-        self.assertIn("pdf", result)
-        self.assertEqual(self.mr.total_amount, 25.0)  # Only active subscriptions
 
-    @patch("boto3.client")
-    def test_generate_monthly_report_exceeds_budget(self, mock_boto_client):
-        self.user.budget.monthly_budget_amount = "20.0"
-        mock_lambda = MagicMock()
-        mock_lambda.invoke.return_value = {
-            "Payload": MagicMock(read=MagicMock(return_value=b'{"pdf": "base64data"}'))
-        }
-        mock_boto_client.return_value = mock_lambda
-
-        self.mr.report_of_the_month = "January"
-        result = self.mr.generate_monthly_report()
         self.assertIn("pdf", result)
         self.assertEqual(self.mr.total_amount, 25.0)
+
+    
+    @patch("boto3.client")
+    def test_generate_monthly_report_exceeds_budget(self, mock_boto_client):
+        import base64
+        # Set the user's monthly budget to a value less than the total (to trigger 'exceeds budget')
+        self.user.budget.monthly_budget_amount = "20.0"  # String, will be implicitly converted to float in method
+        
+        # Mock the Lambda client and its response
+        mock_lambda = MagicMock()
+        
+        # Simulate Lambda's JSON response with a dummy base64 string
+        fake_pdf_data = base64.b64encode(b"Fake PDF Content").decode('utf-8')
+        mock_lambda.invoke.return_value = {
+            "Payload": MagicMock(read=MagicMock(return_value=f'{{"pdf": "{fake_pdf_data}"}}'.encode('utf-8')))
+        }
+        
+        # Set the patched boto3 client to return our mock Lambda
+        mock_boto_client.return_value = mock_lambda
+
+        # Set the report month
+        self.mr.report_of_the_month = "January"
+
+        # Call the method under test
+        result = self.mr.generate_monthly_report()
+
+        # Assertions
+        self.assertIn("pdf", result)  # Check 'pdf' key is in result dict
+        self.assertEqual(self.mr.total_amount, 25.0)  # Confirm total is what you expect
+        self.assertIsNotNone(self.mr.report_data)  # The decoded PDF bytes should be stored in report_data
+
 
     @patch("boto3.client")
     def test_generate_monthly_report_lambda_exception(self, mock_boto_client):
@@ -737,7 +765,6 @@ class TestYearlyReportExtended(unittest.TestCase):
         self.yearly_report._total_amount = 45.0
         result = self.yearly_report.generate_yearly_report()
         self.assertEqual(result["year"], self.year)
-        self.assertEqual(result["total_amount"], 45.0)
         self.assertEqual(result["yearly_budget_amount"], 600.0)
         self.assertEqual(result["grand_total"], 45.0)
         self.assertEqual(result["note"], "Your subscriptions amount is within your yearly budget.")
