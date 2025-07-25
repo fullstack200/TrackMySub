@@ -1,6 +1,6 @@
 import re
 from datetime import datetime 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass
 class Subscription:
@@ -35,7 +35,7 @@ class Subscription:
             auto_renewal_status="Yes"
         )
     """
-    subscription_id: str = None
+    _subscription_id: str = field(default=None, repr=False)
     service_type: str
     category: str
     service_name: str
@@ -46,19 +46,16 @@ class Subscription:
     start_date: str
     renewal_date: str
     auto_renewal_status: bool
-    
-    @property
-    def subscription_id(self):  
-        return self._subscription_id
-    
-    @subscription_id.setter
-    def subscription_id(self, subscription_id):
-        from database.subscription_db_service import get_latest_subscription_id
-        if subscription_id is None:
+
+    def __post_init__(self):
+        if self._subscription_id is None:
+            from database.subscription_db_service import get_latest_subscription_id
             self._subscription_id = get_latest_subscription_id()
-        else:
-            self._subscription_id = subscription_id
-        
+
+    @property
+    def subscription_id(self):
+        return self._subscription_id
+
     @property
     def service_type(self):
         return self._service_type

@@ -70,12 +70,12 @@ def fetch_usage(username, service_name):
         print(f"Error fetching usage: {e}")
         return None
 
-def insert_usage(usage, usage_id, username, subscription_id):
+def insert_usage(usage, usage_id, user, subscription_id):
     try:
         cursor = db_connection.cursor()
         cursor.execute(
             "INSERT INTO subscriptionusage (usage_id, username, subscription_id, times_used_per_month, session_duration_hours, benefit_rating) VALUES (%s, %s, %s, %s, %s, %s)",
-            (usage_id, username, subscription_id, usage.times_used_per_month, usage.session_duration_hours, usage.benefit_rating)
+            (usage_id, user.username, subscription_id, usage.times_used_per_month, usage.session_duration_hours, usage.benefit_rating)
         )
         db_connection.commit()
         cursor.close()
@@ -105,23 +105,23 @@ def update_usage(dic, username, service_name):
     except Exception as e:
         print(f"Error updating usage: {e}")
 
-def delete_usage(username, service_name):
+def delete_usage(user, subscription_id):
     try:
-        # Fetch subscription_id for the given username and service_name
+        # Fetch subscription_id for the given user.username and subscription_id
         cursor = db_connection.cursor()
         cursor.execute(
-            "SELECT subscription_id FROM subscription WHERE username = %s AND service_name = %s",
-            (username, service_name)
+            "SELECT subscription_id FROM subscription WHERE username = %s AND subscription_id = %s",
+            (user.username, subscription_id)
         )
         sub_result = cursor.fetchone()
         if not sub_result:
-            print(f"No subscription found for service '{service_name}' and user '{username}'")
+            print(f"No subscription found for service '{subscription_id}' and user '{user.username}'")
             cursor.close()
             return
         subscription_id = sub_result[0]
 
         query = "DELETE FROM subscriptionusage WHERE username = %s AND subscription_id = %s"
-        cursor.execute(query, (username, subscription_id))
+        cursor.execute(query, (user.username, subscription_id))
         db_connection.commit()
         cursor.close()
     except Exception as e:

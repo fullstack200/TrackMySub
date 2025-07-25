@@ -1,6 +1,5 @@
 from database.db_connection import db_connection
 from models.subscription import Subscription
-
 """
 subscription_db_service.py
 This module provides services for managing subscription records in the database.
@@ -85,11 +84,11 @@ def fetch_all_subscription(username):
         print(f"Error fetching subscription: {e}")
         return None
         
-def fetch_specific_subscription(username, service_name):
+def fetch_specific_subscription(username, subscription_id):
     try:
         cursor = db_connection.cursor()
-        query = "SELECT subscription_id, service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status FROM subscription WHERE username = %s AND service_name = %s"
-        cursor.execute(query, (username, service_name))
+        query = "SELECT subscription_id, service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status FROM subscription WHERE username = %s AND subscription_id = %s"
+        cursor.execute(query, (username, subscription_id))
         result = cursor.fetchone()
         cursor.close()
         if not result:
@@ -125,10 +124,10 @@ def fetch_specific_subscription(username, service_name):
             result[10] = "No"
         return Subscription(*result)
     except Exception as e:
-        print(f"Error fetching {service_name} subscription: {e}")
+        print(f"Error fetching {subscription_id} subscription: {e}")
         return None
 
-def insert_subscription(subscription, subscription_id, username):
+def insert_subscription(subscription, user):
     try:
         cursor = db_connection.cursor()
         from datetime import datetime
@@ -150,40 +149,89 @@ def insert_subscription(subscription, subscription_id, username):
             renewal_date_sql = renewal_date
         cursor.execute(
             "INSERT INTO subscription (subscription_id, username, service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (subscription_id, username, subscription.service_type, subscription.category, subscription.service_name, subscription.plan_type, subscription.active_status, subscription.subscription_price, subscription.billing_frequency, start_date_sql, renewal_date_sql, subscription.auto_renewal_status)
+            (subscription.subscription_id, user.username, subscription.service_type, subscription.category, subscription.service_name, subscription.plan_type, subscription.active_status, subscription.subscription_price, subscription.billing_frequency, start_date_sql, renewal_date_sql, subscription.auto_renewal_status)
         )
+        ###################################################
+        # Adding the new subscription price to the budget #
+        ###################################################
+        from database.budget_db_service import fetch_budget, update_budget
+        budget = fetch_budget(user.username)
+        budget.over_the_limit = None
+        update_budget({"total_amount_paid_monthly": budget.total_amount_paid_monthly, "total_amount_paid_yearly": budget.total_amount_paid_yearly, "over_the_limit": budget.over_the_limit}, user.username)
+        
+        ##########################################################
+        # Inserting the new subscription into the reminder table #
+        ##########################################################
+        from database.reminder_db_service import fetch_reminder_acknowledgements, insert_reminder_acknowledgements
+        reminder = fetch_reminder_acknowledgements(user)
+        reminder.user_reminder_acknowledged[subscription.service_name] = False
+        insert_reminder_acknowledgements(reminder, user.username)
+                
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error inserting {subscription.service_name} subscription: {e}")
 
-def update_subscription(dic, username, service_name):
+def update_subscription(dic, username, subscription_id):
     try:
         cursor = db_connection.cursor()
         for i, j in dic.items():
-            query = f"UPDATE subscription SET {i} = %s WHERE username = %s AND service_name = %s"
-            cursor.execute(query, (j, username, service_name))
+            if i == "subscription_price":
+                j = float(j)
+            elif i == "active_status":
+                j = 1 if j.lower() == "active" else 0
+            elif i == "auto_renewal_status":
+                j = 1 if j.lower() == "yes" else 0
+            elif i == "start_date":
+                from datetime import datetime
+                if isinstance(j, str) and "/" in j:
+                    j = datetime.strptime(j, "%d/%m/%Y").strftime("%Y-%m-%d")
+            elif i == "renewal_date":
+                from datetime import datetime
+                if isinstance(j, str) and "/" in j:
+                    year = datetime.now().year
+                    j = datetime.strptime(f"{j}/{year}", "%d/%m/%Y").strftime("%Y-%m-%d")
+            query = f"UPDATE subscription SET {i} = %s WHERE username = %s AND subscription_id = %s"
+            cursor.execute(query, (j, username, subscription_id))
+        
+        if "subscription_price" in dic or "active_status" in dic:
+            from database.budget_db_service import fetch_budget, update_budget
+            budget = fetch_budget(username)
+            budget.over_the_limit = None
+            update_budget({"total_amount_paid_monthly": budget.total_amount_paid_monthly, "total_amount_paid_yearly": budget.total_amount_paid_yearly, "over_the_limit": budget.over_the_limit}, username)
         db_connection.commit()
         cursor.close()
     except Exception as e:
-        print(f"Error updating {service_name} subscription: {e}")
+        print(f"Error updating {subscription_id} subscription: {e}")
 
-def delete_subscription(username, service_name):
+def delete_subscription(user, subscription_id):
     try:
         cursor = db_connection.cursor()
-        # First, delete related reminder acknowledgement records
-        # from reminder_db_service import delete_reminder_acknowledgement
-        # # Fetch subscription_id for this username and service_name
-        # cursor.execute("SELECT subscription_id FROM subscription WHERE username = %s AND service_name = %s", (username, service_name))
-        # row = cursor.fetchone()
-        # if row:
-        #     subscription_id = row[0]
-        #     delete_reminder_acknowledgement(username, subscription_id)
-            # Now delete the subscription itself
-        query = "DELETE FROM subscription WHERE username = %s AND service_name = %s"
-        cursor.execute(query, (username, service_name))
+        ##########################################################
+        # First, delete related reminder acknowledgement records #
+        ##########################################################
+        from database.reminder_db_service import delete_reminder_acknowledgement
+        delete_reminder_acknowledgement(user.username, subscription_id)
+        
+        ###########################################
+        # Deleting related usage records (if any) #
+        ###########################################
+        from database.usage_db_service import delete_usage
+        delete_usage(user, subscription_id)
+        
+        query = "DELETE FROM subscription WHERE username = %s AND subscription_id = %s"
+        cursor.execute(query, (user.username, subscription_id))
+        
+        ###################################################
+        # Updating the budget after subscription deletion #
+        ###################################################
+        from database.budget_db_service import fetch_budget, update_budget
+        budget = fetch_budget(user.username)
+        budget.over_the_limit = None
+        update_budget({"total_amount_paid_monthly": budget.total_amount_paid_monthly, "total_amount_paid_yearly": budget.total_amount_paid_yearly, "over_the_limit": budget.over_the_limit}, user.username)
+        
         db_connection.commit()
         cursor.close()
     except Exception as e:
-        print(f"Error deleting {service_name} subscription: {e}")
+        print(f"Error deleting {subscription_id} subscription: {e}")
         

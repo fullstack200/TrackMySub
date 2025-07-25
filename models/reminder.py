@@ -23,11 +23,7 @@ class Reminder:
     '''
     def __init__(self, user):
         self.user = user
-        self.user_reminder_acknowledged = {
-        sub.service_name: False
-        for sub in self.user.subscription_list
-        if getattr(sub, "active_status") == True
-    }
+        self.user_reminder_acknowledged = None
         
     @property
     def user(self):
@@ -47,20 +43,14 @@ class Reminder:
 
     @user_reminder_acknowledged.setter
     def user_reminder_acknowledged(self, value):
-        """
-        Accepts a dict where each key is a str (subscription identifier)
-        and each value is a bool (acknowledged or not).
-        """
-        if not isinstance(value, dict):
-            raise TypeError("user_reminder_acknowledged must be a dict")
-
-        # validate all keys and values
-        for k, v in value.items():
-            if not isinstance(k, str) or not isinstance(v, bool):
-                raise TypeError(
-                    "user_reminder_acknowledged must map str keys to bool values"
-                )
-        self._user_reminder_acknowledged = value
+        if value is None:
+            self._user_reminder_acknowledged = {
+            sub.service_name: False
+            for sub in self.user.subscription_list
+            if getattr(sub, "active_status") == True
+        }
+        else:
+            self._user_reminder_acknowledged = value
 
     def check_payment_date(self):
         today = date.today()

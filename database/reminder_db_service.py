@@ -1,5 +1,5 @@
 from database.db_connection import db_connection
-
+from models.reminder import Reminder
 """
 reminder_db_service.py
 This module provides services for managing reminder acknowledgements in the database.
@@ -40,6 +40,24 @@ def insert_reminder_acknowledgements(reminder, username):
         print("Error inserting reminder acknowledgements:", e)
         db_connection.rollback()
 
+def fetch_reminder_acknowledgements(user):
+    from database.subscription_db_service import fetch_specific_subscription
+    cursor = db_connection.cursor()
+    try:
+        sql = "SELECT subscription_id, acknowledged FROM reminder_acknowledgement WHERE username = %s"
+        cursor.execute(sql, (user.username,))
+        results = cursor.fetchall()
+        reminder_dict = {}
+        for sub in results:
+            sub_obj = fetch_specific_subscription(user.username, sub[0])  # Ensure the subscription exists
+            reminder_dict[sub_obj.service_name] = True if sub[1] else False
+        reminder = Reminder(user)
+        reminder.user_reminder_acknowledged = reminder_dict
+        cursor.close()
+        return reminder
+    except Exception as e:
+        print("Error fetching reminder acknowledgements:", e)
+        
 def delete_reminder_acknowledgement(username, subscription_id):
     cursor = db_connection.cursor()
     try:

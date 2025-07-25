@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from database.db_connection import db_connection
 from models.budget import Budget
 from database.user_db_service import fetch_user
-from database.subscription_db_service import fetch_all_subscription
+
 
 """
 budget_db_service.py
@@ -40,6 +40,7 @@ def get_latest_budget_id():
         return None
 
 def fetch_budget(username):
+    from database.subscription_db_service import fetch_all_subscription
     try:
         cursor = db_connection.cursor()
         query = "SELECT username, monthly_budget_amount FROM budget WHERE username= %s"
