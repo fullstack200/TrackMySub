@@ -240,3 +240,13 @@ def delete_subscription(user, subscription):
     except Exception as e:
         print(f"Error deleting {subscription.service_name} subscription: {e}")
         
+
+def delete_all_subscriptions(user):
+    try:
+        cursor = db_connection.cursor()
+        query = "DELETE FROM subscription WHERE username = %s"
+        cursor.execute(query, (user.username,))
+        db_connection.commit()
+        cursor.close()
+    except  Exception as e:
+        print(f"Error deleting subscriptions for user {user.username}. Exception: {e}")

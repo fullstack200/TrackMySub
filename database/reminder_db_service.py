@@ -34,7 +34,6 @@ def insert_reminder_acknowledgements(reminder):
         print("Error inserting reminder acknowledgements:", e)
         db_connection.rollback()
 
-
 def fetch_reminder_acknowledgement(user, subscription):
     cursor = db_connection.cursor()
     try:
@@ -50,7 +49,7 @@ def fetch_reminder_acknowledgement(user, subscription):
     except Exception as e:
         print("Error fetching reminder acknowledgements:", e)
         return None
-    
+
 def delete_reminder_acknowledgement(user, subscription):
     cursor = db_connection.cursor()
     try:
@@ -63,3 +62,13 @@ def delete_reminder_acknowledgement(user, subscription):
     finally:
         cursor.close()
 
+def delete_all_reminders(user):
+    try:
+        cursor = db_connection.cursor()
+        query = "DELETE FROM reminder_acknowledgement WHERE username = %s"
+        cursor.execute(query, (user.username,))
+        db_connection.commit()
+        cursor.close()
+    except Exception as e:
+        print(f"Error deleting reminders for user {user.username}. Exception: {e}")
+        

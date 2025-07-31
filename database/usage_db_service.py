@@ -90,3 +90,14 @@ def delete_usage(user, subscription):
     except Exception as e:
         print(f"Error deleting usage: {e}")
 
+def delete_all_usages(user):
+    try:
+        cursor = db_connection.cursor()
+        query = "DELETE FROM subscriptionusage WHERE username = %s"
+        cursor.execute(query, (user.username,))
+        db_connection.commit()
+        cursor.close()
+    except Exception as e:
+        print(f"Error deleting usages for user {user.username}. Exception: {e}")
+        
+        

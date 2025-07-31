@@ -54,3 +54,13 @@ def delete_yearly_report(user, yearly_report):
         cursor.close()
     except Exception as e:
         print(f"Error deleting report: {e}")
+
+def delete_all_yearly_reports(user):
+    try:
+        cursor = db_connection.cursor()
+        query = "DELETE FROM yearly_report WHERE username = %s"
+        cursor.execute(query, (user.username,))
+        db_connection.commit()
+        cursor.close()
+    except Exception as e:
+        print(f"Error deleting yearly reports for user {user.username}. Exception: {e}")

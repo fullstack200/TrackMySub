@@ -32,11 +32,11 @@ Functions:
             None
 """
 
-def fetch_user(username):
+def fetch_user(username, password):
     try:
         cursor = db_connection.cursor()
-        query = "SELECT username, email_id, password FROM user WHERE username = %s"
-        cursor.execute(query, (username,))
+        query = "SELECT username, email_id, password FROM user WHERE username = %s AND password = %s"
+        cursor.execute(query, (username, password))
         result = cursor.fetchone()
         cursor.close()
         if result:
