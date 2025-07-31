@@ -36,32 +36,18 @@ def get_latest_usage_id():
         print(f"Error fetching latest usage_id: {e}")
         return None
 
-def fetch_usage(username, service_name):
+def fetch_usage(user, subscription):
     try:
-        # Fetch subscription_id for the given username and service_name
-        cursor = db_connection.cursor()
-        cursor.execute(
-            "SELECT subscription_id FROM subscription WHERE username = %s AND service_name = %s",
-            (username, service_name)
-        )
-        sub_result = cursor.fetchone()
-        if not sub_result:
-            print(f"No subscription found for service '{service_name}' and user '{username}'")
-            cursor.close()
-            return None
-        subscription_id = sub_result[0]
         cursor = db_connection.cursor()
         query = """
             SELECT username, subscription_id, times_used_per_month, session_duration_hours, benefit_rating
             FROM subscriptionusage
             WHERE username = %s AND subscription_id = %s
         """
-        cursor.execute(query, (username, subscription_id))
+        cursor.execute(query, (user.username, subscription.subscription_id))
         result = cursor.fetchone()
         cursor.close()
         if result:
-            user = fetch_user(result[0])
-            subscription = fetch_specific_subscription(result[0], service_name)
             times_used_per_month, session_duration_hours, benefit_rating = result[2:]
             return Usage(user, subscription, times_used_per_month, session_duration_hours, benefit_rating)
         else:
@@ -70,58 +56,35 @@ def fetch_usage(username, service_name):
         print(f"Error fetching usage: {e}")
         return None
 
-def insert_usage(usage, usage_id, user, subscription_id):
+def insert_usage(usage, usage_id, user, subscription):
     try:
         cursor = db_connection.cursor()
         cursor.execute(
             "INSERT INTO subscriptionusage (usage_id, username, subscription_id, times_used_per_month, session_duration_hours, benefit_rating) VALUES (%s, %s, %s, %s, %s, %s)",
-            (usage_id, user.username, subscription_id, usage.times_used_per_month, usage.session_duration_hours, usage.benefit_rating)
+            (usage_id, user.username, subscription.subscription_id, usage.times_used_per_month, usage.session_duration_hours, usage.benefit_rating)
         )
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error inserting usage: {e}")
 
-def update_usage(dic, username, service_name):
+def update_usage(dic, user, subscription):
     try:
         # Fetch subscription_id for the given username and service_name
         cursor = db_connection.cursor()
-        cursor.execute(
-            "SELECT subscription_id FROM subscription WHERE username = %s AND service_name = %s",
-            (username, service_name)
-        )
-        sub_result = cursor.fetchone()
-        if not sub_result:
-            print(f"No subscription found for service '{service_name}' and user '{username}'")
-            cursor.close()
-            return
-        subscription_id = sub_result[0]
-
         for i, j in dic.items():
             query = f"UPDATE subscriptionusage SET {i} = %s WHERE username = %s AND subscription_id = %s"
-            cursor.execute(query, (j, username, subscription_id))
+            cursor.execute(query, (j, user.username, subscription.subscription_id))
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error updating usage: {e}")
 
-def delete_usage(user, subscription_id):
+def delete_usage(user, subscription):
     try:
-        # Fetch subscription_id for the given user.username and subscription_id
         cursor = db_connection.cursor()
-        cursor.execute(
-            "SELECT subscription_id FROM subscription WHERE username = %s AND subscription_id = %s",
-            (user.username, subscription_id)
-        )
-        sub_result = cursor.fetchone()
-        if not sub_result:
-            print(f"No subscription found for service '{subscription_id}' and user '{user.username}'")
-            cursor.close()
-            return
-        subscription_id = sub_result[0]
-
         query = "DELETE FROM subscriptionusage WHERE username = %s AND subscription_id = %s"
-        cursor.execute(query, (user.username, subscription_id))
+        cursor.execute(query, (user.username, subscription.subscription_id))
         db_connection.commit()
         cursor.close()
     except Exception as e:

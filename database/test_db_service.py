@@ -14,13 +14,13 @@ from models.yearly_report import YearlyReport
 from models.reminder import Reminder
 
 # import necessary database services
-from database.user_db_service import fetch_user, insert_user, update_user, delete_user
-from database.subscription_db_service import get_latest_subscription_id, fetch_specific_subscription, insert_subscription, update_subscription, delete_subscription
-from database.budget_db_service import get_latest_budget_id, fetch_budget, insert_budget, update_budget, delete_budget
-from database.usage_db_service import get_latest_usage_id, fetch_usage, insert_usage, update_usage, delete_usage
-from database.monthly_report_db_service import get_latest_monthly_report_id, fetch_monthly_report, insert_monthly_report, delete_monthly_report
-from database.yearly_report_db_service import get_latest_yearly_report_id, fetch_yearly_report, insert_yearly_report, delete_yearly_report
-from database.reminder_db_service import insert_reminder_acknowledgements, delete_reminder_acknowledgement
+from database.user_db_service import *
+from database.subscription_db_service import *
+from database.budget_db_service import *
+from database.usage_db_service import *
+from database.monthly_report_db_service import *
+from database.yearly_report_db_service import *
+from database.reminder_db_service import *
 
 class TestUserDBService(unittest.TestCase):
     def setUp(self):
@@ -30,7 +30,7 @@ class TestUserDBService(unittest.TestCase):
 
     def tearDown(self):
         # Clean up test user
-        delete_user(self.user.username)
+        delete_user(self.user)
 
     def test_insert_and_fetch_user(self):
         fetched_user = fetch_user(self.user.username)
@@ -40,25 +40,23 @@ class TestUserDBService(unittest.TestCase):
         self.assertEqual(fetched_user.password, self.user.password)
 
     def test_update_user(self):
-        update_user({"email_id": "sampletest@gmail.com"}, self.user.username)
+        update_user({"email_id": "sampletest@gmail.com"}, self.user)
         updated_user = fetch_user(self.user.username)
         self.assertEqual(updated_user.email_id, "sampletest@gmail.com")
 
     def test_delete_user(self):
-        delete_user(self.user.username)
+        delete_user(self.user)
         deleted_user = fetch_user(self.user.username)
         self.assertIsNone(deleted_user)
         # Re-insert for tearDown
         insert_user(self.user)
-        
+
+
 class TestSubscriptionDBService(unittest.TestCase):
     def setUp(self):
-        # Insert a user first, since subscription requires username
         self.user = User(username="subtestuser", email_id="subtest@example.com", password="testpass123")
         insert_user(self.user)
-        
-        # Prepare subscription
-        self.test_subscription_id = get_latest_subscription_id()
+
         self.subscription = Subscription(
             service_type="Personal",
             category="Entertainment",
@@ -71,90 +69,112 @@ class TestSubscriptionDBService(unittest.TestCase):
             renewal_date="15",
             auto_renewal_status="Yes"
         )
-        insert_subscription(self.subscription, self.test_subscription_id, self.user.username)
+        
+        self.budget = Budget(self.user, "100.00")
+        insert_budget(self.budget, self.user)
+        
+        insert_subscription(self.user, self.subscription)
+
+        self.usage = Usage(self.user, self.subscription, 6, 2.5, 3)
+        insert_usage(self.usage, get_latest_usage_id(), self.user, self.subscription)
         
     def tearDown(self):
-        delete_subscription(self.user.username, self.subscription.service_name)
-        delete_user(self.user.username)
+        delete_usage(self.user, self.subscription)
+        delete_subscription(self.user, self.subscription)
+        delete_budget(self.user)
+        delete_user(self.user)
 
     def test_insert_and_fetch_subscription(self):
-        fetched = fetch_specific_subscription(self.user.username, self.subscription.service_name)
-        self.assertIsNotNone(fetched) 
+        fetched = fetch_specific_subscription(self.user, self.subscription.subscription_id)
+        self.assertIsNotNone(fetched)
         self.assertEqual(fetched.service_name, self.subscription.service_name)
-        self.assertEqual(fetched.subscription_price, float(self.subscription.subscription_price))
-        
+        self.assertEqual(float(fetched.subscription_price), float(self.subscription.subscription_price))
+
     def test_update_subscription(self):
-        update_subscription({"plan_type": "Basic"}, self.user.username, self.subscription.service_name)
-        updated = fetch_specific_subscription(self.user.username, self.subscription.service_name)
+        update_subscription({"plan_type": "Basic"}, self.user, self.subscription)
+        updated = fetch_specific_subscription(self.user, self.subscription.subscription_id)
         self.assertEqual(updated.plan_type, "Basic")
 
     def test_delete_subscription(self):
-        delete_subscription(self.user.username, self.subscription.service_name)
-        deleted = fetch_specific_subscription(self.user.username, self.subscription.service_name)
+        delete_subscription(self.user, self.subscription)
+        deleted = fetch_specific_subscription(self.user, self.subscription.subscription_id)
         self.assertIsNone(deleted)
+
         # Re-insert for tearDown
-        insert_subscription(self.subscription, self.test_subscription_id, self.user.username)
+        insert_subscription(self.user, self.subscription)
+
+    def test_budget_updates_on_insert(self):
+        budget = fetch_budget(self.user)
+        self.assertIsNotNone(budget)
+        expected_monthly = self.subscription.subscription_price
+        self.assertAlmostEqual(float(budget.total_amount_paid_monthly), expected_monthly)
+
+    def test_reminder_acknowledgement_created(self):
+        reminder = fetch_reminder_acknowledgement(self.user, self.subscription)
+        self.assertIsNotNone(reminder, "Reminder should not be None after subscription is added.")
+        self.assertFalse(reminder.reminder_acknowledged, "Reminder should initially be unacknowledged (False).")
+
+    def test_reminder_acknowledgement_deleted_on_subscription_deletion(self):
+        # Delete the subscription
+        delete_subscription(self.user, self.subscription)
+        # Attempt to fetch reminder after deletion
+        reminder = fetch_reminder_acknowledgement(self.user, self.subscription)
+        self.assertIsNone(reminder, "Reminder should be None after subscription deletion.")
+        # Reinsert for tearDown to work cleanly
+        insert_subscription(self.user, self.subscription)
 
 class TestBudgetDBService(unittest.TestCase):
     def setUp(self):
-        # Insert a user first, since budget requires user
-        self.user = User(username="budgettestuser", email_id="budgettest@example.com", password="testpass123")
+        # Create and insert a test user
+        self.user = User(username="unittestuser", email_id="unittest@example.com", password="testpass123")
         insert_user(self.user)
-        
-        #Prepare Subscription
-        self.test_subscription_id = get_latest_subscription_id()
-        self.subscription = Subscription(
-            service_type="Personal",
-            category="Entertainment",
-            service_name="BudgetTestService",
-            plan_type="Premium",
-            active_status="Active",
-            subscription_price="9.99",
-            billing_frequency="Monthly",
-            start_date="01/01/2025",
-            renewal_date="15",
-            auto_renewal_status="Yes"
+
+        # Create and insert a test budget
+        self.budget = Budget(
+            user = self.user,
+            monthly_budget_amount="100.00"
         )
-        insert_subscription(self.subscription, self.test_subscription_id, self.user.username)
-        # Prepare budget
-        self.test_budget_id = get_latest_budget_id()
-        self.budget = Budget(user=self.user, monthly_budget_amount="100.0")
-        # Set calculated fields for DB
-        self.budget.total_amount_paid_monthly = None
-        self.budget.total_amount_paid_yearly = None
-        self.budget.over_the_limit = None
-        insert_budget(self.budget, self.test_budget_id, self.user.username)
+        insert_budget(self.budget, self.user)
 
     def tearDown(self):
-        delete_budget(self.user.username)
-        delete_subscription(self.user.username, self.subscription.service_name)
-        delete_user(self.user.username)
+        # Delete test budget and user
+        delete_budget(self.user)
+        delete_user(self.user)
 
     def test_insert_and_fetch_budget(self):
-        fetched = fetch_budget(self.user.username)
+        fetched = fetch_budget(self.user)
         self.assertIsNotNone(fetched)
-        self.assertEqual(fetched.monthly_budget_amount, self.budget.monthly_budget_amount)
-        self.assertEqual(fetched.yearly_budget_amount, self.budget.yearly_budget_amount)
+        self.assertEqual(float(fetched.monthly_budget_amount), self.budget.monthly_budget_amount)
+        self.assertEqual(float(fetched.yearly_budget_amount), self.budget.yearly_budget_amount)
 
     def test_update_budget(self):
-        update_budget({"monthly_budget_amount": 200.0}, self.user.username)
-        updated = fetch_budget(self.user.username)
-        
-        self.assertEqual(updated.monthly_budget_amount, 200.0)
+        update_budget({"monthly_budget_amount": 200.0}, self.user)
+        updated = fetch_budget(self.user)
+        self.assertEqual(float(updated.monthly_budget_amount), 200.0)
 
     def test_delete_budget(self):
-        delete_budget(self.user.username)
-        deleted = fetch_budget(self.user.username)
+        delete_budget(self.user)
+        deleted = fetch_budget(self.user)
         self.assertIsNone(deleted)
         # Re-insert for tearDown
-        insert_budget(self.budget, self.test_budget_id, self.user.username)
+        insert_budget(self.budget, self.user)
+
+    def test_budget_updates_on_insert(self):
+        budget = fetch_budget(self.user)
+        self.assertIsNotNone(budget)
+        # Let's say a subscription of 50.0 is inserted and updates the budget
+        subscription_price = 50.00
+        expected_monthly = float(self.budget.total_amount_paid_monthly) + subscription_price
+        # Simulate update
+        update_budget({"total_amount_paid_monthly": expected_monthly}, self.user)
+        updated = fetch_budget(self.user)
+        self.assertAlmostEqual(float(updated.total_amount_paid_monthly), expected_monthly)
 
 class TestUsageDBService(unittest.TestCase):
     def setUp(self):
         # Insert a user and subscription first, since usage requires both
         self.user = User(username="usagetestuser", email_id="usagetest@example.com", password="testpass123")
         insert_user(self.user)
-        self.test_subscription_id = get_latest_subscription_id()
         self.subscription = Subscription(
             service_type="Personal",
             category="Entertainment",
@@ -167,10 +187,13 @@ class TestUsageDBService(unittest.TestCase):
             renewal_date="15",
             auto_renewal_status="Yes"
         )
-        insert_subscription(self.subscription, self.test_subscription_id, self.user.username)
-        # Prepare usage
-        self.test_usage_id = get_latest_usage_id()
         
+        self.budget = Budget(self.user, "100.00")
+        insert_budget(self.budget, self.user)
+        
+        insert_subscription(self.user, self.subscription)
+        
+        self.test_usage_id = get_latest_usage_id()
         self.usage = Usage(
             user=self.user,
             subscription=self.subscription,
@@ -178,42 +201,44 @@ class TestUsageDBService(unittest.TestCase):
             session_duration_hours=2.00,
             benefit_rating=4
         )
-        insert_usage(self.usage, self.test_usage_id, self.user.username, self.test_subscription_id)
+        insert_usage(self.usage, self.test_usage_id, self.user, self.subscription)
 
     def tearDown(self):
-        delete_usage(self.user.username, self.subscription.service_name)
-        delete_subscription(self.user.username, self.subscription.service_name)
-        delete_user(self.user.username)
+        delete_usage(self.user, self.subscription)
+        delete_subscription(self.user, self.subscription)
+        delete_budget(self.user)
+        delete_user(self.user)
 
     def test_insert_and_fetch_usage(self):
-        fetched = fetch_usage(self.user.username, self.subscription.service_name)
+        fetched = fetch_usage(self.user, self.subscription)
         self.assertIsNotNone(fetched)
         self.assertEqual(fetched.times_used_per_month, self.usage.times_used_per_month)
         self.assertEqual(str(fetched.session_duration_hours), str(self.usage.session_duration_hours))
         self.assertEqual(fetched.benefit_rating, self.usage.benefit_rating)
 
     def test_update_usage(self):
-        update_usage({"times_used_per_month": 10}, self.user.username, self.subscription.service_name)
-        updated = fetch_usage(self.user.username, self.subscription.service_name)
+        update_usage({"times_used_per_month": 10}, self.user, self.subscription)
+        updated = fetch_usage(self.user, self.subscription)
         self.assertEqual(updated.times_used_per_month, 10)
 
     def test_delete_usage(self):
-        delete_usage(self.user.username, self.subscription.service_name)
-        deleted = fetch_usage(self.user.username, self.subscription.service_name)
+        delete_usage(self.user, self.subscription)
+        deleted = fetch_usage(self.user, self.subscription)
         self.assertIsNone(deleted)
         # Re-insert for tearDown
-        insert_usage(self.usage, self.test_usage_id, self.user.username, self.test_subscription_id)
+        insert_usage(self.usage, self.test_usage_id, self.user, self.subscription)
         # Update the usage object for re-insertion after deletion
         self.usage.times_used_per_month = 10
         self.test_usage_id = get_latest_usage_id()
-        insert_usage(self.usage, self.test_usage_id, self.user.username, self.test_subscription_id)
+        insert_usage(self.usage, self.test_usage_id, self.user, self.subscription)
 
 class TestReminderDBService(unittest.TestCase):
     def setUp(self):
-        # Insert a user and subscription first, since reminder requires both
+        # Create and insert a test user
         self.user = User(username="remindertestuser", email_id="remindertest@example.com", password="testpass123")
         insert_user(self.user)
-        self.test_subscription_id = get_latest_subscription_id()
+
+        # Create and insert a test subscription
         self.subscription = Subscription(
             service_type="Personal",
             category="Entertainment",
@@ -226,25 +251,34 @@ class TestReminderDBService(unittest.TestCase):
             renewal_date="15",
             auto_renewal_status="Yes"
         )
-        insert_subscription(self.subscription, self.test_subscription_id, self.user.username)
-        # Prepare reminder
-        self.user.subscription_list.append(self.subscription)  # Ensure subscription is in user's list
-        self.reminder = Reminder(self.user)
-        self.reminder.user_reminder_acknowledged = {self.subscription.service_name: False}
-        insert_reminder_acknowledgements(self.reminder, self.user.username)
+        
+        self.budget = Budget(self.user, "100.00")
+        insert_budget(self.budget, self.user)
+        
+        insert_subscription(self.user, self.subscription)
+
+        # Create a reminder instance and insert acknowledgement
+        self.reminder = Reminder(self.user, self.subscription, reminder_acknowledged=False)
+        insert_reminder_acknowledgements(self.reminder)
 
     def tearDown(self):
-        delete_reminder_acknowledgement(self.user.username, self.test_subscription_id)
-        delete_subscription(self.user.username, self.subscription.service_name)
-        delete_user(self.user.username)
+        delete_reminder_acknowledgement(self.user, self.subscription)
+        delete_subscription(self.user, self.subscription)
+        delete_budget(self.user)
+        delete_user(self.user)
 
-    def test_insert_and_delete_reminder_acknowledgement(self):
-        # Test insert (already done in setUp)
-        # Now test delete
-        delete_reminder_acknowledgement(self.user.username, self.test_subscription_id)
-        # No fetch function, so just ensure no exceptions and cleanup
-        self.assertTrue(True)
-        
+    def test_insert_and_fetch_reminder_acknowledgement(self):
+        fetched = fetch_reminder_acknowledgement(self.user, self.subscription)
+        self.assertIsNotNone(fetched)
+        self.assertFalse(fetched.reminder_acknowledged)
+        self.assertEqual(fetched.user.username, self.user.username)
+        self.assertEqual(fetched.subscription.service_name, self.subscription.service_name)
+
+    def test_delete_reminder_acknowledgement(self):
+        delete_reminder_acknowledgement(self.user, self.subscription)
+        fetched = fetch_reminder_acknowledgement(self.user, self.subscription)
+        self.assertIsNone(fetched)
+
 class TestMonthlyReportDBService(unittest.TestCase):
     def setUp(self):
         # Insert a user first, since report requires user
@@ -259,24 +293,24 @@ class TestMonthlyReportDBService(unittest.TestCase):
             user=self.user,
             month=date.today().strftime("%B"),
         )
-        insert_monthly_report(self.report, self.test_report_id, self.user.username)
+        insert_monthly_report(self.report, self.test_report_id, self.user)
 
     def tearDown(self):
-        delete_monthly_report(self.user.username, self.report.month)
-        delete_user(self.user.username)
+        delete_monthly_report(self.user, self.report)
+        delete_user(self.user)
 
     def test_insert_and_fetch_report(self):
-        fetched = fetch_monthly_report(self.user.username, self.report.month)
+        fetched = fetch_monthly_report(self.user, self.report)
         self.assertIsNotNone(fetched)
         self.assertEqual(fetched.user.email_id, self.user.email_id)
         self.assertEqual(fetched.report_data, self.report.report_data)
 
     def test_delete_report(self):
-        delete_monthly_report(self.user.username, self.report.month)
-        deleted = fetch_monthly_report(self.user.username, self.report.month)
+        delete_monthly_report(self.user, self.report)
+        deleted = fetch_monthly_report(self.user, self.report)
         self.assertIsNone(deleted)
         # Re-insert for tearDown
-        insert_monthly_report(self.report, self.test_report_id, self.user.username)
+        insert_monthly_report(self.report, self.test_report_id, self.user)
 
 class TestYearlyReportDBService(unittest.TestCase):
     def setUp(self):
@@ -292,24 +326,24 @@ class TestYearlyReportDBService(unittest.TestCase):
             user=self.user,
             year=date.today().year,
         )
-        insert_yearly_report(self.report, self.test_report_id, self.user.username)
+        insert_yearly_report(self.report, self.test_report_id, self.user)
 
     def tearDown(self):
-        delete_yearly_report(self.user.username, self.report.year)
-        delete_user(self.user.username)
+        delete_yearly_report(self.user, self.report)
+        delete_user(self.user)
 
     def test_insert_and_fetch_report(self):
-        fetched = fetch_yearly_report(self.user.username, self.report.year)
+        fetched = fetch_yearly_report(self.user, self.report)
         self.assertIsNotNone(fetched)
         self.assertEqual(fetched.user.email_id, self.user.email_id)
         self.assertEqual(fetched.report_data, self.report.report_data)
 
     def test_delete_report(self):
-        delete_yearly_report(self.user.username, self.report.year)
-        deleted = fetch_yearly_report(self.user.username, self.report.year)
+        delete_yearly_report(self.user, self.report)
+        deleted = fetch_yearly_report(self.user, self.report)
         self.assertIsNone(deleted)
         # Re-insert for tearDown
-        insert_yearly_report(self.report, self.test_report_id, self.user.username)
+        insert_yearly_report(self.report, self.test_report_id, self.user)
 
 if __name__ == "__main__":
     unittest.main()

@@ -16,12 +16,12 @@ def get_latest_yearly_report_id():
         print(f"Error fetching latest yearly_report_id: {e}")
         return None
 
-def fetch_yearly_report(username, year):
+def fetch_yearly_report(user, yearly_report):
     from models.yearly_report import YearlyReport
     try:
         cursor = db_connection.cursor()
         query = "SELECT date_report_generated, total_amount, report_data, username, year FROM yearly_report WHERE username = %s AND year = %s"
-        cursor.execute(query, (username, year))
+        cursor.execute(query, (user.username, yearly_report.year))
         result = cursor.fetchone()
         cursor.close()
         if result:
@@ -33,23 +33,23 @@ def fetch_yearly_report(username, year):
         print(f"Error fetching report: {e}")
         return None
 
-def insert_yearly_report(report, report_id, username):
+def insert_yearly_report(report, report_id, user):
     try:
         cursor = db_connection.cursor()
         cursor.execute(
             "INSERT INTO yearly_report (yearly_report_id, date_report_generated, total_amount, report_data, username, year) VALUES (%s, %s, %s, %s, %s, %s)",
-            (report_id, report.date_report_generated, report.total_amount, report.report_data, username, report.year)
+            (report_id, report.date_report_generated, report.total_amount, report.report_data, user.username, report.year)
         )
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error inserting report: {e}")
 
-def delete_yearly_report(username, year):
+def delete_yearly_report(user, yearly_report):
     try:
         cursor = db_connection.cursor()
         query = "DELETE FROM yearly_report WHERE username = %s AND year = %s"
-        cursor.execute(query, (username, year))
+        cursor.execute(query, (user.username, yearly_report.year))
         db_connection.commit()
         cursor.close()
     except Exception as e:

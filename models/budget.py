@@ -23,13 +23,13 @@ class Budget:
     Raises:
         ValueError: If invalid values are provided for user or budget amounts, or if calculated properties are set directly.
     """
-    def __init__(self, user, monthly_budget_amount):
+    def __init__(self, user, monthly_budget_amount, yearly_budget_amount=None, total_amount_paid_monthly=None, total_amount_paid_yearly=None, over_the_limit=None):
         self.user = user
         self.monthly_budget_amount = monthly_budget_amount
-        self.yearly_budget_amount = self.monthly_budget_amount * 12
-        self.total_amount_paid_monthly = None
-        self.total_amount_paid_yearly = None
-        self.over_the_limit = None
+        self.yearly_budget_amount = yearly_budget_amount
+        self.total_amount_paid_monthly = total_amount_paid_monthly
+        self.total_amount_paid_yearly = total_amount_paid_yearly
+        self.over_the_limit = over_the_limit
 
     @property
     def user(self):
@@ -52,9 +52,9 @@ class Budget:
         if not monthly_budget_amount:
             raise ValueError("Monthly budget amount cannot be empty")
         elif str(monthly_budget_amount).isalpha():
-            raise ValueError("Monthly budget amount must be a number. Example: 100.0")
+            raise ValueError("Monthly budget amount must be a number. Example: 50.0")
         elif not isinstance(eval(monthly_budget_amount), float):
-            raise ValueError("Enter budget amount in 00.00 format. Example: 100.00 dollars")
+            raise ValueError("Enter budget amount in 00.00 format. Example: 50.00 dollars")
         else:
             self._monthly_budget_amount = round(float(monthly_budget_amount), 2)
             
@@ -65,9 +65,9 @@ class Budget:
     @yearly_budget_amount.setter
     def yearly_budget_amount(self, value):
         if value:
-            self._yearly_budget_amount = self.monthly_budget_amount  * 12
+            self._yearly_budget_amount = value
         else:
-            raise ValueError("Monthly budget amount is not available to calculate yearly budget amount")
+            self.yearly_budget_amount = self.monthly_budget_amount  * 12
 
     @property
     def total_amount_paid_monthly(self):
@@ -88,8 +88,7 @@ class Budget:
                     continue
             self._total_amount_paid_monthly = round(float(self._total_amount_paid_monthly), 2)
         else:
-            raise ValueError("Total amount paid monthly cannot be set directly. It is calculated based on subscriptions.")
-    
+            self._total_amount_paid_monthly = value
     @property
     def total_amount_paid_yearly(self):
         return self._total_amount_paid_yearly
@@ -99,8 +98,8 @@ class Budget:
         if value is None:
             self._total_amount_paid_yearly = self.total_amount_paid_monthly * 12
         else:
-            raise ValueError("Total amount paid yearly cannot be set directly. It is calculated based on subscriptions.")
-        
+            self._total_amount_paid_yearly = value
+            
     @property
     def over_the_limit(self):
         return self._over_the_limit
@@ -113,8 +112,11 @@ class Budget:
             else:
                 self._over_the_limit = False
         else:
-            raise ValueError("Over the limit cannot be set directly. It is calculated based on budget and total amount paid.")
-
+            if value == 0:
+                self._over_the_limit = False
+            else:
+                self._over_the_limit = True
+                
     def alert_over_the_limit(self):
         """
         Invokes an AWS Lambda function to send an alert if the budget is exceeded.

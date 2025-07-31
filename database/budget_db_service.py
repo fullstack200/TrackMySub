@@ -39,55 +39,51 @@ def get_latest_budget_id():
         print(f"Error fetching latest budget_id: {e}")
         return None
 
-def fetch_budget(username):
+def fetch_budget(user):
     from database.subscription_db_service import fetch_all_subscription
     try:
         cursor = db_connection.cursor()
-        query = "SELECT username, monthly_budget_amount FROM budget WHERE username= %s"
-        cursor.execute(query, (username,))
+        query = "SELECT username, monthly_budget_amount, yearly_budget_amount, total_amount_paid_monthly, total_amount_paid_yearly, over_the_limit FROM budget WHERE username= %s"
+        cursor.execute(query, (user.username,))
         result = cursor.fetchone()
         cursor.close()
         if result:
-            user = fetch_user(result[0])
-            subs = fetch_all_subscription(user.username)
-            user.add_subscription(subs)
-            return Budget(user, str(result[1]))
+            return Budget(user, str(result[1]), result[2], result[3], result[4], result[5])
         else:
             return None
     except Exception as e:
         print(f"Error fetching budget: {e}")
         return None
 
-def insert_budget(budget, budget_id, usename):
+def insert_budget(budget, user):
     try:
         cursor = db_connection.cursor()
         cursor.execute(
             "INSERT INTO budget (budget_id, username, monthly_budget_amount, yearly_budget_amount, total_amount_paid_monthly, total_amount_paid_yearly, over_the_limit) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-            (budget_id, usename, budget.monthly_budget_amount, budget.yearly_budget_amount, budget.total_amount_paid_monthly, budget.total_amount_paid_yearly, budget.over_the_limit)
+            (get_latest_budget_id(), user.username, budget.monthly_budget_amount, budget.yearly_budget_amount, budget.total_amount_paid_monthly, budget.total_amount_paid_yearly, budget.over_the_limit)
         )
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error inserting budget: {e}")
 
-def update_budget(dic, username):
+def update_budget(dic, user):
     try:
         cursor = db_connection.cursor()
         for i, j in dic.items():
             query = f"UPDATE budget SET {i} = %s WHERE username = %s"
-            cursor.execute(query, (j, username))
+            cursor.execute(query, (j, user.username))
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error updating budget: {e}")
 
-def delete_budget(username):
+def delete_budget(user):
     try:
         cursor = db_connection.cursor()
         query = "DELETE FROM budget WHERE username = %s"
-        cursor.execute(query, (username,))
+        cursor.execute(query, (user.username,))
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error deleting budget: {e}")
-

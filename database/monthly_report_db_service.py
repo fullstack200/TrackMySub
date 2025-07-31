@@ -16,12 +16,12 @@ def get_latest_monthly_report_id():
         print(f"Error fetching latest monthly_report_id: {e}")
         return None
 
-def fetch_monthly_report(username, month):
+def fetch_monthly_report(user, monthly_report):
     from models.monthly_report import MonthlyReport
     try:
         cursor = db_connection.cursor()
         query = "SELECT date_report_generated, total_amount, report_data, username, month_name FROM monthly_report WHERE username = %s AND month_name = %s"
-        cursor.execute(query, (username, month))
+        cursor.execute(query, (user.username, monthly_report.month))
         result = cursor.fetchone()
         cursor.close()
         if result:
@@ -33,23 +33,23 @@ def fetch_monthly_report(username, month):
         print(f"Error fetching report: {e}")
         return None
 
-def insert_monthly_report(report, report_id, username):
+def insert_monthly_report(report, report_id, user):
     try:
         cursor = db_connection.cursor()
         cursor.execute(
             "INSERT INTO monthly_report (monthly_report_id, date_report_generated, total_amount, report_data, username, month_name) VALUES (%s, %s, %s, %s, %s, %s)",
-            (report_id, report.date_report_generated, report.total_amount, report.report_data, username, report.month)
+            (report_id, report.date_report_generated, report.total_amount, report.report_data, user.username, report.month)
         )
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error inserting report: {e}")
 
-def delete_monthly_report(username, month):
+def delete_monthly_report(user, monthly_report):
     try:
         cursor = db_connection.cursor()
         query = "DELETE FROM monthly_report WHERE username = %s AND month_name = %s"
-        cursor.execute(query, (username, month))
+        cursor.execute(query, (user.username, monthly_report.month))
         db_connection.commit()
         cursor.close()
     except Exception as e:

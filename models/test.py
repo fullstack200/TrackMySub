@@ -57,8 +57,19 @@ class TestUserValidation(unittest.TestCase):
 
 class TestSubscriptionValidation(unittest.TestCase):
     def test_valid_subscription(self):
-        subscription = Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Active", "100.00", "Monthly", "10/01/2025", 15, "Yes" )
-        self.assertEqual(subscription.subscription_id, "sub01")
+        subscription = Subscription(
+        service_type="Professional",
+        category="Cloud Services",
+        service_name="Amazon Web Services",
+        plan_type="Enterprise",
+        active_status="Active",
+        subscription_price="100.00",
+        billing_frequency="Monthly",
+        start_date="10/01/2025",
+        renewal_date=15,
+        auto_renewal_status="Yes"
+        )
+        self.assertEqual(subscription.subscription_id, "sub05")
         self.assertEqual(subscription.service_type, "Professional")
         self.assertEqual(subscription.category, "Cloud Services")
         self.assertEqual(subscription.service_name, "Amazon Web Services")
@@ -72,65 +83,64 @@ class TestSubscriptionValidation(unittest.TestCase):
     
     def test_invalid_service_type(self):
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional101", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", 15, "No")
+            Subscription("sub05", "Professional101", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", 15, "No")
         
     def test_invalid_category(self):
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services100@", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "10/01/2025", 15, "Yes")
+            Subscription("sub05","Professional", "Cloud Services100@", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "10/01/2025", 15, "Yes")
         
     def test_invalid_service_name(self):
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", 15, "No")
+            Subscription("sub05","Professional", "Cloud Services", "", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", 15, "No")
     
     def test_invalid_plan_type(self):
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise123", "No", "100.00", "Monthly", "10/01/2025", 15, "Yes")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise123", "No", "100.00", "Monthly", "10/01/2025", 15, "Yes")
         
     def test_invalid_active_status(self):
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "", "100.00", "Monthly", "10/01/2025", 15, "No")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "", "100.00", "Monthly", "10/01/2025", 15, "No")
 
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Maybe", "100.00", "Monthly", "10/01/2025", 15, "Yes")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Maybe", "100.00", "Monthly", "10/01/2025", 15, "Yes")
 
     def test_invalid_subscription_price_with_missing_decimal(self):
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "ac", "Monthly", "10/01/2025", 15, "No")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "ac", "Monthly", "10/01/2025", 15, "No")
             
     def test_invalid_billing_frequency(self):
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Quarterly", "10/01/2025", 15, "No")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Quarterly", "10/01/2025", 15, "No")
     
     def test_invalid_start_date(self):
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "2025/01/10", 15, "Yes")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "2025/01/10", 15, "Yes")
         
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10-01-2025", 15, "No")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10-01-2025", 15, "No")
         
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "10th of Jan 2025", 15, "Yes")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Monthly", "10th of Jan 2025", 15, "Yes")
         
     def test_invalid_renewal_date(self):
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", "15/03/2025", "No")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Monthly", "10/01/2025", "15/03/2025", "No")
             
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Yearly", "10/01/2025", "15", "Yes")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "No", "100.00", "Yearly", "10/01/2025", "15", "Yes")
             
     def test_invalid_auto_renewal_status(self):
         with self.assertRaises(ValueError):    
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Yearly", "10/01/2025", "15", "")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Yearly", "10/01/2025", "15", "")
         
         with self.assertRaises(ValueError):
-            Subscription("sub01","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Yearly", "10/01/2025", "15", "Maybe")
+            Subscription("sub05","Professional", "Cloud Services", "Amazon Web Services", "Enterprise", "Yes", "100.00", "Yearly", "10/01/2025", "15", "Maybe")
         
 class TestBudgetValidation(unittest.TestCase):
     def setUp(self):
         self.user = User("fahadahmed", "al.fahadahmed555@gmail.com", "Qwerty@123")
         self.sub1 = Subscription(
-            subscription_id="sub01",
-            service_type="Streaming",
+            service_type="Personal",
             category="Entertainment",
             service_name="Netflix",
             plan_type="Premium",
@@ -142,8 +152,7 @@ class TestBudgetValidation(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub2 = Subscription(
-            subscription_id="sub02",
-            service_type="Cloud Storage",
+            service_type="Professional",
             category="Productivity",
             service_name="Google Drive",
             plan_type="Premium",
@@ -155,8 +164,7 @@ class TestBudgetValidation(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub3 = Subscription(
-            subscription_id="sub03",
-            service_type="Software",
+            service_type="Professional",
             category="Design",
             service_name="Adobe Creative Cloud",
             plan_type="All Apps",
@@ -168,8 +176,7 @@ class TestBudgetValidation(unittest.TestCase):
             auto_renewal_status="No"
         )
         self.sub4 = Subscription(
-            subscription_id="sub4",
-            service_type="Gaming",
+            service_type="Personal",
             category="Entertainment",
             service_name="Xbox Game Pass",
             plan_type="Ultimate",
@@ -181,8 +188,7 @@ class TestBudgetValidation(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub5 = Subscription(
-            subscription_id="sub05",
-            service_type="News",
+            service_type="Personal",
             category="Information",
             service_name="The New York Times",
             plan_type="Digital Access",
@@ -200,7 +206,6 @@ class TestBudgetValidation(unittest.TestCase):
         budget = Budget(self.user, "100.00")
         self.user.budget = budget
         self.user.budget.total_amount_paid_monthly = None
-        print(self.user.budget.total_amount_paid_monthly)
         
         self.assertEqual(budget.user, self.user)
         self.assertEqual(budget.monthly_budget_amount, 100.00)
@@ -222,8 +227,7 @@ class TestReminder(unittest.TestCase):
     def setUp(self):
         self.user = User("testuser", "test@example.com", "Password123")
         self.sub1 = Subscription(
-            subscription_id="sub01",
-            service_type="Streaming",
+            service_type="Personal",
             category="Entertainment",
             service_name="Netflix",
             plan_type="Premium",
@@ -235,8 +239,7 @@ class TestReminder(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub2 = Subscription(
-            subscription_id="sub02",
-            service_type="Cloud Storage",
+            service_type="Professional",
             category="Productivity",
             service_name="Google Drive",
             plan_type="Premium",
@@ -249,106 +252,89 @@ class TestReminder(unittest.TestCase):
         )
         self.user.add_subscription([self.sub1])
         self.user.add_subscription([self.sub2])
-        self.reminder = Reminder(self.user)
+        self.reminder1 = Reminder(self.user, self.sub1)
+        self.reminder2 = Reminder(self.user, self.sub2)
 
     def test_user_property_validation(self):
         with self.assertRaises(TypeError):
-            Reminder("not_a_user")
-
-    def test_user_reminder_acknowledged_property(self):
-        # Valid dict
-        self.reminder.user_reminder_acknowledged = {"Netflix": True}
-        self.assertEqual(self.reminder.user_reminder_acknowledged, {"Netflix": True})
-        # Invalid dict
-        with self.assertRaises(TypeError):
-            self.reminder.user_reminder_acknowledged = ["Netflix", True]
-        with self.assertRaises(TypeError):
-            self.reminder.user_reminder_acknowledged = {"Netflix": "yes"}
+            Reminder("not_a_user", self.sub1)
 
     def test_check_payment_date_monthly(self):
         self.sub1.renewal_date = "12"
-        self.reminder.user_reminder_acknowledged = {self.sub1.service_name: False}
+        self.reminder1.reminder_acknowledged = False
 
-        # Patch date.today to June 9, 2025
-        original_date = date
         class MockDate(date):
             @classmethod
             def today(cls):
-                return cls(2025, 6, 9)
-            
-        reminder_module = __import__('models.reminder')
-        reminder_module.date = MockDate
+                return cls(2025, 6, 10)
 
-        # Track call
+        # Patch the date used in the Reminder module
+        original_date = Reminder.__init__.__globals__['date']
+        Reminder.__init__.__globals__['date'] = MockDate
+
         called = []
-        def fake_remind_payment(sub):
-            called.append(sub.service_name)
 
-        self.reminder.remind_payment = fake_remind_payment(self.sub1)
-        self.reminder.check_payment_date()
+        def fake_remind_payment():
+            called.append(self.sub1.service_name)
+
+        self.reminder1.remind_payment = fake_remind_payment
+        self.reminder1.check_payment_date()
         self.assertIn(self.sub1.service_name, called)
 
-        # Restore
-        reminder_module.date = original_date
+        # Restore original date
+        Reminder.__init__.__globals__['date'] = original_date
 
     def test_check_payment_date_yearly(self):
         self.sub2.renewal_date = "15/06"
-        self.reminder.user_reminder_acknowledged = {self.sub2.service_name: False}
+        self.reminder2.reminder_acknowledged = False
 
-        # Patch date.today to June 12, 2025
-        original_date = date
         class MockDate(date):
             @classmethod
             def today(cls):
                 return cls(2025, 6, 12)
-        reminder_module = __import__('models.reminder')
-        reminder_module.date = MockDate
+
+        original_date = Reminder.__init__.__globals__['date']
+        Reminder.__init__.__globals__['date'] = MockDate
 
         called = []
-        def fake_remind_payment(sub):
-            called.append(sub.service_name)
 
-        self.reminder.remind_payment = fake_remind_payment(self.sub2)
-        self.reminder.check_payment_date()
+        def fake_remind_payment():
+            called.append(self.sub2.service_name)
+
+        self.reminder2.remind_payment = fake_remind_payment
+        self.reminder2.check_payment_date()
         self.assertIn(self.sub2.service_name, called)
 
-        # Restore
-        reminder_module.date = original_date
+        Reminder.__init__.__globals__['date'] = original_date
 
     def test_check_payment_date_inactive_subscription(self):
-        # Set status BEFORE creating Reminder object
-        self.user.subscription_list.remove(self.sub1)
-        # Now create Reminder object
-        self.sub1.active_status = "Cancelled" # Ensure it's marked inactive
-        self.user.add_subscription([self.sub1])  # Re-add to user
-        self.reminder = Reminder(self.user)  # Create AFTER sub1 is marked inactive
+        self.sub1.active_status = "Cancelled"  # inactive
+        reminder = Reminder(self.user, self.sub1)
 
-        # Patch date.today to June 9, 2025
-        original_date = date
         class MockDate(date):
             @classmethod
             def today(cls):
                 return cls(2025, 6, 9)
-        reminder_module = __import__('models.reminder')
-        reminder_module.date = MockDate
+
+        original_date = Reminder.__init__.__globals__['date']
+        Reminder.__init__.__globals__['date'] = MockDate
 
         called = []
-        def fake_remind_payment(sub):
-            called.append(sub.service_name)
 
-        self.reminder.remind_payment = fake_remind_payment
-        self.reminder.check_payment_date()
+        def fake_remind_payment():
+            called.append(self.sub1.service_name)
+
+        reminder.remind_payment = fake_remind_payment
+        reminder.check_payment_date()
         self.assertNotIn(self.sub1.service_name, called)
 
-        # Restore
-        reminder_module.date = original_date
-
+        Reminder.__init__.__globals__['date'] = original_date
+        
 class TestUsage(unittest.TestCase):
     def setUp(self):
         self.user = User("testuser", "test@example.com", "Bethealpha@05")
         self.sub1 = Subscription(
-            subscription_id="sub01",
-            service_type="Streaming",
+            service_type="Personal",
             category="Entertainment",
             service_name="Netflix",
             plan_type="Premium",
@@ -412,8 +398,7 @@ class TestAdvisory(unittest.TestCase):
     def setUp(self):
         self.user = User("advisoryuser", "advisory@example.com", "StrongPass123")
         self.sub = Subscription(
-            subscription_id="sub001",
-            service_type="Streaming",
+            service_type="Personal",
             category="Entertainment",
             service_name="Netflix",
             plan_type="Premium",
@@ -456,8 +441,7 @@ class TestAdvisory(unittest.TestCase):
     def test_final_score_is_clamped_between_0_and_10(self):
         # Very high usage but extremely high price should reduce score below 0
         expensive_sub = Subscription(
-            subscription_id="sub002",
-            service_type="Cloud",
+            service_type="Professional",
             category="Technology",
             service_name="AWS Enterprise",
             plan_type="Premium",
@@ -563,8 +547,7 @@ class TestMonthlyReport(unittest.TestCase):
     def setUp(self):
         # Create actual Subscription instances
         self.sub1 = Subscription(
-            subscription_id="sub01",
-            service_type="Streaming",
+            service_type="Personal",
             category="Entertainment",
             service_name="Netflix",
             plan_type="Premium",
@@ -576,8 +559,7 @@ class TestMonthlyReport(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub2 = Subscription(
-            subscription_id="sub02",
-            service_type="Music",
+            service_type="Personal",
             category="Entertainment",
             service_name="Spotify",
             plan_type="Premium",
@@ -589,8 +571,7 @@ class TestMonthlyReport(unittest.TestCase):
             auto_renewal_status="Yes"
         )
         self.sub3 = Subscription(
-            subscription_id="sub03",
-            service_type="Streaming",
+            service_type="Personal",
             category="Entertainment",
             service_name="Disney+",
             plan_type="Standard",
