@@ -41,11 +41,12 @@ class Dashboard:
                 if should_exit:
                     break  # go back to main menu
             elif choice == '0':
+                print("Logging out ...")
+                time.sleep(5)
                 print("\n👋 Logged out. Returning to main menu...\n")
                 break
             else:
                 print("❌ Invalid input. Try again.")
-
 
     def manage_subscriptions(self):
         print("\n🔧 Manage Subscriptions (coming next)")

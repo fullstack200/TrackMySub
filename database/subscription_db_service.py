@@ -95,6 +95,7 @@ def fetch_specific_subscription(user, subscription_id):
             return None
         # Convert active_status from int/bool to string for Subscription
         result = list(result)
+        print(result)
         if result[5] == 1 or result[5] is True:
             result[5] = "Active"
         else:
@@ -114,7 +115,7 @@ def fetch_specific_subscription(user, subscription_id):
         if billing_frequency == "Yearly" and result[9] and "-" in str(result[9]):
             try:
                 dt = datetime.strptime(result[9], "%Y-%m-%d")
-                result[8] = dt.strftime("%d/%m")
+                result[9] = dt.strftime("%d/%m")
             except Exception:
                 pass
         result[6] = str(result[6]) 
@@ -139,6 +140,7 @@ def insert_subscription(user, subscription):
             start_date_sql = start_date
         renewal_date = subscription.renewal_date
         if subscription.billing_frequency == "Yearly":
+            subscription.subscription_price = str(subscription.subscription_price / 12)
             if isinstance(renewal_date, str) and "/" in renewal_date:
                 year = start_date_obj.year if 'start_date_obj' in locals() else datetime.now().year
                 renewal_date_obj = datetime.strptime(f"{renewal_date}/{year}", "%d/%m/%Y")
@@ -242,11 +244,17 @@ def delete_subscription(user, subscription):
         
 
 def delete_all_subscriptions(user):
+    from database.reminder_db_service import delete_all_reminders
+    from database.usage_db_service import delete_all_usages
+    from database.budget_db_service import update_budget
     try:
+        delete_all_reminders(user)
+        delete_all_usages(user)
         cursor = db_connection.cursor()
         query = "DELETE FROM subscription WHERE username = %s"
         cursor.execute(query, (user.username,))
         db_connection.commit()
         cursor.close()
+        update_budget({"total_amount_paid_monthly":0.0, "total_amount_paid_yearly":0.0, "over_the_limit": False}, user)
     except  Exception as e:
         print(f"Error deleting subscriptions for user {user.username}. Exception: {e}")

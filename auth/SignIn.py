@@ -1,6 +1,7 @@
 from database.user_db_service import fetch_user
 from dashboard.dashboard import Dashboard
 import getpass
+import time
 class SignIn:
     def handle(self):
         print("\n🔐 Sign In")
@@ -12,6 +13,8 @@ class SignIn:
             return
         user = fetch_user(username, password)
         if user:
+            print("Logging in ...")
+            time.sleep(5)
             print(f"\n✅ Welcome back, {user.username}!")
             dashboard = Dashboard(user)
             dashboard.show()
