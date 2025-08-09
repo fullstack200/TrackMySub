@@ -1,8 +1,5 @@
 import re
 from datetime import datetime 
-from dataclasses import dataclass, field
-
-@dataclass
 class Subscription:
     """
     Represents a subscription to a service with various attributes and validation.
@@ -35,26 +32,30 @@ class Subscription:
             auto_renewal_status="Yes"
         )
     """
-    _subscription_id: str = field(default=None, repr=False)
-    service_type: str
-    category: str
-    service_name: str
-    plan_type: str
-    active_status: bool
-    subscription_price: float
-    billing_frequency: str
-    start_date: str
-    renewal_date: str
-    auto_renewal_status: bool
-
-    def __post_init__(self):
-        if self._subscription_id is None:
-            from database.subscription_db_service import get_latest_subscription_id
-            self._subscription_id = get_latest_subscription_id()
+    def __init__(self):
+        self._subscription_id = None
+        self._service_type = None
+        self._category = None
+        self._service_name = None
+        self._plan_type = None
+        self._subscription_price = None
+        self._billing_frequency = None
+        self._start_date = None
+        self._renewal_date = None
+        self._active_status = None
+        self._auto_renewal_status = None
 
     @property
     def subscription_id(self):
         return self._subscription_id
+    
+    @subscription_id.setter
+    def subscription_id(self, value):
+        from database.subscription_db_service import get_latest_subscription_id
+        if value is None:
+            self._subscription_id = get_latest_subscription_id()
+        else:
+            self._subscription_id = value
 
     @property
     def service_type(self):

@@ -33,6 +33,26 @@ def fetch_monthly_report(user, monthly_report):
         print(f"Error fetching report: {e}")
         return None
 
+def fetch_all_monthly_reports(user):
+    from models.monthly_report import MonthlyReport
+    try:
+        cursor = db_connection.cursor()
+        query = "SELECT date_report_generated, total_amount, report_data, username, month_name FROM monthly_report WHERE username = %s"
+        cursor.execute(query, (user.username,))
+        result = cursor.fetchall()
+        cursor.close()
+        if result:
+            reports_list = []
+            for report in result:
+                date_report_generated, total_amount, report_data, user, month = report
+                reports_list.append(MonthlyReport(date_report_generated, total_amount, report_data, fetch_user(user), month))
+            return reports_list
+        else:
+            return None
+    except Exception as e:
+        print(f"Error fetching report: {e}")
+        return None
+    
 def insert_monthly_report(report, report_id, user):
     try:
         cursor = db_connection.cursor()

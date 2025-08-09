@@ -51,7 +51,7 @@ def fetch_user(username, password):
 def insert_user(user):
     try:
         cursor = db_connection.cursor()
-        is_unique = fetch_user(user.username)
+        is_unique = fetch_user(user.username, user.password)
         if is_unique:
             print(f"User with username {user.username} already exists.")
             return

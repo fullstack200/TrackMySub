@@ -48,8 +48,38 @@ def fetch_usage(user, subscription):
         result = cursor.fetchone()
         cursor.close()
         if result:
-            times_used_per_month, session_duration_hours, benefit_rating = result[2:]
-            return Usage(user, subscription, times_used_per_month, session_duration_hours, benefit_rating)
+            u = Usage(user, fetch_specific_subscription(result[1]))
+            u.times_used_per_month = result[2]
+            u.session_duration_hours = result[3]
+            u.benefit_rating = result[4]
+            return u
+        else:
+            return None
+    except Exception as e:
+        print(f"Error fetching usage: {e}")
+        return None
+    
+def fetch_all_usages(user):
+    from database.subscription_db_service import fetch_specific_subscription
+    try:
+        cursor = db_connection.cursor()
+        query = """
+            SELECT username, subscription_id, times_used_per_month, session_duration_hours, benefit_rating
+            FROM subscriptionusage
+            WHERE username = %s
+        """
+        cursor.execute(query, (user.username,))
+        result = cursor.fetchall()
+        cursor.close()
+        if result:
+            usage_list = []
+            for usage in result:
+                u = Usage(user, fetch_specific_subscription(usage[1]))
+                u.times_used_per_month = usage[2]
+                u.session_duration_hours = usage[3]
+                u.benefit_rating = usage[4]
+                usage_list.append(u)
+            return usage_list 
         else:
             return None
     except Exception as e:

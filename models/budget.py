@@ -23,13 +23,13 @@ class Budget:
     Raises:
         ValueError: If invalid values are provided for user or budget amounts, or if calculated properties are set directly.
     """
-    def __init__(self, user, monthly_budget_amount, yearly_budget_amount=None, total_amount_paid_monthly=None, total_amount_paid_yearly=None, over_the_limit=None):
+    def __init__(self, user):
         self.user = user
-        self.monthly_budget_amount = monthly_budget_amount
-        self.yearly_budget_amount = yearly_budget_amount
-        self.total_amount_paid_monthly = total_amount_paid_monthly
-        self.total_amount_paid_yearly = total_amount_paid_yearly
-        self.over_the_limit = over_the_limit
+        self.monthly_budget_amount = None
+        self.yearly_budget_amount = None
+        self.total_amount_paid_monthly = None
+        self.total_amount_paid_yearly = None
+        self.over_the_limit = False
 
     @property
     def user(self):
@@ -49,26 +49,29 @@ class Budget:
 
     @monthly_budget_amount.setter
     def monthly_budget_amount(self, monthly_budget_amount):
-        if not monthly_budget_amount:
-            raise ValueError("Monthly budget amount cannot be empty")
-        elif str(monthly_budget_amount).isalpha():
-            raise ValueError("Monthly budget amount must be a number. Example: 50.0")
-        elif not isinstance(eval(monthly_budget_amount), float):
-            raise ValueError("Enter budget amount in 00.00 format. Example: 50.00 dollars")
+        if monthly_budget_amount is None:
+            self._monthly_budget_amount = None
         else:
-            self._monthly_budget_amount = round(float(monthly_budget_amount), 2)
-            
+            if not monthly_budget_amount:
+                raise ValueError("Monthly budget amount cannot be empty")
+            elif str(monthly_budget_amount).isalpha():
+                raise ValueError("Monthly budget amount must be a number. Example: 50.0")
+            elif not isinstance(eval(monthly_budget_amount), float):
+                raise ValueError("Enter budget amount in 00.00 format. Example: 50.00 dollars")
+            else:
+                self._monthly_budget_amount = round(float(monthly_budget_amount), 2)
+
     @property
     def yearly_budget_amount(self):
         return self._yearly_budget_amount
 
     @yearly_budget_amount.setter
-    def yearly_budget_amount(self, value):
-        if value:
-            self._yearly_budget_amount = value
+    def yearly_budget_amount(self, yearly_budget_amount):
+        if yearly_budget_amount is None:
+            self._yearly_budget_amount = None
         else:
-            self.yearly_budget_amount = self.monthly_budget_amount  * 12
-
+            self._yearly_budget_amount = yearly_budget_amount
+            
     @property
     def total_amount_paid_monthly(self):
         return self._total_amount_paid_monthly
@@ -107,10 +110,11 @@ class Budget:
     @over_the_limit.setter
     def over_the_limit(self, value):
         if value is None:
-            if self.total_amount_paid_monthly > self.monthly_budget_amount or self.total_amount_paid_yearly > self.yearly_budget_amount:
-                self._over_the_limit = True
-            else:
-                self._over_the_limit = False
+            if self.monthly_budget_amount:
+                if self.total_amount_paid_monthly > self.monthly_budget_amount or self.total_amount_paid_yearly > self.yearly_budget_amount:
+                    self._over_the_limit = True
+                else:
+                    self._over_the_limit = False
         else:
             if value == 0:
                 self._over_the_limit = False

@@ -32,6 +32,26 @@ def fetch_yearly_report(user, yearly_report):
     except Exception as e:
         print(f"Error fetching report: {e}")
         return None
+    
+def fetch_all_yearly_reports(user):
+    from models.yearly_report import YearlyReport
+    try:
+        cursor = db_connection.cursor()
+        query = "SELECT date_report_generated, total_amount, report_data, username, year FROM yearly_report WHERE username = %s"
+        cursor.execute(query, (user.username,))
+        result = cursor.fetchall()
+        cursor.close()
+        if result:
+            report_list = []
+            for report in result:
+                date_report_generated, total_amount, report_data, user, year = report
+                report_list.append(YearlyReport(date_report_generated, total_amount, report_data, fetch_user(user), year))
+            return report_list
+        else:
+            return None
+    except Exception as e:
+        print(f"Error fetching report: {e}")
+        return None
 
 def insert_yearly_report(report, report_id, user):
     try:
