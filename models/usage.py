@@ -46,7 +46,7 @@ class Usage:
         if value is not None:
             if not isinstance(value, int):
                 raise ValueError("Benefit rating should be an integer")
-            if not (1 <= value <= 5):
+            if not (0 <= value <= 5):
                 raise ValueError("Benefit rating should be between 1 and 5")
         self._benefit_rating = value
 

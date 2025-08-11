@@ -8,6 +8,7 @@ from database.yearly_report_db_service import delete_all_yearly_reports
 from database.usage_db_service import *
 from database.reminder_db_service import *
 from models.subscription import Subscription
+from models.advisory import Advisory
 import getpass
 import time
 from datetime import datetime
@@ -31,7 +32,8 @@ class Dashboard:
             print("2. Manage Budget")
             print("3. Manage Usage")
             print("4. View Reports")
-            print("5. Account Settings")
+            print("5. Get Advise on Subscriptions")
+            print("6. Account Settings")
             print("0. Logout")
 
             choice = input("Enter your option number: ").strip()
@@ -43,10 +45,14 @@ class Dashboard:
                 clear_screen_with_banner()
                 self.manage_budget()
             elif choice == '3':
+                clear_screen_with_banner()
                 self.manage_usage()
             elif choice == '4':
-                print("\n📄 View Reports (coming soon)")
+                self.view_reports()
             elif choice == '5':
+                clear_screen_with_banner()
+                self.get_advice()
+            elif choice == '6':
                 clear_screen_with_banner()
                 should_exit = self.account_settings()
                 if should_exit:
@@ -58,6 +64,37 @@ class Dashboard:
                 break
             else:
                 print("❌ Invalid input. Try again.")
+    
+    def get_advice(self):
+        print("\n" + "="*50)
+        print("Get personalized tips to upgrade or downgrade your plan so you enjoy the best value while saving money.")
+        print("="*50)
+        if not self.subscriptions:
+            print("You have no subscriptions yet.")
+        else:
+            print("📄 Your Subscriptions:")
+            for i, sub in enumerate(self.subscriptions, start=1):
+                print(f"{i}. {sub.service_name} | Status: {'Active' if sub.active_status else 'Inactive'} | Price: $ {sub.subscription_price}")
+        choice = int(input("\nEnter the number of the subscription which you want to get advice on: "))
+        
+        subscription = self.subscriptions[choice-1]
+        try:
+            usage = fetch_usage(self.user, subscription)
+            if not usage:
+                print("Please enter the Subscription usage details first to get advice. Go to Manage Usage option in the main menu to add usage details.")
+                time.sleep(5)
+                return
+            advisory = Advisory(self.user, usage)
+            print("Analyzing the subscription to generate advice...\n")
+            time.sleep(3)
+            print(advisory.generate_advice())
+            time.sleep(10)
+            return
+        except Exception as e:
+            print(f"There was an error generating advice. Error: {e}")
+        
+    def view_reports(self):
+        pass
     
     def manage_usage(self):
         def add_usage():
@@ -191,7 +228,48 @@ class Dashboard:
                 update_usage(updated_fields, usage.user, usage.subscription)
             else:
                 print("No fields were updated.")
+        
+        def reset_usage():
+            print("\n✏️  Reset Subscription Usage")
 
+            usages_list = fetch_all_usages(self.user)
+            if not usages_list:
+                print("No usage records found.")
+                return
+
+            # Step 1: Display available usage records
+            for i, usg in enumerate(usages_list, start=1):
+                print(f"{i}. Subscription: {usg.subscription.service_name} "
+                    f"| Times used per month: {usg.times_used_per_month} "
+                    f"| Session duration (hrs): {usg.session_duration_hours} "
+                    f"| Benefit rating: {usg.benefit_rating}")
+            print("0. Go back")
+            
+            try:
+                choice = int(input("\nEnter the number of the usage record you want to reset: "))
+                if choice == 0:
+                    return
+                elif choice < 0 or choice > len(usages_list):
+                    print("Invalid choice. Returning to menu.")
+                    return
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+                return
+            print("\n Resetting usage records...")
+            time.sleep(3)
+            usage = usages_list[choice - 1]
+            usage.times_used_per_month = 0
+            usage.session_duration_hours = 0.0
+            usage.benefit_rating = 0
+            try:
+                update_usage({"times_used_per_month":usage.times_used_per_month, "session_duration_hours": usage.session_duration_hours, "benefit_rating": usage.benefit_rating}, usage.user, usage.subscription)
+                print("Usage record was reset successfully.")
+                time.sleep(2)
+            except Exception as e:
+                print(f"\nThere was an error resetting the usage record. Error: {e}")
+                time.sleep(3)
+                return
+            
         def remove_usage():
             print("\n❌ Delete Subscription Usage")
             usages_list = fetch_all_usages(self.user)
@@ -251,8 +329,9 @@ class Dashboard:
             print("\nWhat would you like to do?")
             print("1. ✅ Add usage details for a subscirption")
             print("2. ✏️  Update usage details of a subscription")
-            print("3. ❌ Delete usage details of a subscription")
-            print("4. 🔙 Return to main menu")
+            print("3. Reset Usage")
+            print("4. ❌ Delete usage details of a subscription")
+            print("5. 🔙 Return to main menu")
 
             choice = input("\nEnter your choice (1-4): ")
 
@@ -261,8 +340,10 @@ class Dashboard:
             elif choice == "2":
                 modify_usage()
             elif choice == "3":
-                remove_usage()
+                reset_usage()
             elif choice == "4":
+                remove_usage()
+            elif choice == "5":
                 break
             else:
                 print("❌ Invalid choice. Please enter a number from 1 to 4.")

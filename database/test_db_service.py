@@ -239,52 +239,55 @@ class TestUsageDBService(unittest.TestCase):
         self.test_usage_id = get_latest_usage_id()
         insert_usage(self.usage, self.test_usage_id, self.user, self.subscription)
 
-# class TestReminderDBService(unittest.TestCase):
-#     def setUp(self):
-#         # Create and insert a test user
-#         self.user = User(username="remindertestuser", email_id="remindertest@example.com", password="testpass123")
-#         insert_user(self.user)
+class TestReminderDBService(unittest.TestCase):
+    def setUp(self):
+        # Create and insert a test user
+        self.user = User(username="remindertestuser", email_id="remindertest@example.com", password="testpass123")
+        insert_user(self.user)
 
-#         # Create and insert a test subscription
-#         self.subscription = Subscription(
-#             service_type="Personal",
-#             category="Entertainment",
-#             service_name="ReminderTestService",
-#             plan_type="Premium",
-#             active_status="Active",
-#             subscription_price="9.99",
-#             billing_frequency="Monthly",
-#             start_date="01/01/2025",
-#             renewal_date="15",
-#             auto_renewal_status="Yes"
-#         )
+        # Create and insert a test subscription
+        self.subscription = Subscription()
+        self.subscription.subscription_id = None
+        self.subscription.service_type="Personal"
+        self.subscription.category="Entertainment"
+        self.subscription.service_name="TestService"
+        self.subscription.plan_type="Premium"
+        self.subscription.active_status="Active"
+        self.subscription.subscription_price="19.99"
+        self.subscription.billing_frequency="Monthly"
+        self.subscription.start_date="01/01/2025"
+        self.subscription.renewal_date="15"
+        self.subscription.auto_renewal_status="Yes"
         
-#         self.budget = Budget(self.user, "100.00")
-#         insert_budget(self.budget, self.user)
+        self.budget = Budget(self.user)
+        self.budget.monthly_budget_amount = "100.00"
+        self.budget.yearly_budget_amount = self.budget.monthly_budget_amount * 12
         
-#         insert_subscription(self.user, self.subscription)
+        insert_budget(self.budget, self.user)
+        
+        insert_subscription(self.user, self.subscription)
 
-#         # Create a reminder instance and insert acknowledgement
-#         self.reminder = Reminder(self.user, self.subscription, reminder_acknowledged=False)
-#         insert_reminder_acknowledgements(self.reminder)
+        # Create a reminder instance and insert acknowledgement
+        self.reminder = Reminder(self.user, self.subscription, reminder_acknowledged=False)
+        insert_reminder_acknowledgements(self.reminder)
 
-#     def tearDown(self):
-#         delete_reminder_acknowledgement(self.user, self.subscription)
-#         delete_subscription(self.user, self.subscription)
-#         delete_budget(self.user)
-#         delete_user(self.user)
+    def tearDown(self):
+        delete_reminder_acknowledgement(self.user, self.subscription)
+        delete_subscription(self.user, self.subscription)
+        delete_budget(self.user)
+        delete_user(self.user)
 
-#     def test_insert_and_fetch_reminder_acknowledgement(self):
-#         fetched = fetch_reminder_acknowledgement(self.user, self.subscription)
-#         self.assertIsNotNone(fetched)
-#         self.assertFalse(fetched.reminder_acknowledged)
-#         self.assertEqual(fetched.user.username, self.user.username)
-#         self.assertEqual(fetched.subscription.service_name, self.subscription.service_name)
+    def test_insert_and_fetch_reminder_acknowledgement(self):
+        fetched = fetch_reminder_acknowledgement(self.user, self.subscription)
+        self.assertIsNotNone(fetched)
+        self.assertFalse(fetched.reminder_acknowledged)
+        self.assertEqual(fetched.user.username, self.user.username)
+        self.assertEqual(fetched.subscription.service_name, self.subscription.service_name)
 
-#     def test_delete_reminder_acknowledgement(self):
-#         delete_reminder_acknowledgement(self.user, self.subscription)
-#         fetched = fetch_reminder_acknowledgement(self.user, self.subscription)
-#         self.assertIsNone(fetched)
+    def test_delete_reminder_acknowledgement(self):
+        delete_reminder_acknowledgement(self.user, self.subscription)
+        fetched = fetch_reminder_acknowledgement(self.user, self.subscription)
+        self.assertIsNone(fetched)
 
 # class TestMonthlyReportDBService(unittest.TestCase):
 #     def setUp(self):
