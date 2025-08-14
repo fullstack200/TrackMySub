@@ -73,32 +73,33 @@ class MonthlyReport(Report):
                 self.report_data = base64.b64decode(pdf_b64)
             else:
                 self.report_data = None
-            
-            payload2 = {
-                "report_data": pdf_b64,
-                "email_to": getattr(self.user, "email_id", None),
-                "subject": f"Monthly Report for {self.month}",
-                "username": getattr(self.user, "username", None),
-                "body": f"Dear {getattr(self.user, 'username', 'User')},\n\nPlease find attached your monthly report for {self.month}.\n\nBest regards,\nTrackMySubs Team"
-            }
-            
-            try:
-                function_name2 = 'send_report'
-                response2 = lambda_client.invoke(
-                    FunctionName=function_name2,
-                    InvocationType='Event',
-                    Payload=json.dumps(payload2).encode('utf-8')
-                )
-                print("Report sent successfully.")
-            
-            except Exception as e:
-                print(f"Error sending report: {e}")
-                return {"error": str(e)}
-            
             return result
             
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")
             return {"error": str(e)}
 
-        
+    def send_monthly_report(self, result):
+        lambda_client = boto3.client('lambda', region_name='ap-south-1')
+        function_name = 'send_report'
+        if self.report_data:
+            pdf_b64_for_email = base64.b64encode(self.report_data).decode('utf-8')
+        else:
+            pdf_b64_for_email = result.get("pdf", None)
+        payload2 = {
+                "report_data": pdf_b64_for_email,
+                "email_to": getattr(self.user, "email_id", None),
+                "subject": f"Monthly Report for {self.month}",
+                "username": getattr(self.user, "username", None),
+                "body": f"Dear {getattr(self.user, 'username', 'User')},\n\nPlease find attached your monthly report for {self.month}.\n\nBest regards,\nTrackMySubs Team"
+            }
+            
+        try:
+            response2 = lambda_client.invoke(
+                FunctionName=function_name,
+                InvocationType='Event',
+                Payload=json.dumps(payload2).encode('utf-8')
+            )
+        except Exception as e:
+            print(f"Error sending monthly report: {e}")
+            return {"error": str(e)}

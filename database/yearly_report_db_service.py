@@ -25,14 +25,14 @@ def fetch_yearly_report(user, yearly_report):
         result = cursor.fetchone()
         cursor.close()
         if result:
-            date_report_generated, total_amount, report_data, user, year = result
-            return YearlyReport(date_report_generated, total_amount, report_data, fetch_user(user), year)
+            date_report_generated, total_amount, report_data, username, year = result
+            return YearlyReport(date_report_generated, total_amount, report_data, fetch_user(username, user.password), year)
         else:
             return None
     except Exception as e:
-        print(f"Error fetching report: {e}")
+        print(f"Error fetching single yearly report: {e}")
         return None
-    
+
 def fetch_all_yearly_reports(user):
     from models.yearly_report import YearlyReport
     try:
@@ -44,13 +44,13 @@ def fetch_all_yearly_reports(user):
         if result:
             report_list = []
             for report in result:
-                date_report_generated, total_amount, report_data, user, year = report
-                report_list.append(YearlyReport(date_report_generated, total_amount, report_data, fetch_user(user), year))
+                date_report_generated, total_amount, report_data, username, year = report
+                report_list.append(YearlyReport(date_report_generated, total_amount, report_data, fetch_user(username, user.password), year))
             return report_list
         else:
             return None
     except Exception as e:
-        print(f"Error fetching report: {e}")
+        print(f"Error fetching yearly report: {e}")
         return None
 
 def insert_yearly_report(report, report_id, user):

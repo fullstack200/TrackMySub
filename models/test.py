@@ -9,10 +9,12 @@ from models.usage import Usage
 from models.report import Report
 from models.monthly_report import MonthlyReport
 from models.yearly_report import YearlyReport
+from models.advisory import Advisory
 from unittest.mock import patch, MagicMock
+
 class TestUserValidation(unittest.TestCase):
     def test_valid_user(self):
-        user = User("Ahmed123123", "ahmed@example.com", "StrongPass123")
+        user = User("Ahmed123123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
         budget = Budget(user)
         user.budget = budget
         self.assertEqual(user.username, "Ahmed123123")
@@ -22,36 +24,41 @@ class TestUserValidation(unittest.TestCase):
 
     def test_invalid_username(self):
         with self.assertRaises(ValueError):
-            User("Ahmed123@123", "ahmed@example.com", "StrongPass123")
+            User("Ahmed123@123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
 
     def test_invalid_email(self):
         with self.assertRaises(ValueError):
-            User("Ahmed123", "ahmedexample.com", "StrongPass123")
+            User("Ahmed123", "ahmedexample.com", "StrongPass123", date(2025, 7, 1))
 
     def test_short_password(self):
         with self.assertRaises(ValueError):
-            User("Ahmed123", "ahmed@example.com", "123")
+            User("Ahmed123", "ahmed@example.com", "123", date(2025, 7, 1))
 
     def test_update_email_invalid(self):
-        user = User("Ahmed123", "ahmed@example.com", "StrongPass123")
+        user = User("Ahmed123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
         with self.assertRaises(ValueError):
             user.email_id = "wrongformat"
 
     def test_update_username_invalid(self):
-        user = User("Ahmed123", "ahmed@example.com", "StrongPass123")
+        user = User("Ahmed123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
         with self.assertRaises(ValueError):
             user.username = "Ahmed123@99"
 
     def test_update_password_invalid(self):
-        user = User("Ahmed123", "ahmed@example.com", "StrongPass123")
+        user = User("Ahmed123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
         with self.assertRaises(ValueError):
             user.password = "short"
     
     def test_invalid_budget_type(self):
-        user = User("Ahmed123", "ahmed@example.com", "StrongPass123")
+        user = User("Ahmed123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
         with self.assertRaises(TypeError) as context:
             user.budget = "100.00"  # Invalid: not a Budget instance
-        self.assertEqual(str(context.exception), "Invalid Budget")            
+        self.assertEqual(str(context.exception), "Invalid Budget")       
+    
+    def test_invalid_crated_at(self):
+        user = User("Ahmed123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
+        with self.assertRaises(ValueError) as context:
+            user.created_at = "2025-07-01"
 class TestSubscriptionValidation(unittest.TestCase):
     def test_valid_subscription(self):
         subscription = Subscription()
@@ -143,7 +150,7 @@ class TestSubscriptionValidation(unittest.TestCase):
             subscription.auto_renewal_status = "Maybe"
 class TestBudgetValidation(unittest.TestCase):
     def setUp(self):
-        self.user = User("fahadahmed", "al.fahadahmed555@gmail.com", "Qwerty@123")
+        self.user = User("fahadahmed", "al.fahadahmed555@gmail.com", "Qwerty@123", date(2025, 7, 1))
         
         self.sub1 = Subscription()
         self.sub1.service_type = "Personal"
@@ -232,7 +239,7 @@ class TestBudgetValidation(unittest.TestCase):
 
 class TestReminder(unittest.TestCase):
     def setUp(self):
-        self.user = User("testuser", "test@example.com", "Password123")
+        self.user = User("testuser", "test@example.com", "Password123", date(2025, 7, 1))
         self.sub1 = Subscription()
         self.sub1.service_type = "Personal"
         self.sub1.category = "Entertainment"
@@ -339,7 +346,7 @@ class TestReminder(unittest.TestCase):
         
 class TestUsage(unittest.TestCase):
     def setUp(self):
-        self.user = User("testuser", "test@example.com", "Bethealpha@05")
+        self.user = User("testuser", "test@example.com", "Bethealpha@05", date(2025, 7, 1))
         self.sub1 = Subscription()
         self.sub1.service_type = "Personal"
         self.sub1.category = "Entertainment"
@@ -421,160 +428,171 @@ class TestUsage(unittest.TestCase):
         self.assertEqual(usage.session_duration_hours, 0.0)
         self.assertEqual(usage.benefit_rating, 0)
 
-# import unittest
-# from models.user import User
-# from models.subscription import Subscription
-# from models.usage import Usage
-# from models.advisory import Advisory
+class TestAdvisory(unittest.TestCase):
+    def setUp(self):
+        self.user = User("advisoryuser", "advisory@example.com", "StrongPass123", date(2025, 7, 1))
+        self.sub1 = Subscription()
+        self.sub1.service_type = "Personal"
+        self.sub1.category = "Entertainment"
+        self.sub1.service_name = "Netflix"
+        self.sub1.plan_type = "Premium"
+        self.sub1.active_status = "Active"
+        self.sub1.subscription_price = "17.99"
+        self.sub1.billing_frequency = "Monthly"
+        self.sub1.start_date = "10/01/2025"
+        self.sub1.renewal_date = 15
+        self.sub1.auto_renewal_status = "Yes"
+        self.user.add_subscription([self.sub1])
 
-# class TestAdvisory(unittest.TestCase):
-#     def setUp(self):
-#         self.user = User("advisoryuser", "advisory@example.com", "StrongPass123")
-#         self.sub = Subscription(
-#             service_type="Personal",
-#             category="Entertainment",
-#             service_name="Netflix",
-#             plan_type="Premium",
-#             active_status="Active",
-#             subscription_price="15.00",
-#             billing_frequency="Monthly",
-#             start_date="01/01/2025",
-#             renewal_date="10",
-#             auto_renewal_status="Yes"
-#         )
-#         self.user.add_subscription([self.sub])
+    def test_valid_advisory_initialization(self):
+        usage = Usage(self.user, self.sub1)
+        usage.times_used_per_month = 10
+        usage.session_duration_hours = 1.5
+        usage.benefit_rating = 4
+        advisory = Advisory(self.user, usage)
+        self.assertEqual(advisory.user, self.user)
+        self.assertEqual(advisory.usage, usage)
 
-#     def test_valid_advisory_initialization(self):
-#         usage = Usage(self.user, self.sub, 10, 1.5, 4)
-#         advisory = Advisory(self.user, usage)
-#         self.assertEqual(advisory.user, self.user)
-#         self.assertEqual(advisory.usage, usage)
+    def test_invalid_advisory_user_type(self):
+        usage = Usage(self.user, self.sub1)
+        usage.times_used_per_month = 10
+        usage.session_duration_hours = 1.5
+        usage.benefit_rating = 4
+        with self.assertRaises(ValueError):
+            Advisory("not_a_user", usage)
 
-#     def test_invalid_advisory_user_type(self):
-#         usage = Usage(self.user, self.sub, 10, 1.5, 4)
-#         with self.assertRaises(ValueError):
-#             Advisory("not_a_user", usage)
+    def test_invalid_advisory_usage_type(self):
+        with self.assertRaises(ValueError):
+            Advisory(self.user, "not_a_usage")
 
-#     def test_invalid_advisory_usage_type(self):
-#         with self.assertRaises(ValueError):
-#             Advisory(self.user, "not_a_usage")
+    def test_advice_recommendation_continue(self):
+        usage = Usage(self.user, self.sub1)
+        usage.times_used_per_month = 30
+        usage.session_duration_hours = 4.0
+        usage.benefit_rating = 5
+        advisory = Advisory(self.user, usage)
+        advice = advisory.generate_advice()
+        self.assertIn("✅ Continue using the current plan.", advice)
 
-#     def test_advice_recommendation_continue(self):
-#         usage = Usage(self.user, self.sub, 30, 4.0, 5)  # High usage + benefit
-#         advisory = Advisory(self.user, usage)
-#         advice = advisory.generate_advice()
-#         self.assertIn("✅ Continue using the current plan.", advice)
+    def test_advice_recommendation_downgrade(self):
+        usage = Usage(self.user, self.sub1)
+        usage.times_used_per_month = 2
+        usage.session_duration_hours = 0.5
+        usage.benefit_rating = 1
+        advisory = Advisory(self.user, usage)
+        advice = advisory.generate_advice()
+        self.assertIn("📉 Consider downgrading to a lower plan.", advice)
 
-#     def test_advice_recommendation_downgrade(self):
-#         usage = Usage(self.user, self.sub, 2, 0.5, 1)  # Low everything
-#         advisory = Advisory(self.user, usage)
-#         advice = advisory.generate_advice()
-#         self.assertIn("📉 Consider downgrading to a lower plan.", advice)
-
-#     def test_final_score_is_clamped_between_0_and_10(self):
-#         # Very high usage but extremely high price should reduce score below 0
-#         expensive_sub = Subscription(
-#             service_type="Professional",
-#             category="Technology",
-#             service_name="AWS Enterprise",
-#             plan_type="Premium",
-#             active_status="Active",
-#             subscription_price="1500.00",  # triggers price penalty
-#             billing_frequency="Monthly",
-#             start_date="01/01/2025",
-#             renewal_date="10",
-#             auto_renewal_status="Yes"
-#         )
-#         self.user.add_subscription([expensive_sub])
-#         usage = Usage(self.user, expensive_sub, 0, 0.0, 1)
-#         advisory = Advisory(self.user, usage)
-#         advice = advisory.generate_advice()
-#         self.assertIn("Final score: 0.00/10", advice)
-
-#     def test_generate_advice_format_contains_expected_sections(self):
-#         usage = Usage(self.user, self.sub, 12, 1.5, 4)
-#         advisory = Advisory(self.user, usage)
-#         advice = advisory.generate_advice()
-#         self.assertIn("📄 **Subscription Advisory Report**", advice)
-#         self.assertIn("📊 **Usage Overview**", advice)
-#         self.assertIn("🧠 **Score Breakdown**", advice)
-
-# class TestReport(unittest.TestCase):
-#     def setUp(self):
-#         self.user = User("advisoryuser", "advisory@example.com", "StrongPass123")
-#         self.valid_kwargs = {
-#             "date_report_generated": date(2024, 6, 15),
-#             "total_amount": 100.00,
-#             "report_data": b"test data",
-#             "user": self.user
-#         }
-
-#     def test_report_initialization_valid(self):
-#         report = Report(**self.valid_kwargs)
-#         self.assertEqual(report.date_report_generated, date(2024, 6, 15))
-#         self.assertEqual(report.report_data, b"test data")
-#         self.assertEqual(report.user, self.user)
-
-#     def test_report_invalid_date_report_generated(self):
-#         kwargs = self.valid_kwargs.copy()
-#         kwargs["date_report_generated"] = None
-#         with self.assertRaises(ValueError):
-#             Report(**kwargs)
-#         kwargs["date_report_generated"] = "2024-06-15"
-#         with self.assertRaises(ValueError):
-#             Report(**kwargs)
-
-#     def test_report_invalid_report_data_types(self):
-#         for invalid in ["not bytes", 12345, 3.14, [1, 2, 3]]:
-#             kwargs = self.valid_kwargs.copy()
-#             kwargs["report_data"] = invalid
-#             with self.assertRaises(ValueError):
-#                 Report(**kwargs)
-
-#     def test_report_invalid_user(self):
-#         kwargs = self.valid_kwargs.copy()
-#         kwargs["user"] = "not a user"
-#         with self.assertRaises(ValueError):
-#             Report(**kwargs)
-
-#     def test_report_setters_and_getters(self):
-#         report = Report(**self.valid_kwargs)
-#         new_user = self.user
-#         report.date_report_generated = date(2024, 7, 15)
-#         report.report_data = b"new data"
-#         report.user = new_user
-#         self.assertEqual(report.date_report_generated, date(2024, 7, 15))
-#         self.assertEqual(report.report_data, b"new data")
-#         self.assertEqual(report.user, new_user)
-
-#     def test_report_setter_invalid_types(self):
-#         report = Report(**self.valid_kwargs)
-#         with self.assertRaises(ValueError):
-#             report.date_report_generated = None
-#         with self.assertRaises(ValueError):
-#             report.report_data = 123
-#         with self.assertRaises(ValueError):
-#             report.user = "someone"
-
-#     def test_report_data_accepts_bytearray(self):
-#         kwargs = self.valid_kwargs.copy()
-#         kwargs["report_data"] = bytearray(b"bytearray data")
-#         report = Report(**kwargs)
-#         self.assertEqual(report.report_data, bytearray(b"bytearray data"))
-
-#     def test_report_repr_str(self):
-#         report = Report(**self.valid_kwargs)
-#         self.assertIsInstance(str(report), str)
-#         self.assertIsInstance(repr(report), str)
+    def test_final_score_is_clamped_between_0_and_10(self):
+        # Very high usage but extremely high price should reduce score below 0
+        expensive_sub = Subscription()
+        expensive_sub.service_type = "Professional"
+        expensive_sub.category = "Cloud"
+        expensive_sub.service_name = "AWS"
+        expensive_sub.plan_type = "Premium"
+        expensive_sub.active_status = "Active"
+        expensive_sub.subscription_price = "1500.99"
+        expensive_sub.billing_frequency = "Monthly"
+        expensive_sub.start_date = "10/01/2025"
+        expensive_sub.renewal_date = 15
+        expensive_sub.auto_renewal_status = "Yes"
         
-#     def test_invalid_total_amount(self):
-#         kwargs = self.valid_kwargs.copy()
-#         kwargs["total_amount"] = "not a float"
-#         with self.assertRaises(ValueError):
-#             Report(**kwargs)
-#         kwargs["total_amount"] = -100.00
-#         with self.assertRaises(ValueError):
-#             Report(**kwargs)
+        self.user.add_subscription([expensive_sub])
+        usage = Usage(self.user, expensive_sub)
+        usage.times_used_per_month = 0
+        usage.session_duration_hours = 0.0
+        usage.benefit_rating = 1
+        advisory = Advisory(self.user, usage)
+        advice = advisory.generate_advice()
+        self.assertIn("Final score: 0.00/10", advice)
+
+    def test_generate_advice_format_contains_expected_sections(self):
+        usage = Usage(self.user, self.sub1)
+        usage.times_used_per_month = 12
+        usage.session_duration_hours = 1.5
+        usage.benefit_rating = 4
+        advisory = Advisory(self.user, usage)
+        advice = advisory.generate_advice()
+        self.assertIn("📄 **Subscription Advisory Report**", advice)
+        self.assertIn("📊 **Usage Overview**", advice)
+        self.assertIn("🧠 **Score Breakdown**", advice)
+
+class TestReport(unittest.TestCase):
+    def setUp(self):
+        self.user = User("advisoryuser", "advisory@example.com", "StrongPass123", date(2025, 7, 1))
+        self.valid_kwargs = {
+            "date_report_generated": date(2024, 6, 15),
+            "total_amount": 100.00,
+            "report_data": b"test data",
+            "user": self.user
+        }
+
+    def test_report_initialization_valid(self):
+        report = Report(**self.valid_kwargs)
+        self.assertEqual(report.date_report_generated, date(2024, 6, 15))
+        self.assertEqual(report.report_data, b"test data")
+        self.assertEqual(report.user, self.user)
+
+    def test_report_invalid_date_report_generated(self):
+        kwargs = self.valid_kwargs.copy()
+        kwargs["date_report_generated"] = None
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
+        kwargs["date_report_generated"] = "2024-06-15"
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
+
+    def test_report_invalid_report_data_types(self):
+        for invalid in ["not bytes", 12345, 3.14, [1, 2, 3]]:
+            kwargs = self.valid_kwargs.copy()
+            kwargs["report_data"] = invalid
+            with self.assertRaises(ValueError):
+                Report(**kwargs)
+
+    def test_report_invalid_user(self):
+        kwargs = self.valid_kwargs.copy()
+        kwargs["user"] = "not a user"
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
+
+    def test_report_setters_and_getters(self):
+        report = Report(**self.valid_kwargs)
+        new_user = self.user
+        report.date_report_generated = date(2024, 7, 15)
+        report.report_data = b"new data"
+        report.user = new_user
+        self.assertEqual(report.date_report_generated, date(2024, 7, 15))
+        self.assertEqual(report.report_data, b"new data")
+        self.assertEqual(report.user, new_user)
+
+    def test_report_setter_invalid_types(self):
+        report = Report(**self.valid_kwargs)
+        with self.assertRaises(ValueError):
+            report.date_report_generated = None
+        with self.assertRaises(ValueError):
+            report.report_data = 123
+        with self.assertRaises(ValueError):
+            report.user = "someone"
+
+    def test_report_data_accepts_bytearray(self):
+        kwargs = self.valid_kwargs.copy()
+        kwargs["report_data"] = bytearray(b"bytearray data")
+        report = Report(**kwargs)
+        self.assertEqual(report.report_data, bytearray(b"bytearray data"))
+
+    def test_report_repr_str(self):
+        report = Report(**self.valid_kwargs)
+        self.assertIsInstance(str(report), str)
+        self.assertIsInstance(repr(report), str)
+        
+    def test_invalid_total_amount(self):
+        kwargs = self.valid_kwargs.copy()
+        kwargs["total_amount"] = "not a float"
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
+        kwargs["total_amount"] = -100.00
+        with self.assertRaises(ValueError):
+            Report(**kwargs)
 
 class TestMonthlyReport(unittest.TestCase):
     def setUp(self):
@@ -616,7 +634,7 @@ class TestMonthlyReport(unittest.TestCase):
         self.sub3.auto_renewal_status = "No"
         
         # Create actual User and Budget instances
-        self.user = User("testuser", "testuser@example.com", "StrongPass123")
+        self.user = User("testuser", "testuser@example.com", "StrongPass123", date(2025, 7, 1))
         
         self.user.subscription_list.append(self.sub1)
         self.user.subscription_list.append(self.sub2)
@@ -701,7 +719,7 @@ class TestMonthlyReport(unittest.TestCase):
 
 class TestYearlyReportExtended(unittest.TestCase):
     def setUp(self):
-        self.user = User(username="testuser", email_id="test@example.com", password="Qwerty@12345")
+        self.user = User("testuser", "test@example.com", "Qwerty@12345", date(2025, 7, 1))
         self.year = 2024
         self.report_data = b"test"
         self.total_amount = 0.0

@@ -1,6 +1,7 @@
 import time
 import os
 from auth.SignIn import SignIn
+from auth.SignUp import SignUp
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -34,13 +35,14 @@ def main():
             signin.handle()
             
         elif choice == '2':
-            print("\n📝 Sign Up selected.\n")
-            # SignUp().handle()
+            signup = SignUp()
+            signup.handle()
             
         elif choice == '0':
             print("\n👋 Exiting application. Goodbye!")
             break
 
 
+    
 if __name__ == "__main__":
     main()

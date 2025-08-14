@@ -96,6 +96,7 @@ def fetch_subscriptions_with_no_usage(user):
             
     except Exception as e:
         return f"Error fetching subscriptions with no usage details. Error: {e}"
+
 def fetch_all_subscription(user):
     try:
         cursor = db_connection.cursor()
@@ -111,7 +112,7 @@ def fetch_all_subscription(user):
         cursor.close()
 
         if not result:
-            return f"User with username: {user.username} doesn't exist."
+            return []
 
         subscription_list = []
         from datetime import datetime
