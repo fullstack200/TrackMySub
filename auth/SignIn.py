@@ -26,7 +26,7 @@ class SignIn:
         # self.user = fetch_user(username, password)
         
         #Adding this line to skip the signin part#####
-        self.user = fetch_user("fahad456", "Qwerty@12345")
+        self.user = fetch_user("fahad05", "Qwerty@12345")
         ###############################################
         if self.user:
             subscriptions = fetch_all_subscription(self.user)
@@ -36,7 +36,7 @@ class SignIn:
             if budget:
                 self.user.budget = budget
             print("Logging in ...")
-            time.sleep(2)
+            # time.sleep(2)
             
             try:
                 if self.user.budget:
@@ -45,7 +45,7 @@ class SignIn:
                 print(f"⚠️ {e}")
         
             print(f"\n✅ Welcome back, {self.user.username}!")
-            time.sleep(2)
+            # time.sleep(2)
             monthly_reports = fetch_all_monthly_reports(self.user)
             yearly_reports = fetch_all_yearly_reports(self.user)
             usages = fetch_all_usages(self.user)

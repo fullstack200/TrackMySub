@@ -54,12 +54,15 @@ class Budget:
         else:
             if not monthly_budget_amount:
                 raise ValueError("Monthly budget amount cannot be empty")
-            elif str(monthly_budget_amount).isalpha():
-                raise ValueError("Monthly budget amount must be a number. Example: 50.0")
-            elif not isinstance(eval(monthly_budget_amount), float):
-                raise ValueError("Enter budget amount in 00.00 format. Example: 50.00 dollars")
-            else:
-                self._monthly_budget_amount = round(float(monthly_budget_amount), 2)
+            # Check for alphabetic or special characters (except dot and digits)
+            import re
+            if not re.fullmatch(r"\d+(\.\d{1,2})?", monthly_budget_amount.strip()):
+                raise ValueError("Monthly budget amount must be a number in 00.00 format. Example: 50.00")
+            try:
+                value = float(monthly_budget_amount)
+            except ValueError:
+                raise ValueError("Monthly budget amount must be a valid number.")
+            self._monthly_budget_amount = round(value, 2)
 
     @property
     def yearly_budget_amount(self):

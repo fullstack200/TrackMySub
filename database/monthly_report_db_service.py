@@ -40,12 +40,11 @@ def fetch_monthly_report(user, month_name):
         print(f"Error fetching single monthly report: {e}")
         return None
 
-
 def fetch_all_monthly_reports(user):
     from models.monthly_report import MonthlyReport
     try:
         cursor = db_connection.cursor()
-        query = "SELECT date_report_generated, total_amount, report_data, username, month_name FROM monthly_report WHERE username = %s"
+        query = "SELECT date_report_generated, total_amount, report_data, username, month_name FROM monthly_report WHERE username = %s ORDER BY date_report_generated"
         cursor.execute(query, (user.username,))
         result = cursor.fetchall()
         cursor.close()

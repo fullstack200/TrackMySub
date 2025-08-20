@@ -27,16 +27,21 @@ class Dashboard:
         while True:
             clear_screen_with_banner()
             print(f"\n📊 Welcome, {self.user.username} — Choose an action:")
-            print("1. Manage Subscriptions")
-            print("2. Manage Budget")
-            print("3. Manage Usage")
-            print("4. View Reports")
-            print("5. Get Advise on Subscriptions")
-            print("6. Account Settings")
-            print("0. Logout")
+            print("1. 🔧 Manage Subscriptions")
+            print("2. 🔧 Manage Budget")
+            print("3. 🔧 Manage Usage")
+            print("4. 📄 View Reports")
+            print("5. 💡 Get Advise on Subscriptions")
+            print("6. ⚙️  Account Settings")
+            print("0. ↩️  Logout")
 
             choice = input("Enter your option number: ").strip()
             
+            if choice not in ['1', '2', '3', '4', '5', '6', '0']:
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
+                continue
+
             if choice == '1':
                 clear_screen_with_banner()
                 self.manage_subscriptions()
@@ -61,111 +66,146 @@ class Dashboard:
                 time.sleep(3)
                 print("\n👋 Logged out. Returning to main menu...\n")
                 break
-            else:
-                print("❌ Invalid input. Try again.")
     
     def get_advice(self):
-        print("Get personalized tips to upgrade or downgrade your plan so you enjoy the best value while saving money.")
-        print("="*50)
-        if not self.subscriptions:
-            print("\nYou have no subscriptions yet.")
-            time.sleep(3)
-            return
-        else:
-            print("📄 Your Subscriptions:")
-            for i, sub in enumerate(self.subscriptions, start=1):
-                print(f"{i}. {sub.service_name} | Status: {'Active' if sub.active_status else 'Inactive'} | Price: $ {sub.subscription_price}")
-            print("0. Go back")
-        choice = int(input("\nEnter the number of the subscription which you want to get advice on: "))
-        
-        subscription = self.subscriptions[choice-1]
-        try:
-            usage = fetch_usage(self.user, subscription)
-            if not usage:
-                print("Please enter the Subscription usage details first to get advice. Go to Manage Usage option in the main menu to add usage details.")
+        while True:
+            clear_screen_with_banner()
+            print("\nGet personalized tips to upgrade or downgrade your plan so you enjoy the best value while saving money.")
+            print("="*50)
+            if not self.subscriptions:
+                print("\nYou have no subscriptions yet.")
                 time.sleep(5)
                 return
-            advisory = Advisory(self.user, usage)
-            print("Analyzing the subscription to generate advice...\n")
-            time.sleep(3)
-            print(advisory.generate_advice())
-            time.sleep(10)
-            return
-        except Exception as e:
-            print(f"There was an error generating advice. Error: {e}")
-        
-    def view_reports(self):
-
-        def send_monthly_report():
-            print("\n📄 Your Monthly Reports")
-            reports = fetch_all_monthly_reports(self.user)
-            if not reports:
-                print("⚠️  No monthly reports found.")
-                time.sleep(3)
+            else:
+                print("📄 Your Subscriptions:")
+                for i, sub in enumerate(self.subscriptions, start=1):
+                    print(f"{i}. 📄 {sub.service_name} | Status: {'Active' if sub.active_status else 'Inactive'} | Price: $ {sub.subscription_price}")
+                print("0. 🔙 Go back")
+            choice = input("\nEnter the number of the subscription which you want to get advice on: ")
+            valid_choices = [str(i) for i in range(0, len(self.subscriptions)+1)]
+            if choice not in valid_choices:
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)    
+                continue
+            
+            if choice == "0":
                 return
-
-            print("\n📅 Monthly Reports:")
-            for i, report in enumerate(reports, start=1):
-                print(f"{i}. {report.month}")  # Assuming report has month_name attribute
-
-            choice = int(input("\nSelect the monthly report you want to be emailed: "))
+                
+            subscription = self.subscriptions[int(choice)-1]
             try:
-                if choice < 1 or choice > len(reports):
-                    print("\nInvalid option")
+                usage = fetch_usage(self.user, subscription)
+                if not usage:
+                    print("Please enter the Subscription usage details first to get advice. Go to Manage Usage option in the main menu to add usage details.")
+                    time.sleep(5)
+                    return
+                advisory = Advisory(self.user, usage)
+                print("Analyzing the subscription to generate advice...\n")
+                time.sleep(3)
+                print(advisory.generate_advice())
+                time.sleep(10)
+                return
+            except Exception as e:
+                print(f"There was an error generating advice. Error: {e}")
+            
+    def view_reports(self):
+        def send_monthly_report():
+            while True:
+                all_reports = self.monthly_reports
+                years = set()
+                for r in all_reports:
+                    years.add(r.date_report_generated.year)
+                print("\nEnter the year for which you want to send the monthly report.")
+                print("Available years:")
+                for i, year in enumerate(years, start=1):
+                    print(f"{i}. {year}")
+                print("0. 🔙 Back to Main Menu")
+                choice = input("Enter the option number: ")
+                if choice not in [str(i) for i in range(1, len(years)+1)] + ['0']:
+                    print("\n❌ Invalid input. Please enter the correct option number.\n")
+                    time.sleep(3)
+                    return
+                if choice == '0':
+                    return
+                year = list(years)[int(choice)-1]
+                
+                def filter_reports_by_year(report):
+                    if report.date_report_generated.year == year:
+                        return report
+                    else:
+                        return None
+                
+                reports = list(filter(filter_reports_by_year, all_reports))
+                
+                if not reports:
+                    print("⚠️  No monthly reports found.")
                     time.sleep(3)
                     return
 
-                report_selected = reports[choice - 1]
-                pdf_data = report_selected.report_data
+                print("\n📅 Monthly Reports:")
+                for i, report in enumerate(reports, start=1):
+                    print(f"{i}. {report.month}")  # Assuming report has month_name attribute
+                print("0. 🔙 Back to Main Menu")
+                
+                choice = input("\nSelect the monthly report you want to be emailed: ")
+                try:
+                    if not choice.isdigit() or int(choice) < 0 or int(choice) > len(reports):
+                        print("\n❌ Invalid input. Please enter the correct option number.\n")
+                        time.sleep(3)
+                        return
+                    
+                    if choice == "0":
+                        return
 
-                # MySQL might return as str if TEXT column, decode if needed
-                if isinstance(pdf_data, str):
-                    try:
-                        pdf_data = base64.b64decode(pdf_data, validate=True)
-                    except Exception:
-                        pass  # assume already raw bytes
+                    report_selected = reports[int(choice) - 1]
+                    pdf_data = report_selected.report_data
 
-                # Create a temp PDF file from the BLOB
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
-                    temp_pdf.write(pdf_data)
-                    temp_pdf_path = temp_pdf.name
+                    # MySQL might return as str if TEXT column, decode if needed
+                    if isinstance(pdf_data, str):
+                        try:
+                            pdf_data = base64.b64decode(pdf_data, validate=True)
+                        except Exception:
+                            pass  # assume already raw bytes
 
-                # Read the file back and encode as base64 for Lambda payload
-                with open(temp_pdf_path, "rb") as f:
-                    encoded_pdf = base64.b64encode(f.read()).decode("utf-8")
+                    # Create a temp PDF file from the BLOB
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
+                        temp_pdf.write(pdf_data)
+                        temp_pdf_path = temp_pdf.name
 
-                # Prepare Lambda payload
-                lambda_client = boto3.client('lambda', region_name='ap-south-1')
-                payload = {
-                    "report_data": encoded_pdf,
-                    "email_to": report_selected.user.email_id,
-                    "subject": f"Monthly Report for {report_selected.month}",
-                    "username": report_selected.user.username,
-                    "body": (
-                        f"Dear {getattr(self.user, 'username', 'User')},\n\n"
-                        f"Please find attached your monthly report for {report_selected.month}.\n\n"
-                        f"Best regards,\nTrackMySubs Team"
+                    # Read the file back and encode as base64 for Lambda payload
+                    with open(temp_pdf_path, "rb") as f:
+                        encoded_pdf = base64.b64encode(f.read()).decode("utf-8")
+
+                    # Prepare Lambda payload
+                    lambda_client = boto3.client('lambda', region_name='ap-south-1')
+                    payload = {
+                        "report_data": encoded_pdf,
+                        "email_to": report_selected.user.email_id,
+                        "subject": f"Monthly Report for {report_selected.month}",
+                        "username": report_selected.user.username,
+                        "body": (
+                            f"Dear {getattr(self.user, 'username', 'User')},\n\n"
+                            f"Please find attached your monthly report for {report_selected.month}.\n\n"
+                            f"Best regards,\nTrackMySubs Team"
+                        )
+                    }
+                    # Invoke Lambda
+                    function_name = 'send_report'
+                    lambda_client.invoke(
+                        FunctionName=function_name,
+                        InvocationType='Event',
+                        Payload=json.dumps(payload).encode('utf-8')
                     )
-                }
 
-                # Invoke Lambda
-                function_name = 'send_report'
-                lambda_client.invoke(
-                    FunctionName=function_name,
-                    InvocationType='Event',
-                    Payload=json.dumps(payload).encode('utf-8')
-                )
+                    print("Report sent successfully. Please check your email inbox.")
+                    time.sleep(3)
+                    return
 
-                print("Report sent successfully. Please check your email inbox.")
-                time.sleep(3)
+                    # Optionally clean up the temp file
+                    os.remove(temp_pdf_path)
 
-                # Optionally clean up the temp file
-                os.remove(temp_pdf_path)
-
-            except Exception as e:
-                print(f"Error sending the monthly report selected. Error: {e}")
-                time.sleep(4)
-
+                except Exception as e:
+                    print(f"Error sending the monthly report selected. Error: {e}")
+                    time.sleep(4)
             
         def send_yearly_report():
             print("\n📄 Your Yearly Reports")
@@ -174,17 +214,21 @@ class Dashboard:
                 print("⚠️  No yearly reports found.")
                 time.sleep(3)
                 return
-            print("\n📅 Yearly Reports:")
+            print("\n📅 Yearly Reports")
+            print("Available Years:")
             for i, report in enumerate(reports, start=1):
                 print(f"{i}. {report.year}")  # Assuming report has month_name attribute
 
-            choice = int(input("\n Select the yearly report you want to be emailed."))
+            choice = input("\nSelect the yearly report you want to be emailed: ")
             try:
-                if choice < 0 or choice > len(reports):
-                    print("\nInvalid option")
+                if not choice.isdigit() or int(choice) < 0 or int(choice) > len(reports):
+                    print("\n❌ Invalid input. Please enter the correct option number.\n")
                     time.sleep(3)
                     return
-                report_selected = reports[choice-1]
+                    
+                if choice == "0":
+                    return
+                report_selected = reports[int(choice)-1]
                 lambda_client = boto3.client('lambda', region_name='ap-south-1')
                 payload = {
                     "report_data": base64.b64encode(report_selected.report_data).decode("utf-8"),  # convert bytes -> base64 string
@@ -215,11 +259,16 @@ class Dashboard:
             print("="*50)
             
             # Step 1: Ask user for report type
-            print("\n Which report would you like to be emailed?")
-            print("\n1. Monthly Report")
-            print("2. Yearly Report")
-            print("0. Go back")
+            print("\nWhich report would you like to be emailed?")
+            print("\n1. 📅 Monthly Report")
+            print("2. 📅 Yearly Report")
+            print("0. 🔙 Back to Main Menu")
             choice = input("Enter the option number: ")
+            
+            if choice not in ["1", "2", "0"]:
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
+                continue
 
             if choice == "1":
                 send_monthly_report()
@@ -227,9 +276,7 @@ class Dashboard:
                 send_yearly_report()
             elif choice == "0":
                 break
-            else:
-                print("❌ Invalid choice. Please enter a valid option number.")
-    
+            
     def manage_usage(self):
         def add_usage():
             print("\n🆕 Add New Subscription Usage Details")
@@ -257,10 +304,10 @@ class Dashboard:
                 if choice == 0:
                     return
                 if choice < 0 or choice > len(subs):
-                    print("Invalid choice. Returning to menu.")
-                    return
+                    raise ValueError
             except ValueError:
-                print("Invalid input. Please enter a number.")
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
                 return
 
             # Create Usage object
@@ -288,7 +335,7 @@ class Dashboard:
         def modify_usage():
             print("\n✏️  Update Subscription Usage")
 
-            usages_list = fetch_all_usages(self.user)
+            usages_list = self.usages
             if not usages_list:
                 print("No usage records found to update.")
                 time.sleep(3)
@@ -307,10 +354,10 @@ class Dashboard:
                 if choice == 0:
                     return
                 elif choice < 0 or choice > len(usages_list):
-                    print("Invalid choice. Returning to menu.")
-                    return
+                    raise ValueError
             except ValueError:
-                print("Invalid input. Please enter a number.")
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
                 return
 
             usage = usages_list[choice - 1]
@@ -324,9 +371,10 @@ class Dashboard:
                 print("4. ❌ Finish updating")
 
                 try:
-                    field_choice = int(input("Enter the number corresponding to the field: "))
+                    field_choice = int(input("\nEnter the number corresponding to the field: "))
                 except ValueError:
-                    print("Invalid input. Please enter a number.")
+                    print("\n❌ Invalid input. Please enter the correct option number.\n")
+                    time.sleep(3)
                     continue
 
                 if field_choice == 4:
@@ -372,7 +420,7 @@ class Dashboard:
         def reset_usage():
             print("\n✏️  Reset Subscription Usage")
 
-            usages_list = fetch_all_usages(self.user)
+            usages_list = self.usages
             if not usages_list:
                 print("No usage records found to reset.")
                 time.sleep(3)
@@ -391,10 +439,10 @@ class Dashboard:
                 if choice == 0:
                     return
                 elif choice < 0 or choice > len(usages_list):
-                    print("Invalid choice. Returning to menu.")
-                    return
+                    raise ValueError
             except ValueError:
-                print("Invalid input. Please enter a number.")
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
                 return
             print("\n Resetting usage records...")
             time.sleep(3)
@@ -405,7 +453,7 @@ class Dashboard:
             try:
                 update_usage({"times_used_per_month":usage.times_used_per_month, "session_duration_hours": usage.session_duration_hours, "benefit_rating": usage.benefit_rating}, usage.user, usage.subscription)
                 print("Usage record was reset successfully.")
-                time.sleep(2)
+                time.sleep(3)
             except Exception as e:
                 print(f"\nThere was an error resetting the usage record. Error: {e}")
                 time.sleep(3)
@@ -413,7 +461,7 @@ class Dashboard:
             
         def remove_usage():
             print("\n❌ Delete Subscription Usage")
-            usages_list = fetch_all_usages(self.user)
+            usages_list = self.usages
             if not usages_list:
                 print("No usage records found to delete.")
                 time.sleep(3)
@@ -427,39 +475,38 @@ class Dashboard:
                     f"| Benefit rating: {usg.benefit_rating}")
             print("0. Go back")
 
-            try:
-                choice = int(input("\nEnter the number of the usage record you want to delete: "))
-                if choice == 0:
-                    return
-                elif choice < 0 or choice > len(usages_list):
-                    print("Invalid choice. Returning to menu.")
-                    return
-            except ValueError:
-                print("Invalid input. Please enter a number.")
+            
+            choice = input("\nEnter the number of the usage record you want to delete: ")
+            if choice == "0":
+                return
+            elif not choice.isdigit() or int(choice) < 0 or int(choice) > len(usages_list):
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
                 return
 
-            usage = usages_list[choice - 1]
+            usage = usages_list[int(choice) - 1]
 
             try:
                 print("1. Yes")
                 print("2. Cancel")
-                print("\n")
-                confirm = int(input("Are you sure you want to delete this usage record? "))
+                confirm = int(input("⚠️  Are you sure you want to delete this usage record? "))
                 if confirm == 1:
                     delete_usage(usage.user, usage.subscription)
                     print("✅ Usage record deleted successfully.")
                     time.sleep(3)
                 elif confirm == 2:
                     return
+                
             except ValueError:
-                print("Invalid input. Please enter 1 for Yes and 2 for Cancel.")
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
             
         while True:
             clear_screen_with_banner()
             print("🔧 Manage Usage Details")
             print("="*50)
 
-            usages_list = fetch_all_usages(self.user)
+            usages_list = self.usages
                 
             if not usages_list:
                 print("You have not added any usage details yet.")
@@ -470,12 +517,17 @@ class Dashboard:
             print("\nWhat would you like to do?")
             print("1. ✅ Add usage details for a subscirption")
             print("2. ✏️  Update usage details of a subscription")
-            print("3. Reset Usage")
+            print("3. 🔄 Reset Usage")
             print("4. ❌ Delete usage details of a subscription")
-            print("5. 🔙 Return to main menu")
+            print("0. 🔙 Back to Main Menu")
 
             choice = input("\nEnter your choice (1-4): ")
 
+            if choice not in ['0', '1', '2', '3', '4']:
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
+                continue
+            
             if choice == "1":
                 add_usage()
             elif choice == "2":
@@ -484,10 +536,8 @@ class Dashboard:
                 reset_usage()
             elif choice == "4":
                 remove_usage()
-            elif choice == "5":
+            elif choice == "0":
                 break
-            else:
-                print("❌ Invalid choice. Please enter a number from 1 to 4.")
             
     def manage_budget(self):
         def add_budget():
@@ -520,12 +570,13 @@ class Dashboard:
             
             while True:
                 monthly_budget_amount = input("\nEnter your new monthly budget amount: ")
-                print("Updating your budget...")
-                time.sleep(3)
+                
                 try:
                     self.budget.monthly_budget_amount = monthly_budget_amount
                     self.budget.yearly_budget_amount = self.budget.monthly_budget_amount * 12
                     self.budget.over_the_limit = None
+                    print("Updating your budget...")
+                    time.sleep(3)
                     break
                 except ValueError as e:
                     print(f"❌ {e}")
@@ -538,7 +589,7 @@ class Dashboard:
                 
         while True:
             clear_screen_with_banner()
-            print("🔧 Manage Budget")
+            print("\n0🔧 Manage Budget")
             print("="*50)
 
             if not self.budget:
@@ -550,18 +601,21 @@ class Dashboard:
             print("\nWhat would you like to do?")
             print("1. ✅ Add Budget")
             print("2. ✏️  Update Budget")
-            print("3. 🔙 Return to main menu")
+            print("0. 🔙 Back to Main Menu")
 
             choice = input("\nEnter your choice (1-2): ")
 
+            if choice not in ['0', '1', '2']:
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
+                continue
+            
             if choice == "1":
                 add_budget()
             elif choice == "2":
                 modify_budget()
-            elif choice == "3":
+            elif choice == "0":
                 break
-            else:
-                print("❌ Invalid choice. Please enter either 1 or 2.")
 
     def manage_subscriptions(self):
         def add_subscription():
@@ -570,7 +624,7 @@ class Dashboard:
             subscription.subscription_id = None
             print("\nEnter 0 and press Enter to cancel")
             while True:
-                service_type = input("Enter service type (Personal/Professional): ").strip().title()
+                service_type = input("\nEnter service type (Personal/Professional): ").strip().title()
                 if service_type == "0":
                     print("\n🔙 Returning to main menu")
                     time.sleep(3)
@@ -582,7 +636,7 @@ class Dashboard:
                     print(f"❌ {e}")
 
             while True:
-                category = input("Enter category (e.g., Movies, Music, etc.): ").strip().title()
+                category = input("\nEnter category (e.g., Movies, Music, etc.): ").strip().title()
                 if category == "0":
                     print("🔙 Returning to main menu")
                     time.sleep(3)
@@ -594,7 +648,7 @@ class Dashboard:
                     print(f"❌ {e}")
 
             while True:
-                service_name = input("Enter service name (e.g., Netflix, Spotify): ").strip().title()
+                service_name = input("\nEnter service name (e.g., Netflix, Spotify): ").strip().title()
                 if service_name == "0":
                     print("🔙 Returning to main menu")
                     time.sleep(3)
@@ -606,7 +660,7 @@ class Dashboard:
                     print(f"❌ {e}")
 
             while True:
-                plan_type = input("Enter plan type (Basic/Standard/Premium): ").strip().title()
+                plan_type = input("nEnter plan type (Basic/Standard/Premium): ").strip().title()
                 if plan_type == "0":
                     print("🔙 Returning to main menu")
                     time.sleep(3)
@@ -618,7 +672,7 @@ class Dashboard:
                     print(f"❌ {e}")
             
             while True:
-                active_status = input("Is the subscription currently active? (Active/Cancelled): ").strip().title() 
+                active_status = input("\nIs the subscription currently active? (Active/Cancelled): ").strip().title() 
                 if active_status == "0":
                     print("🔙 Returning to main menu")
                     time.sleep(3)
@@ -630,7 +684,7 @@ class Dashboard:
                     print(f"❌ {e}")
 
             while True:
-                price_input = input("Enter subscription price (e.g., $ 50.00): ").strip()
+                price_input = input("\nEnter subscription price (e.g., $ 50.00): ").strip()
                 if price_input == "0":
                     print("🔙 Returning to main menu")
                     time.sleep(3)
@@ -642,7 +696,7 @@ class Dashboard:
                     print(f"❌ {e}.")
 
             while True:
-                frequency = input("Enter billing frequency (e.g., Monthly/Yearly): ").strip().title()
+                frequency = input("\nEnter billing frequency (e.g., Monthly/Yearly): ").strip().title()
                 if frequency == "0":
                     print("🔙 Returning to main menu")
                     time.sleep(3)
@@ -654,7 +708,7 @@ class Dashboard:
                     print(f"❌ {e}")
 
             while True:
-                start_date = input("Enter start date (DD/MM/YYYY): ").strip()
+                start_date = input("\nEnter start date (DD/MM/YYYY): ").strip()
                 if start_date == "0":
                     print("🔙 Returning to main menu")
                     time.sleep(3)
@@ -666,7 +720,7 @@ class Dashboard:
                     print(f"❌ {e}")
 
             while True:
-                renewal_date = input("Enter renewal date (DD/MM or DD): ").strip()
+                renewal_date = input("\nEnter renewal date (DD/MM or DD): ").strip()
                 if renewal_date == "0":
                     print("🔙 Returning to main menu")
                     time.sleep(3)
@@ -675,10 +729,10 @@ class Dashboard:
                     subscription.renewal_date = renewal_date
                     break
                 except ValueError as e:
-                    print(f"❌ {e}")
+                    print(f"❌ Enter date in DD/MM format")
 
             while True:
-                auto_renew = input("Is it renewed automatically? (yes/no): ").strip().title()
+                auto_renew = input("\nIs it renewed automatically? (yes/no): ").strip().title()
                 if auto_renew == "0":
                     print("🔙 Returning to main menu")
                     time.sleep(3)
@@ -718,10 +772,10 @@ class Dashboard:
                 if choice == 0:
                     return
                 elif choice < 0 or choice > len(self.subscriptions):
-                    print("Invalid choice. Returning to menu.")
-                    return
+                    raise ValueError
             except ValueError:
-                print("Invalid input. Please enter a number.")
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
                 return
 
             subscription = self.subscriptions[choice - 1]
@@ -742,9 +796,10 @@ class Dashboard:
                 print("11. ❌ Finish updating")
 
                 try:
-                    field_choice = int(input("Enter the number corresponding to the field: "))
+                    field_choice = int(input("\nEnter the number corresponding to the field: "))
                 except ValueError:
-                    print("Invalid input. Please enter a number.")
+                    print("\n❌ Invalid input. Please enter the correct option number.\n")
+                    time.sleep(3)
                     continue
 
                 if field_choice == 11:
@@ -774,6 +829,7 @@ class Dashboard:
                     setattr(subscription, attr_name, new_value)
                     updated_fields[attr_name] = getattr(subscription, attr_name)
                     print(f"✅ {attr_name} updated successfully.")
+                    time.sleep(3)
                 except ValueError as ve:
                     print(f"❌ Error: {ve}")
 
@@ -781,6 +837,7 @@ class Dashboard:
                 print("\n🔄 The following fields were updated:")
                 for k, v in updated_fields.items():
                     print(f"{k}: {v}")
+                time.sleep(3)
                 update_subscription(updated_fields, self.user, subscription)
             else:
                 print("No fields were updated.")
@@ -804,10 +861,10 @@ class Dashboard:
                 if choice == 0:
                     return
                 elif choice < 0 or choice > len(self.subscriptions):
-                    print("Invalid choice. Returning to menu.")
-                    return
+                    raise ValueError
             except ValueError:
-                print("Invalid input. Please enter a number.")
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
                 return
 
             subscription = self.subscriptions[choice - 1]
@@ -815,21 +872,23 @@ class Dashboard:
             try:
                 print("1. Yes")
                 print("2. Cancel")
-                print("\n") 
-                choice = int(input("Are you sure you want to delete this subscription? "))
+                choice = int(input("⚠️  Are you sure you want to delete this subscription? "))
                 if choice == 1:
                     delete_subscription(self.user, subscription)
                     print("✅ Subscription deleted successfully.")
                     time.sleep(3)
                     self.budget = fetch_budget(self.user)
+                    self.subscriptions = fetch_all_subscription(self.user)
                 elif choice == 2:
                     return
             except ValueError:
-                print("Invalid input. Please enter 1 for Yes and 2 for Cancel.")
-
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
+                return
+            
         while True:
             clear_screen_with_banner()
-            print("🔧 Manage Subscriptions")
+            print("\n🔧 Manage Subscriptions")
             print("="*50)
 
             if not self.subscriptions:
@@ -843,52 +902,71 @@ class Dashboard:
             print("1. ✅ Add a new subscription")
             print("2. ✏️  Update an existing subscription details")
             print("3. ❌ Delete a subscription")
-            print("4. 🔙 Return to main menu")
+            print("0. 🔙 Back to Main Menu")
 
             choice = input("\nEnter your choice (1-4): ")
 
+            if choice not in ['0', '1', '2', '3']:
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
+                continue
             if choice == "1":
                 add_subscription()
             elif choice == "2":
                 modify_subscription()
             elif choice == "3":
                 remove_subscription()
-            elif choice == "4":
+            elif choice == "0":
                 break
-            else:
-                print("❌ Invalid choice. Please enter a number from 1 to 4.")
-
+            
     def account_settings(self):
         while True:
+            clear_screen_with_banner()
             print("\n⚙️  Account Settings")
-            print("1. Change Email")
-            print("2. Change Password")
+            print("="*50)
+            print("1.✏️  Change Email")
+            print("2.✏️  Change Password")
             print("3.❌ Delete Account")
-            print("0. Back to Dashboard")
+            print("0.🔙 Back to Main Menu")
 
             choice = input("\nEnter your option: ").strip()
+            
+            if choice not in ['0', '1', '2', '3']:
+                print("\n❌ Invalid input. Please enter the correct option number.\n")
+                time.sleep(3)
+                continue
 
             if choice == '1':
-                print(f"Your current email address: {self.user.email_id}")
+                print(f"\nYour current email address: {self.user.email_id}")
                 new_email = input("Enter new email: ").strip()
                 try:
                     self.user.email_id = new_email
                     update_user({'email_id': new_email}, self.user)
                     print("✅ Email updated successfully.")
+                    time.sleep(3)
                 except ValueError as ve:
                     print(f"❌ {ve}")
+                    time.sleep(3)
 
             elif choice == '2':
-                new_password = getpass.getpass("Enter new password: ").strip()
-                try:
-                    self.user.password = new_password
-                    update_user({'password': new_password}, self.user)
-                    print("✅ Password updated successfully.")
-                except ValueError as ve:
-                    print(f"❌ {ve}")
-
+                current_password = getpass.getpass("\nEnter your current password: ")
+                if current_password == self.user.password:
+                    new_password = getpass.getpass("Enter new password: ").strip()
+                    try:
+                        self.user.password = new_password
+                        update_user({'password': new_password}, self.user)
+                        print("✅ Password updated successfully.")
+                        time.sleep(3)
+                    except ValueError as ve:
+                        print(f"❌ {ve}")
+                        time.sleep(3)
+                else:
+                    print("❌ Incorrect current password. Please try again.")
+                    time.sleep(3)
+                    return
+                
             elif choice == '3':
-                print("\n⚠️ Are you sure you want to delete your account? This action cannot be undone.")
+                print("\n⚠️  Are you sure you want to delete your account? This action cannot be undone.")
                 sub_choice = input("1. Yes\n2. No\n\nEnter your choice: ").strip()
 
                 if sub_choice == "1":
@@ -909,12 +987,10 @@ class Dashboard:
                         print(f"❌ Failed to delete account: {e}")
                         time.sleep(2)
                 elif sub_choice == "2":
-                    print("\n🔙 Returning to Account Settings...")
-                    time.sleep(1)
+                    pass
                 else:
                     print("❌ Invalid choice.")
+                    time.sleep(3)
 
             elif choice == '0':
                 break
-            else:
-                print("❌ Invalid choice. Try again.")
