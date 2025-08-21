@@ -35,7 +35,7 @@ class Dashboard:
             print("6. ⚙️  Account Settings")
             print("0. ↩️  Logout")
 
-            choice = input("Enter your option number: ").strip()
+            choice = input("\nEnter your option number: ").strip()
             
             if choice not in ['1', '2', '3', '4', '5', '6', '0']:
                 print("\n❌ Invalid input. Please enter the correct option number.\n")
@@ -70,7 +70,7 @@ class Dashboard:
     def get_advice(self):
         while True:
             clear_screen_with_banner()
-            print("\nGet personalized tips to upgrade or downgrade your plan so you enjoy the best value while saving money.")
+            print("\n💡 Get personalized tips to upgrade or downgrade your plan so you enjoy the best value while saving money.")
             print("="*50)
             if not self.subscriptions:
                 print("\nYou have no subscriptions yet.")
@@ -111,15 +111,18 @@ class Dashboard:
         def send_monthly_report():
             while True:
                 all_reports = self.monthly_reports
+                if not all_reports:
+                    print("⚠️  No monthly reports found.")
+                    time.sleep(3)
+                    return
                 years = set()
                 for r in all_reports:
                     years.add(r.date_report_generated.year)
-                print("\nEnter the year for which you want to send the monthly report.")
                 print("Available years:")
                 for i, year in enumerate(years, start=1):
                     print(f"{i}. {year}")
                 print("0. 🔙 Back to Main Menu")
-                choice = input("Enter the option number: ")
+                choice = input("\nSelect the year for which you want to send the monthly report: ")
                 if choice not in [str(i) for i in range(1, len(years)+1)] + ['0']:
                     print("\n❌ Invalid input. Please enter the correct option number.\n")
                     time.sleep(3)
@@ -143,7 +146,7 @@ class Dashboard:
 
                 print("\n📅 Monthly Reports:")
                 for i, report in enumerate(reports, start=1):
-                    print(f"{i}. {report.month}")  # Assuming report has month_name attribute
+                    print(f"{i}. 📄 Report of the month - {report.month}")  # Assuming report has month_name attribute
                 print("0. 🔙 Back to Main Menu")
                 
                 choice = input("\nSelect the monthly report you want to be emailed: ")
@@ -208,7 +211,6 @@ class Dashboard:
                     time.sleep(4)
             
         def send_yearly_report():
-            print("\n📄 Your Yearly Reports")
             reports = fetch_all_yearly_reports(self.user)
             if not reports:
                 print("⚠️  No yearly reports found.")
@@ -217,8 +219,8 @@ class Dashboard:
             print("\n📅 Yearly Reports")
             print("Available Years:")
             for i, report in enumerate(reports, start=1):
-                print(f"{i}. {report.year}")  # Assuming report has month_name attribute
-
+                print(f"{i}. 📄 Report of the year -  {report.year}")  # Assuming report has month_name attribute
+            print("0. 🔙 Back to Main Menu")
             choice = input("\nSelect the yearly report you want to be emailed: ")
             try:
                 if not choice.isdigit() or int(choice) < 0 or int(choice) > len(reports):
@@ -259,11 +261,11 @@ class Dashboard:
             print("="*50)
             
             # Step 1: Ask user for report type
-            print("\nWhich report would you like to be emailed?")
+            print("Which report would you like to be emailed?")
             print("\n1. 📅 Monthly Report")
             print("2. 📅 Yearly Report")
             print("0. 🔙 Back to Main Menu")
-            choice = input("Enter the option number: ")
+            choice = input("\nEnter the option number: ")
             
             if choice not in ["1", "2", "0"]:
                 print("\n❌ Invalid input. Please enter the correct option number.\n")
@@ -296,8 +298,8 @@ class Dashboard:
             # Display available subscriptions
             print("Select the subscription for which you want to add the usage details:")
             for index, sub in enumerate(subs, start=1):
-                print(f"{index}. Service Name: {sub.service_name}")
-            print("0. Go back")
+                print(f"{index}. 📄 Subscription: {sub.service_name}")
+            print("0. 🔙 Go Back")
 
             try:
                 choice = int(input("\nEnter your choice: "))
@@ -320,7 +322,8 @@ class Dashboard:
                 usage.times_used_per_month = int(input("Enter times used per month: "))
                 usage.benefit_rating = int(input("Enter benefit rating (1-5): "))
             except ValueError as ve:
-                print(f"❌ Error: {ve}")
+                print(f"\n❌ Error: {ve}")
+                time.sleep(3)
                 return
 
             # Get latest usage ID
@@ -329,7 +332,8 @@ class Dashboard:
             # Insert into database
             insert_usage(usage, usage_id, self.user, selected_subscription)
             print("✅ Usage details added successfully.")
-            time.sleep(5)
+            self.usages.append(usage)
+            time.sleep(3)
             return
             
         def modify_usage():
@@ -347,7 +351,7 @@ class Dashboard:
                     f"| Times used per month: {usg.times_used_per_month} "
                     f"| Session duration (hrs): {usg.session_duration_hours} "
                     f"| Benefit rating: {usg.benefit_rating}")
-            print("0. Go back")
+            print(" 0. 🔙 Go back")
 
             try:
                 choice = int(input("\nEnter the number of the usage record you want to update: "))
@@ -375,7 +379,7 @@ class Dashboard:
                 except ValueError:
                     print("\n❌ Invalid input. Please enter the correct option number.\n")
                     time.sleep(3)
-                    continue
+                    return
 
                 if field_choice == 4:
                     break
@@ -388,31 +392,29 @@ class Dashboard:
 
                 attr_name = attr_map.get(field_choice)
                 if not attr_name:
-                    print("Invalid choice.")
-                    continue
+                    print("\n❌ Invalid input. Please enter the correct option number.\n")
+                    time.sleep(3)
+                    return
 
                 new_value = input(f"Enter new value for {attr_name.replace('_', ' ').title()}: ")
 
                 # Convert to correct type before assigning
                 try:
-                    if attr_name == 'times_used_per_month':
-                        new_value = int(new_value)
-                    elif attr_name == 'session_duration_hours':
-                        new_value = float(new_value)
-                    elif attr_name == 'benefit_rating':
-                        new_value = int(new_value)
-
+                    # Do NOT convert new_value here; let the setter handle it
                     setattr(usage, attr_name, new_value)
                     updated_fields[attr_name] = getattr(usage, attr_name)
                     print(f"✅ {attr_name} updated successfully.")
-                    
+                    time.sleep(2)
                 except ValueError as ve:
-                    print(f"❌ Error: {ve}")
+                    print(f"\n❌ Error: {ve}")
+                    time.sleep(3)
+                    return
 
             if updated_fields:
                 print("\n🔄 The following fields were updated:")
                 for k, v in updated_fields.items():
                     print(f"{k}: {v}")
+                time.sleep(3)
                 update_usage(updated_fields, usage.user, usage.subscription)
             else:
                 print("No fields were updated.")
@@ -432,7 +434,7 @@ class Dashboard:
                     f"| Times used per month: {usg.times_used_per_month} "
                     f"| Session duration (hrs): {usg.session_duration_hours} "
                     f"| Benefit rating: {usg.benefit_rating}")
-            print("0. Go back")
+            print("0. 🔙 Go Back")
             
             try:
                 choice = int(input("\nEnter the number of the usage record you want to reset: "))
@@ -444,7 +446,7 @@ class Dashboard:
                 print("\n❌ Invalid input. Please enter the correct option number.\n")
                 time.sleep(3)
                 return
-            print("\n Resetting usage records...")
+            print("\nResetting usage records...")
             time.sleep(3)
             usage = usages_list[choice - 1]
             usage.times_used_per_month = 0
@@ -473,7 +475,7 @@ class Dashboard:
                     f"| Times used per month: {usg.times_used_per_month} "
                     f"| Session duration (hrs): {usg.session_duration_hours} "
                     f"| Benefit rating: {usg.benefit_rating}")
-            print("0. Go back")
+            print("0. 🔙 Go Back")
 
             
             choice = input("\nEnter the number of the usage record you want to delete: ")
@@ -493,6 +495,7 @@ class Dashboard:
                 if confirm == 1:
                     delete_usage(usage.user, usage.subscription)
                     print("✅ Usage record deleted successfully.")
+                    self.usages.remove(usage)
                     time.sleep(3)
                 elif confirm == 2:
                     return
@@ -503,7 +506,7 @@ class Dashboard:
             
         while True:
             clear_screen_with_banner()
-            print("🔧 Manage Usage Details")
+            print("\n🔧 Manage Usage Details")
             print("="*50)
 
             usages_list = self.usages
@@ -513,7 +516,7 @@ class Dashboard:
             else:
                 print("📄 Your Subscription's usage details:")
                 for i, usg in enumerate(usages_list, start=1):
-                    print(f"{i}. Subscription: {usg.subscription.service_name} | Times used per month: {usg.times_used_per_month} | Session duration: {usg.session_duration_hours} | Benefit rating: {usg.benefit_rating}")
+                    print(f"{i}. 📄 Subscription: {usg.subscription.service_name} | Times used per month: {usg.times_used_per_month} | Session duration: {usg.session_duration_hours} | Benefit rating: {usg.benefit_rating}")
             print("\nWhat would you like to do?")
             print("1. ✅ Add usage details for a subscirption")
             print("2. ✏️  Update usage details of a subscription")
@@ -521,7 +524,7 @@ class Dashboard:
             print("4. ❌ Delete usage details of a subscription")
             print("0. 🔙 Back to Main Menu")
 
-            choice = input("\nEnter your choice (1-4): ")
+            choice = input("\nEnter the option number: ")
 
             if choice not in ['0', '1', '2', '3', '4']:
                 print("\n❌ Invalid input. Please enter the correct option number.\n")
@@ -560,7 +563,8 @@ class Dashboard:
                 print("✅ Your budget has been added successfully.")
                 time.sleep(2)
             except ValueError as e:
-                print(f"❌ {e}")
+                print(f"\n❌ {e}")
+                time.sleep(3)
                 
         def modify_budget():
             if not self.budget:
@@ -580,6 +584,8 @@ class Dashboard:
                     break
                 except ValueError as e:
                     print(f"❌ {e}")
+                    time.sleep(3)
+                    return
             try:
                 update_budget({"monthly_budget_amount": self.budget.monthly_budget_amount, "yearly_budget_amount": self.budget.yearly_budget_amount, "over_the_limit": self.budget.over_the_limit}, self.user)
                 print("Your budget has been updated successfully.")
@@ -589,14 +595,15 @@ class Dashboard:
                 
         while True:
             clear_screen_with_banner()
-            print("\n0🔧 Manage Budget")
+            print("\n🔧 Manage Budget")
             print("="*50)
 
             if not self.budget:
                 print("\nYou have not added your budget details. Add your budget details by pressing 1")
             else:
                 print("📄 Your Budget")
-                print(f"Monthly Budget Amount: {self.budget.monthly_budget_amount} | Yearly Budget Amount: {self.budget.yearly_budget_amount} | Total Amount Paid Monthly: {self.budget.total_amount_paid_monthly} | Total Amount Paid Yearly: {self.budget.total_amount_paid_yearly} | Budget within limit? {self.budget.over_the_limit}")
+                budget_within_limit = "No" if self.budget.over_the_limit else "Yes"
+                print(f"Monthly Budget Amount: {self.budget.monthly_budget_amount} | Yearly Budget Amount: {self.budget.yearly_budget_amount} | Total Amount Paid Monthly: {self.budget.total_amount_paid_monthly} | Total Amount Paid Yearly: {self.budget.total_amount_paid_yearly} | Budget within limit? {budget_within_limit}")
             
             print("\nWhat would you like to do?")
             print("1. ✅ Add Budget")
@@ -660,7 +667,7 @@ class Dashboard:
                     print(f"❌ {e}")
 
             while True:
-                plan_type = input("nEnter plan type (Basic/Standard/Premium): ").strip().title()
+                plan_type = input("\nEnter plan type (Basic/Standard/Premium): ").strip().title()
                 if plan_type == "0":
                     print("🔙 Returning to main menu")
                     time.sleep(3)
@@ -765,10 +772,10 @@ class Dashboard:
 
             # Step 1: Display available subscriptions
             for idx, sub in enumerate(self.subscriptions, start=1):
-                print(f"{idx}. {sub.service_name} | Status: {'Active' if sub.active_status else 'Inactive'} | Price: $ {sub.subscription_price}")
-            print("0. Go back")
+                print(f"{idx}. 📄  {sub.service_name} | Status: {'Active' if sub.active_status else 'Inactive'} | Price: $ {sub.subscription_price}")
+            print("0. 🔙 Go Back")
             try:
-                choice = int(input("Enter the number of the subscription you want to update: "))
+                choice = int(input("\nEnter the number of the subscription you want to update: "))
                 if choice == 0:
                     return
                 elif choice < 0 or choice > len(self.subscriptions):
@@ -832,6 +839,7 @@ class Dashboard:
                     time.sleep(3)
                 except ValueError as ve:
                     print(f"❌ Error: {ve}")
+                    time.sleep(3)
 
             if updated_fields:
                 print("\n🔄 The following fields were updated:")
@@ -854,10 +862,10 @@ class Dashboard:
 
             # Step 1: Display available subscriptions
             for idx, sub in enumerate(self.subscriptions, start=1):
-                print(f"{idx}. {sub.service_name} | Status: {'Active' if sub.active_status else 'Inactive'} | Price: $ {sub.subscription_price}")
-            print("0. Go back")
+                print(f"{idx}. 📄 {sub.service_name} | Status: {'Active' if sub.active_status else 'Inactive'} | Price: $ {sub.subscription_price}")
+            print("0. 🔙 Go Back")
             try:
-                choice = int(input("Enter the number of the subscription you want to delete: "))
+                choice = int(input("\nEnter the number of the subscription you want to delete: "))
                 if choice == 0:
                     return
                 elif choice < 0 or choice > len(self.subscriptions):
@@ -870,9 +878,10 @@ class Dashboard:
             subscription = self.subscriptions[choice - 1]
             
             try:
+                print("\n⚠️  Are you sure you want to delete this subscription?")
                 print("1. Yes")
                 print("2. Cancel")
-                choice = int(input("⚠️  Are you sure you want to delete this subscription? "))
+                choice = int(input("Enter the option number: "))
                 if choice == 1:
                     delete_subscription(self.user, subscription)
                     print("✅ Subscription deleted successfully.")
@@ -892,11 +901,11 @@ class Dashboard:
             print("="*50)
 
             if not self.subscriptions:
-                print("You have no subscriptions yet.")
+                print("You have not added any subscriptions yet.")
             else:
                 print("📄 Your Subscriptions:")
                 for i, sub in enumerate(self.subscriptions, start=1):
-                    print(f"{i}. {sub.service_name} | Status: {'Active' if sub.active_status else 'Inactive'} | Price: $ {sub.subscription_price}")
+                    print(f"{i}. 📄 {sub.service_name} | Status: {'Active' if sub.active_status else 'Inactive'} | Price: $ {sub.subscription_price}")
 
             print("\nWhat would you like to do?")
             print("1. ✅ Add a new subscription")
@@ -904,7 +913,7 @@ class Dashboard:
             print("3. ❌ Delete a subscription")
             print("0. 🔙 Back to Main Menu")
 
-            choice = input("\nEnter your choice (1-4): ")
+            choice = input("\nEnter the option number: ")
 
             if choice not in ['0', '1', '2', '3']:
                 print("\n❌ Invalid input. Please enter the correct option number.\n")
@@ -945,7 +954,7 @@ class Dashboard:
                     print("✅ Email updated successfully.")
                     time.sleep(3)
                 except ValueError as ve:
-                    print(f"❌ {ve}")
+                    print(f"\n❌ {ve}")
                     time.sleep(3)
 
             elif choice == '2':
@@ -958,12 +967,12 @@ class Dashboard:
                         print("✅ Password updated successfully.")
                         time.sleep(3)
                     except ValueError as ve:
-                        print(f"❌ {ve}")
+                        print(f"\n❌ {ve}")
                         time.sleep(3)
                 else:
-                    print("❌ Incorrect current password. Please try again.")
+                    print("\n❌ Incorrect current password. Please try again.")
                     time.sleep(3)
-                    return
+                    
                 
             elif choice == '3':
                 print("\n⚠️  Are you sure you want to delete your account? This action cannot be undone.")
@@ -984,12 +993,12 @@ class Dashboard:
                         time.sleep(2)
                         return True  # <---- SIGNAL to exit dashboard
                     except Exception as e:
-                        print(f"❌ Failed to delete account: {e}")
+                        print(f"\n❌ Failed to delete account: {e}")
                         time.sleep(2)
                 elif sub_choice == "2":
                     pass
                 else:
-                    print("❌ Invalid choice.")
+                    print("\n❌ Invalid choice.")
                     time.sleep(3)
 
             elif choice == '0':

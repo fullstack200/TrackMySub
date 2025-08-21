@@ -16,18 +16,19 @@ class SignIn:
         
     def handle(self):
         print("\n🔐 Sign In")
-        # username = input("Enter username: ").strip()
-        # password = getpass.getpass("Enter password: ").strip()
+        username = input("Enter username: ").strip()
+        password = getpass.getpass("Enter password: ").strip()
         
-        # if not username or not password:
-        #     print("❌ Username or password cannot be empty.")
-        #     return
+        if not username or not password:
+            print("\n❌ Username or password cannot be empty.")
+            time.sleep(2)
+            return
         
-        # self.user = fetch_user(username, password)
+        self.user = fetch_user(username, password)
         
-        #Adding this line to skip the signin part#####
-        self.user = fetch_user("fahad05", "Qwerty@12345")
-        ###############################################
+        # #Adding this line to skip the signin part#####
+        # self.user = fetch_user("fahad05", "Qwerty@123")
+        # ###############################################
         if self.user:
             subscriptions = fetch_all_subscription(self.user)
             budget = fetch_budget(self.user)
@@ -36,7 +37,7 @@ class SignIn:
             if budget:
                 self.user.budget = budget
             print("Logging in ...")
-            # time.sleep(2)
+            time.sleep(2)
             
             try:
                 if self.user.budget:
@@ -45,12 +46,13 @@ class SignIn:
                 print(f"⚠️ {e}")
         
             print(f"\n✅ Welcome back, {self.user.username}!")
-            # time.sleep(2)
+            time.sleep(3)
             monthly_reports = fetch_all_monthly_reports(self.user)
             yearly_reports = fetch_all_yearly_reports(self.user)
             usages = fetch_all_usages(self.user)
             dashboard = Dashboard(self.user, subscriptions, budget, monthly_reports, yearly_reports, usages)
             dashboard.show()
-        # else:
-        #     print("\n❌ Invalid username or password.")
+        else:
+            print("\n❌ Invalid username or password.")
+            time.sleep(3)
         

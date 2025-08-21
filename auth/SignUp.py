@@ -14,12 +14,14 @@ class SignUp:
         password = getpass.getpass("Enter a secure password: ").strip()
         if not username or not email_id or not password:
             print("❌ All fields are required.")
+            time.sleep(2)
             return 
         try:
             cursor = db_connection.cursor()
             cursor.execute("SELECT * FROM user WHERE username = %s", (username,))
             if cursor.fetchone():
                 print("❌ Username already exists. Please choose a different username.")
+                time.sleep(2)
                 return
             else:
                 user.username = username
@@ -32,5 +34,6 @@ class SignUp:
                 time.sleep(2)
         except Exception as e:
             print(f"❌ Error during sign up: {e}")
+            time.sleep(2)
         finally:
             cursor.close()

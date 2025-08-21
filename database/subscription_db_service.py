@@ -42,12 +42,12 @@ def fetch_subscriptions_with_no_usage(user):
     try:
         cursor = db_connection.cursor()
         query = f"""
-                SELECT s.subscription_id,s.service_type, s.category, s.service_name, s.plan_type,
+                SELECT s.subscription_id, s.service_type, s.category, s.service_name, s.plan_type,
                 s.active_status, s.subscription_price, s.billing_frequency,
                 s.start_date, s.renewal_date, s.auto_renewal_status FROM subscription s
-                where s.subscription_id not in (select su.subscription_id from subscriptionusage su where su.username = %s);
+                where s.username = %s and s.subscription_id not in (select su.subscription_id from subscriptionusage su where su.username = %s);
             """
-        cursor.execute(query,(user.username,))
+        cursor.execute(query,(user.username, user.username))
         result = cursor.fetchall()
         cursor.close()
         

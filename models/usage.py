@@ -20,9 +20,12 @@ class Usage:
 
     @times_used_per_month.setter
     def times_used_per_month(self, value):
+        value = int(value) if value is not None else 0
         if value is not None:
             if not isinstance(value, int):
                 raise ValueError("Times used per month should be an integer")
+            elif value < 0:
+                raise ValueError("Times used per month cannot be negative")
         self._times_used_per_month = value
 
     @property
@@ -31,9 +34,12 @@ class Usage:
 
     @session_duration_hours.setter
     def session_duration_hours(self, value):
+        value = float(value) if value is not None else 0.0
         if value is not None:
-            if not isinstance(value, (float, int)):
+            if not isinstance(value, (float)):
                 raise ValueError("Session duration should be a number")
+            elif value < 0:
+                raise ValueError("Session duration cannot be negative")
             value = float(value) 
         self._session_duration_hours = value
 
@@ -43,12 +49,13 @@ class Usage:
 
     @benefit_rating.setter
     def benefit_rating(self, value):
+        value = int(value) if value is not None else 0
         if value is not None:
-            if not isinstance(value, int):
+            if not isinstance(int(value), int):
                 raise ValueError("Benefit rating should be an integer")
-            if not (0 <= value <= 5):
+            if not (0 <= int(value) <= 5):
                 raise ValueError("Benefit rating should be between 1 and 5")
-        self._benefit_rating = value
+        self._benefit_rating = int(value)
 
     def reset_usage(self):
         """
