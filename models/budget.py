@@ -73,7 +73,7 @@ class Budget:
         if yearly_budget_amount is None:
             self._yearly_budget_amount = None
         else:
-            self._yearly_budget_amount = yearly_budget_amount
+            self._yearly_budget_amount = round(float(yearly_budget_amount), 2)
             
     @property
     def total_amount_paid_monthly(self):
@@ -94,7 +94,7 @@ class Budget:
                     continue
             self._total_amount_paid_monthly = round(float(self._total_amount_paid_monthly), 2)
         else:
-            self._total_amount_paid_monthly = value
+            self._total_amount_paid_monthly = round(float(value),2)
     @property
     def total_amount_paid_yearly(self):
         return self._total_amount_paid_yearly
@@ -102,9 +102,9 @@ class Budget:
     @total_amount_paid_yearly.setter
     def total_amount_paid_yearly(self, value):
         if value is None:
-            self._total_amount_paid_yearly = self.total_amount_paid_monthly * 12
+            self._total_amount_paid_yearly = round(float(self.total_amount_paid_monthly * 12), 2)
         else:
-            self._total_amount_paid_yearly = value
+            self._total_amount_paid_yearly = float(value)
             
     @property
     def over_the_limit(self):
@@ -135,6 +135,7 @@ class Budget:
 
         lambda_client = boto3.client('lambda', region_name='ap-south-1')
         function_name = 'alert-over-budget'
+        
         payload = {
             "monthly_budget_amount": self.monthly_budget_amount,
             "yearly_budget_amount": self.yearly_budget_amount,
@@ -152,7 +153,6 @@ class Budget:
                 InvocationType='Event',
                 Payload=json.dumps(payload).encode('utf-8')
             )
-            print("Alert Lambda invoked.")
             return response
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")

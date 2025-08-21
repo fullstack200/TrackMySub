@@ -314,7 +314,7 @@ class Dashboard:
             print("0. 🔙 Go Back")
 
             try:
-                choice = int(input("\nEnter your choice: "))
+                choice = int(input("\nEnter the option number: "))
                 if choice == 0:
                     return
                 if choice < 0 or choice > len(subs):
@@ -601,6 +601,9 @@ class Dashboard:
             try:
                 update_budget({"monthly_budget_amount": self.budget.monthly_budget_amount, "yearly_budget_amount": self.budget.yearly_budget_amount, "over_the_limit": self.budget.over_the_limit}, self.user)
                 print("Your budget has been updated successfully.")
+                self.budget = fetch_budget(self.user)
+                if self.budget.over_the_limit:
+                    self.budget.alert_over_the_limit()
                 time.sleep(5)
             except Exception as e:
                 print(f"There was an error when updating the budget. The error: {e}")
@@ -622,7 +625,7 @@ class Dashboard:
             print("2. ✏️  Update Budget")
             print("0. 🔙 Back to Main Menu")
 
-            choice = input("\nEnter your choice (1-2): ")
+            choice = input("\nEnter the option number: ")
 
             if choice not in ['0', '1', '2']:
                 print("\n❌ Invalid input. Please enter the correct option number.\n")
@@ -767,6 +770,8 @@ class Dashboard:
             time.sleep(3)
             insert_subscription(self.user, subscription)
             self.budget = fetch_budget(self.user)
+            if self.budget.over_the_limit:
+                self.budget.alert_over_the_limit()
         
             print("✅ Subscription added successfully!")
             self.budget.total_amount_paid_monthly = None
@@ -863,7 +868,9 @@ class Dashboard:
                 print("No fields were updated.")
                 
             self.budget = fetch_budget(self.user)
-                
+            if self.budget.over_the_limit:
+                self.budget.alert_over_the_limit()
+        
         def remove_subscription():
             print("\n❌ Delete Subscription")
 
@@ -899,6 +906,9 @@ class Dashboard:
                     print("✅ Subscription deleted successfully.")
                     time.sleep(3)
                     self.budget = fetch_budget(self.user)
+                    if self.budget.over_the_limit:
+                        self.budget.alert_over_the_limit()
+        
                     self.subscriptions = fetch_all_subscription(self.user)
                 elif choice == 2:
                     return
@@ -988,7 +998,7 @@ class Dashboard:
                 
             elif choice == '3':
                 print("\n⚠️  Are you sure you want to delete your account? This action cannot be undone.")
-                sub_choice = input("1. Yes\n2. No\n\nEnter your choice: ").strip()
+                sub_choice = input("1. Yes\n2. No\n\nEnter the option number: ").strip()
 
                 if sub_choice == "1":
                     print("\n🧹 Deleting your data from the database...")
