@@ -91,13 +91,13 @@ class Reminder:
         days_before_renewal = (renewal_date - today).days
 
         if 1 <= days_before_renewal <= 3:
-            self.remind_payment()
             self.reminder_acknowledged = True
+            return f"🔔 {self.subscription.service_name} — Renewal due on {self.subscription.renewal_date} ({days_before_renewal} days left)"
         elif today >= renewal_date:
             self.reminder_acknowledged = False
-            print("No pending payments")
+            return f"❌ {self.subscription.service_name} — Payment overdue!"
         else:
-            print("No pending payments")
+            return f"✅ {self.subscription.service_name} — No pending payments"
 
     def remind_payment(self):
         print(f"Reminder: Your subscription to {self.subscription.service_name} is due for renewal on {self.subscription.renewal_date}. Please make the payment.")

@@ -15,17 +15,29 @@ import base64
 import json
 import tempfile
 class Dashboard:
-    def __init__(self, user, subscriptions, budget, monthly_reports, yearly_reports, usages):
+    def __init__(self, user, subscriptions, budget, monthly_reports, yearly_reports, usages, reminders):
         self.user = user 
         self.subscriptions = subscriptions
         self.budget = budget
         self.monthly_reports = monthly_reports
         self.yearly_reports = yearly_reports
         self.usages = usages
+        self.reminders = reminders
+    
+    def show_reminders(self):
+        clear_screen_with_banner()
+        print("\n🔔 Payment Reminders\n" + "=" * 30)
+
+        for reminder in self.reminders:
+            status = reminder.check_payment_date()
+            print(status)
+
+        print("=" * 30)
 
     def show(self):
         while True:
             clear_screen_with_banner()
+            self.show_reminders()
             print(f"\n📊 Welcome, {self.user.username} — Choose an action:")
             print("1. 🔧 Manage Subscriptions")
             print("2. 🔧 Manage Budget")
@@ -70,7 +82,7 @@ class Dashboard:
     def get_advice(self):
         while True:
             clear_screen_with_banner()
-            print("\n💡 Get personalized tips to upgrade or downgrade your plan so you enjoy the best value while saving money.")
+            print("\n💡 Smart Subscription Advisor - Get personalized tips to upgrade or downgrade your plan so you enjoy the best value while saving money.")
             print("="*50)
             if not self.subscriptions:
                 print("\nYou have no subscriptions yet.")
