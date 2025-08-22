@@ -48,6 +48,23 @@ def fetch_user(username, password):
     except Exception as e:
         print(f"Error fetching user: {e}")
         return None
+    
+def fetch_all_users():
+    try:
+        cursor = db_connection.cursor()
+        query = "SELECT * FROM user"
+        cursor.execute(query)
+        results = cursor.fetchall()
+        cursor.close()
+        users = []
+        for row in results:
+            user = User()
+            user.username, user.email_id, user.password, user.created_at = row
+            users.append(user)
+        return users
+    except Exception as e:
+        print(f"Error fetching all users: {e}")
+        return []
 
 def insert_user(user):
     try:
