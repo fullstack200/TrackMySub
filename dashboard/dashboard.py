@@ -2,7 +2,7 @@ from utils.utils import clear_screen_with_banner
 from database.user_db_service import update_user, delete_user
 from database.subscription_db_service import *
 from database.budget_db_service import *
-from database.monthly_report_db_service import delete_all_monthly_reports, fetch_all_monthly_reports
+from database.monthly_report_db_service import delete_all_monthly_reports
 from database.yearly_report_db_service import delete_all_yearly_reports, fetch_all_yearly_reports
 from database.usage_db_service import *
 from database.reminder_db_service import *

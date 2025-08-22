@@ -6,7 +6,6 @@ from database.monthly_report_db_service import fetch_all_monthly_reports
 from database.yearly_report_db_service import fetch_all_yearly_reports
 from database.usage_db_service import fetch_all_usages
 from database.reminder_db_service import fetch_all_reminders
-from misc.report_generate import check_and_generate_reports
 import getpass
 import time
 class SignIn:
@@ -38,12 +37,6 @@ class SignIn:
                 self.user.budget = budget
             print("Logging in ...")
             time.sleep(2)
-            
-            try:
-                if self.user.budget:
-                    check_and_generate_reports(self.user)
-            except ValueError as e:
-                print(f"⚠️ {e}")
         
             print(f"\n✅ Welcome back, {self.user.username}!")
             time.sleep(3)
