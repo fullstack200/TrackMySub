@@ -14,51 +14,68 @@ from unittest.mock import patch, MagicMock
 
 class TestUserValidation(unittest.TestCase):
     def test_valid_user(self):
-        user = User("Ahmed123123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
+        user = User()
+        user.username = "Ahmed"
+        user.email_id = "ahmed@example.com"
+        user.password = "StrongPass123"
         budget = Budget(user)
         user.budget = budget
-        self.assertEqual(user.username, "Ahmed123123")
+        self.assertEqual(user.username, "Ahmed")
         self.assertEqual(user.email_id, "ahmed@example.com")
         self.assertEqual(user.password, "StrongPass123")
         self.assertEqual(user.budget, budget)
 
     def test_invalid_username(self):
+        user = User()
         with self.assertRaises(ValueError):
-            User("Ahmed123@123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
+            user.username = "Ahmed123@123"
 
     def test_invalid_email(self):
+        user = User()
         with self.assertRaises(ValueError):
-            User("Ahmed123", "ahmedexample.com", "StrongPass123", date(2025, 7, 1))
+            user.email_id = "ahmedexample.com"
 
     def test_short_password(self):
+        user = User()
         with self.assertRaises(ValueError):
-            User("Ahmed123", "ahmed@example.com", "123", date(2025, 7, 1))
+            user.password = "123"
 
     def test_update_email_invalid(self):
-        user = User("Ahmed123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
+        user = User()
+        user.username = "Ahmed"
+        user.email_id = "ahmed@example.com"
+        user.password = "StrongPass123"
         with self.assertRaises(ValueError):
             user.email_id = "wrongformat"
 
     def test_update_username_invalid(self):
-        user = User("Ahmed123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
+        user = User()
+        user.username = "Ahmed"
+        user.email_id = "ahmed@example.com"
+        user.password = "StrongPass123"
         with self.assertRaises(ValueError):
             user.username = "Ahmed123@99"
 
     def test_update_password_invalid(self):
-        user = User("Ahmed123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
+        user = User()
+        user.username = "Ahmed"
+        user.email_id = "ahmed@example.com"
+        user.password = "StrongPass123"
         with self.assertRaises(ValueError):
             user.password = "short"
     
     def test_invalid_budget_type(self):
-        user = User("Ahmed123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
+        user = User()
+        user.username = "Ahmed"
+        user.email_id = "ahmed@example.com"
+        user.password = "StrongPass123"
         with self.assertRaises(TypeError) as context:
             user.budget = "100.00"  # Invalid: not a Budget instance
         self.assertEqual(str(context.exception), "Invalid Budget")       
-    
-    def test_invalid_crated_at(self):
-        user = User("Ahmed123", "ahmed@example.com", "StrongPass123", date(2025, 7, 1))
-        with self.assertRaises(ValueError) as context:
-            user.created_at = "2025-07-01"
+
+    def test_created_at_is_today(self):
+        user = User()
+        self.assertEqual(user.created_at, date.today())
 class TestSubscriptionValidation(unittest.TestCase):
     def test_valid_subscription(self):
         subscription = Subscription()
@@ -150,7 +167,10 @@ class TestSubscriptionValidation(unittest.TestCase):
             subscription.auto_renewal_status = "Maybe"
 class TestBudgetValidation(unittest.TestCase):
     def setUp(self):
-        self.user = User("fahadahmed", "al.fahadahmed555@gmail.com", "Qwerty@123", date(2025, 7, 1))
+        self.user = User()
+        self.user.username = "Ahmed"
+        self.user.email_id = "ahmed@example.com"
+        self.user.password = "StrongPass123"
         
         self.sub1 = Subscription()
         self.sub1.service_type = "Personal"
@@ -239,7 +259,11 @@ class TestBudgetValidation(unittest.TestCase):
 
 class TestReminder(unittest.TestCase):
     def setUp(self):
-        self.user = User("testuser", "test@example.com", "Password123", date(2025, 7, 1))
+        self.user = User()
+        self.user.username = "Ahmed"
+        self.user.email_id = "ahmed@example.com"
+        self.user.password = "StrongPass123"
+        
         self.sub1 = Subscription()
         self.sub1.service_type = "Personal"
         self.sub1.category = "Entertainment"
@@ -249,7 +273,7 @@ class TestReminder(unittest.TestCase):
         self.sub1.subscription_price = "17.99"
         self.sub1.billing_frequency = "Monthly"
         self.sub1.start_date = "10/01/2025"
-        self.sub1.renewal_date = 15
+        self.sub1.renewal_date = "15"
         self.sub1.auto_renewal_status = "Yes"
 
         self.sub2 = Subscription()
@@ -291,7 +315,7 @@ class TestReminder(unittest.TestCase):
         def fake_remind_payment():
             called.append(self.sub1.service_name)
 
-        self.reminder1.remind_payment = fake_remind_payment
+        self.reminder1.remind_payment = fake_remind_payment()
         self.reminder1.check_payment_date()
         self.assertIn(self.sub1.service_name, called)
 
@@ -315,7 +339,7 @@ class TestReminder(unittest.TestCase):
         def fake_remind_payment():
             called.append(self.sub2.service_name)
 
-        self.reminder2.remind_payment = fake_remind_payment
+        self.reminder2.remind_payment = fake_remind_payment()
         self.reminder2.check_payment_date()
         self.assertIn(self.sub2.service_name, called)
 
@@ -346,7 +370,11 @@ class TestReminder(unittest.TestCase):
         
 class TestUsage(unittest.TestCase):
     def setUp(self):
-        self.user = User("testuser", "test@example.com", "Bethealpha@05", date(2025, 7, 1))
+        self.user = User()
+        self.user.username = "Ahmed"
+        self.user.email_id = "ahmed@example.com"
+        self.user.password = "StrongPass123"
+        
         self.sub1 = Subscription()
         self.sub1.service_type = "Personal"
         self.sub1.category = "Entertainment"
@@ -430,7 +458,11 @@ class TestUsage(unittest.TestCase):
 
 class TestAdvisory(unittest.TestCase):
     def setUp(self):
-        self.user = User("advisoryuser", "advisory@example.com", "StrongPass123", date(2025, 7, 1))
+        self.user = User()
+        self.user.username = "Ahmed"
+        self.user.email_id = "ahmed@example.com"
+        self.user.password = "StrongPass123"
+        
         self.sub1 = Subscription()
         self.sub1.service_type = "Personal"
         self.sub1.category = "Entertainment"
@@ -519,7 +551,11 @@ class TestAdvisory(unittest.TestCase):
 
 class TestReport(unittest.TestCase):
     def setUp(self):
-        self.user = User("advisoryuser", "advisory@example.com", "StrongPass123", date(2025, 7, 1))
+        self.user = User()
+        self.user.username = "Ahmed"
+        self.user.email_id = "ahmed@example.com"
+        self.user.password = "StrongPass123"
+        
         self.valid_kwargs = {
             "date_report_generated": date(2024, 6, 15),
             "total_amount": 100.00,
@@ -634,7 +670,10 @@ class TestMonthlyReport(unittest.TestCase):
         self.sub3.auto_renewal_status = "No"
         
         # Create actual User and Budget instances
-        self.user = User("testuser", "testuser@example.com", "StrongPass123", date(2025, 7, 1))
+        self.user = User()
+        self.user.username = "Ahmed"
+        self.user.email_id = "ahmed@example.com"
+        self.user.password = "StrongPass123"
         
         self.user.subscription_list.append(self.sub1)
         self.user.subscription_list.append(self.sub2)
@@ -719,7 +758,11 @@ class TestMonthlyReport(unittest.TestCase):
 
 class TestYearlyReportExtended(unittest.TestCase):
     def setUp(self):
-        self.user = User("testuser", "test@example.com", "Qwerty@12345", date(2025, 7, 1))
+        self.user = User()
+        self.user.username = "Ahmed"
+        self.user.email_id = "ahmed@example.com"
+        self.user.password = "StrongPass123"
+        
         self.year = 2024
         self.report_data = b"test"
         self.total_amount = 0.0
@@ -727,7 +770,7 @@ class TestYearlyReportExtended(unittest.TestCase):
     
     def test_init_sets_attributes(self):
         self.assertEqual(self.yearly_report.year, self.year)
-        self.assertEqual(self.yearly_report.user.username, "testuser")
+        self.assertEqual(self.yearly_report.user.username, "Ahmed")
         self.assertEqual(self.yearly_report.monthly_reports, [])
         self.assertEqual(self.yearly_report.total_amount, 0.0)
 

@@ -129,18 +129,21 @@ class Subscription:
     @property
     def subscription_price(self):
         return self._subscription_price
-    
+
     @subscription_price.setter
     def subscription_price(self, subscription_price):
         if not subscription_price:
             raise ValueError("Subscription price cannot be empty")
-        elif str(subscription_price).isalpha():
-            raise ValueError("Subscription price must be a number. Example: 14.99")
-        elif not isinstance(eval(subscription_price), float):
-            raise ValueError("Enter subscription price in 00.00 format")
-        else:
-            self._subscription_price = float(subscription_price)
-            
+
+        # Ensure subscription_price is a string for regex matching
+        price_str = str(subscription_price)
+
+        # Regex: whole numbers or numbers with up to 2 decimal places
+        pattern = r"^\d+(\.\d{1,2})"
+        if not re.match(pattern, price_str):
+            raise ValueError("Subscription amount must be a number in 00.00 format. Example: 50.00")
+
+        self._subscription_price = float(price_str)  
     @property
     def billing_frequency(self):
         return self._billing_frequency

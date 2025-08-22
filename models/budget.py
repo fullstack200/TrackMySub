@@ -56,7 +56,7 @@ class Budget:
                 raise ValueError("Monthly budget amount cannot be empty")
             # Check for alphabetic or special characters (except dot and digits)
             import re
-            if not re.fullmatch(r"\d+(\.\d{1,2})?", monthly_budget_amount.strip()):
+            if not re.fullmatch(r"\d+(\.\d{1,2})", monthly_budget_amount.strip()):
                 raise ValueError("Monthly budget amount must be a number in 00.00 format. Example: 50.00")
             try:
                 value = float(monthly_budget_amount)

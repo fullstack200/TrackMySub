@@ -870,6 +870,8 @@ class Dashboard:
             self.budget = fetch_budget(self.user)
             if self.budget.over_the_limit:
                 self.budget.alert_over_the_limit()
+                
+            time.sleep(10)
         
         def remove_subscription():
             print("\n❌ Delete Subscription")
