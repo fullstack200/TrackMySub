@@ -29,7 +29,8 @@ def lambda_handler(event, context):
             f"Total Paid Yearly: ${total_paid_yearly}\n"
             f"Yearly Difference: ${yearly_diff}\n\n"
             "Please review your subscriptions.\n\n"
-            "Team Trackmysubs"
+            "Team"
+            "TrackMySubs"
         )
         email_from = 'fullstackdeveloper404@gmail.com'
         password = os.environ['password']

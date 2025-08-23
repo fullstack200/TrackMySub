@@ -7,6 +7,15 @@
 # merges it with a template PDF, uploads the final PDF to an S3 bucket and returns the pdf back
 # to the function call.
 
+# The function requires the following packages:
+# boto3, pdfrw, reportlab, and their dependencies.
+# Ensure these packages are included in your Lambda layer or deployment package.
+# The Montserrat font files should be placed in the /opt/fonts directory in the Lambda layer
+# or deployment package.
+# The function generates a yearly report PDF based on the provided event data,
+# merges it with a template PDF, uploads the final PDF to an S3 bucket and returns the pdf back
+# to the function call.
+
 import boto3
 import io
 import pdfrw
@@ -42,7 +51,7 @@ def lambda_handler(event, context):
 
     c.setFont("Montserrat", 12)
     c.drawString(280, 654, str(event['year'])) # e.g., 2025
-    c.drawString(280, 630, event['date_generated']) # e.g., "25/06/2025"
+    c.drawString(280, 630, event['date_report_generated']) # e.g., "25/06/2025"
 
     y = 510
     for idx, month in enumerate(event['monthly_reports'], start=1):

@@ -7,7 +7,6 @@
 # merges it with a template PDF, uploads the final PDF to an S3 bucket and returns the pdf back 
 # to the function call.
 
-
 import boto3
 import io
 import pdfrw
