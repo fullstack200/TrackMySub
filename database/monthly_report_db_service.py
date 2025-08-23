@@ -1,7 +1,6 @@
 from database.db_connection import db_connection
 from database.user_db_service import fetch_user
 
-
 def get_latest_monthly_report_id():
     try:
         cursor = db_connection.cursor()
@@ -32,14 +31,19 @@ def fetch_monthly_report(user, month_name):
 
         if result:
             date_report_generated, total_amount, report_data, username, month = result
-            # Convert BLOB/memoryview to bytes
-            report_bytes = bytes(report_data) if report_data else None
-            return MonthlyReport(date_report_generated, total_amount, report_bytes, fetch_user(username, user.password), month)
-        else:
-            return None
+            if report_data is not None and not isinstance(report_data, bytes):
+                report_data = bytes(report_data)  # convert memoryview/bytearray to bytes
 
+            return MonthlyReport(
+                date_report_generated,
+                total_amount,
+                report_data,
+                fetch_user(username, user.password),
+                month
+            )
+        return None
     except Exception as e:
-        print(f"Error fetching single monthly report: {e}")
+        print(f"Error fetching monthly report: {e}")
         return None
     
 def fetch_all_monthly_reports(user):
@@ -80,14 +84,13 @@ def insert_monthly_report(report, report_id, user):
             (monthly_report_id, date_report_generated, total_amount, report_data, username, month_name)
             VALUES (%s, %s, %s, %s, %s, %s)
         """
-        # Ensure report_data is bytes
         pdf_bytes = report.report_data if isinstance(report.report_data, bytes) else None
 
         cursor.execute(query, (
             report_id,
             report.date_report_generated,
             report.total_amount,
-            pdf_bytes,  # must be actual bytes
+            pdf_bytes,  
             user.username,
             report.month
         ))

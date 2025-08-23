@@ -16,27 +16,35 @@ def get_latest_yearly_report_id():
         print(f"Error fetching latest yearly_report_id: {e}")
         return None
 
-def fetch_yearly_report(user, yearly_report):
+def fetch_yearly_report(user, year):
     from models.yearly_report import YearlyReport
     try:
         cursor = db_connection.cursor()
-        query = "SELECT date_report_generated, total_amount, report_data, username, year FROM yearly_report WHERE username = %s AND year = %s"
-        cursor.execute(query, (user.username, yearly_report.year))
+        query = """
+            SELECT date_report_generated, total_amount, report_data, username, year
+            FROM yearly_report
+            WHERE username = %s AND year = %s
+        """
+        cursor.execute(query, (user.username, year))
         result = cursor.fetchone()
         cursor.close()
 
         if result:
             date_report_generated, total_amount, report_data, username, year = result
-            # Convert BLOB/memoryview to bytes
-            report_bytes = bytes(report_data) if report_data else None
-            return YearlyReport(date_report_generated, total_amount, report_bytes, fetch_user(username, user.password), year)
-        else:
-            return None
+            if report_data is not None and not isinstance(report_data, bytes):
+                report_data = bytes(report_data)  # convert memoryview/bytearray to bytes
 
-    except Exception as e:
-        print(f"Error fetching single yearly report: {e}")
+            return YearlyReport(
+                date_report_generated,
+                total_amount,
+                report_data,
+                fetch_user(username, user.password),
+                year
+            )
         return None
-
+    except Exception as e:
+        print(f"Error fetching yearly report: {e}")
+        return None
 
 def fetch_all_yearly_reports(user):
     from models.yearly_report import YearlyReport
@@ -66,7 +74,7 @@ def insert_yearly_report(report, report_id, user):
         cursor = db_connection.cursor()
         query = """
             INSERT INTO yearly_report 
-            (yearly_report_id, date_report_generated, total_amount, report_data, username, year)
+            (yearly_report_id, date_report_generated, total_amount, report_data, username, year_name)
             VALUES (%s, %s, %s, %s, %s, %s)
         """
         pdf_bytes = report.report_data if isinstance(report.report_data, bytes) else None
@@ -75,7 +83,7 @@ def insert_yearly_report(report, report_id, user):
             report_id,
             report.date_report_generated,
             report.total_amount,
-            pdf_bytes,  # must be actual bytes
+            pdf_bytes,  # pass bytes directly
             user.username,
             report.year
         ))

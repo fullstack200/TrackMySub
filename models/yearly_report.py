@@ -79,7 +79,6 @@ class YearlyReport(Report):
                 self.monthly_reports.append(monthly_report)
                 self.total_amount += float(monthly_report.total_amount)
 
-        
         except Exception as e:
             print(f"Error fetching yearly reports: {e}")
             
