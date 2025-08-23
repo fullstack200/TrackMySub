@@ -32,27 +32,39 @@ def fetch_monthly_report(user, month_name):
 
         if result:
             date_report_generated, total_amount, report_data, username, month = result
-            return MonthlyReport(date_report_generated, total_amount, report_data, fetch_user(username, user.password), month)
+            # Convert BLOB/memoryview to bytes
+            report_bytes = bytes(report_data) if report_data else None
+            return MonthlyReport(date_report_generated, total_amount, report_bytes, fetch_user(username, user.password), month)
         else:
             return None
-    
+
     except Exception as e:
         print(f"Error fetching single monthly report: {e}")
         return None
-
+    
 def fetch_all_monthly_reports(user):
     from models.monthly_report import MonthlyReport
     try:
         cursor = db_connection.cursor()
-        query = "SELECT date_report_generated, total_amount, report_data, username, month_name FROM monthly_report WHERE username = %s ORDER BY date_report_generated"
+        query = """
+            SELECT date_report_generated, total_amount, report_data, username, month_name 
+            FROM monthly_report 
+            WHERE username = %s 
+            ORDER BY date_report_generated
+        """
         cursor.execute(query, (user.username,))
         result = cursor.fetchall()
         cursor.close()
+
         if result:
             reports_list = []
             for report in result:
                 date_report_generated, total_amount, report_data, username, month = report
-                reports_list.append(MonthlyReport(date_report_generated, total_amount, report_data, fetch_user(username, user.password), month))
+                # Convert BLOB/memoryview to bytes
+                report_bytes = bytes(report_data) if report_data else None
+                reports_list.append(
+                    MonthlyReport(date_report_generated, total_amount, report_bytes, fetch_user(username, user.password), month)
+                )
             return reports_list
         else:
             return None
@@ -63,14 +75,26 @@ def fetch_all_monthly_reports(user):
 def insert_monthly_report(report, report_id, user):
     try:
         cursor = db_connection.cursor()
-        cursor.execute(
-            "INSERT INTO monthly_report (monthly_report_id, date_report_generated, total_amount, report_data, username, month_name) VALUES (%s, %s, %s, %s, %s, %s)",
-            (report_id, report.date_report_generated, report.total_amount, report.report_data, user.username, report.month)
-        )
+        query = """
+            INSERT INTO monthly_report 
+            (monthly_report_id, date_report_generated, total_amount, report_data, username, month_name)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        # Ensure report_data is bytes
+        pdf_bytes = report.report_data if isinstance(report.report_data, bytes) else None
+
+        cursor.execute(query, (
+            report_id,
+            report.date_report_generated,
+            report.total_amount,
+            pdf_bytes,  # must be actual bytes
+            user.username,
+            report.month
+        ))
         db_connection.commit()
         cursor.close()
     except Exception as e:
-        print(f"Error inserting report: {e}")
+        print(f"Error inserting monthly report: {e}")
 
 def delete_monthly_report(user, monthly_report):
     try:

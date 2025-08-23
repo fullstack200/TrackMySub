@@ -80,26 +80,43 @@ class MonthlyReport(Report):
             return {"error": str(e)}
 
     def send_monthly_report(self, result):
+        import boto3
+        import json
+        import base64
+
         lambda_client = boto3.client('lambda', region_name='ap-south-1')
         function_name = 'send_report'
-        if self.report_data:
-            pdf_b64_for_email = base64.b64encode(self.report_data).decode('utf-8')
-        else:
-            pdf_b64_for_email = result.get("pdf", None)
-        payload2 = {
-                "report_data": pdf_b64_for_email,
-                "email_to": getattr(self.user, "email_id", None),
-                "subject": f"Monthly Report for {self.month}",
-                "username": getattr(self.user, "username", None),
-                "body": f"Dear {getattr(self.user, 'username', 'User')},\n\nPlease find attached your monthly report for {self.month}.\n\nBest regards,\nTrackMySubs Team"
-            }
-            
+
+        if not self.report_data:
+            print("No report data available to send.")
+            return {"error": "No report data"}
+
+        # Encode raw PDF bytes to base64 string
+        pdf_b64 = base64.b64encode(self.report_data).decode('utf-8')
+
+        # Debug: write PDF to /tmp to verify integrity
         try:
-            response2 = lambda_client.invoke(
+            with open("/tmp/test_monthly.pdf", "wb") as f:
+                f.write(self.report_data)
+            print("Monthly PDF written to /tmp/test_monthly.pdf for verification")
+        except Exception as e:
+            print(f"Failed to write debug PDF: {e}")
+
+        payload = {
+            "report_data": pdf_b64,
+            "email_to": getattr(self.user, "email_id", None),
+            "subject": f"Monthly Report for {self.month}",
+            "username": getattr(self.user, "username", None),
+            "body": f"Dear {getattr(self.user, 'username', 'User')},\n\nPlease find your attached monthly report for {self.month}.\n\nBest regards,\nTrackMySubs Team"
+        }
+
+        try:
+            lambda_client.invoke(
                 FunctionName=function_name,
                 InvocationType='Event',
-                Payload=json.dumps(payload2).encode('utf-8')
+                Payload=json.dumps(payload).encode('utf-8')
             )
+            print("Monthly report sent successfully via Lambda")
         except Exception as e:
             print(f"Error sending monthly report: {e}")
             return {"error": str(e)}
