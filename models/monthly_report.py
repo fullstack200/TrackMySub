@@ -1,8 +1,7 @@
 from models.report import Report
 import json
 import boto3
-import base64
-
+import base64 
 class MonthlyReport(Report):
     """
     Represents a monthly report generated for a user.
@@ -80,10 +79,6 @@ class MonthlyReport(Report):
             return {"error": str(e)}
 
     def send_monthly_report(self, result):
-        import boto3
-        import json
-        import base64
-
         lambda_client = boto3.client('lambda', region_name='ap-south-1')
         function_name = 'send_report'
 
@@ -113,7 +108,7 @@ class MonthlyReport(Report):
         try:
             lambda_client.invoke(
                 FunctionName=function_name,
-                InvocationType='Event',
+                InvocationType='RequestResponse',
                 Payload=json.dumps(payload).encode('utf-8')
             )
             print("Monthly report sent successfully via Lambda")

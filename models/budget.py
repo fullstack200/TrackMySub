@@ -114,7 +114,7 @@ class Budget:
     def over_the_limit(self, value):
         if value is None:
             if self.monthly_budget_amount:
-                if self.total_amount_paid_monthly > self.monthly_budget_amount or self.total_amount_paid_yearly > self.yearly_budget_amount:
+                if self.total_amount_paid_monthly > self.monthly_budget_amount:
                     self._over_the_limit = True
                 else:
                     self._over_the_limit = False
