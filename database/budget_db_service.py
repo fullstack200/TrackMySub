@@ -1,10 +1,6 @@
 import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from database.db_connection import db_connection
 from models.budget import Budget
-from database.user_db_service import fetch_user
-
 
 """
 budget_db_service.py
@@ -40,7 +36,6 @@ def get_latest_budget_id():
         return None
 
 def fetch_budget(user):
-    from database.subscription_db_service import fetch_all_subscription
     try:
         cursor = db_connection.cursor()
         query = "SELECT username, monthly_budget_amount, yearly_budget_amount, total_amount_paid_monthly, total_amount_paid_yearly, over_the_limit FROM budget WHERE username= %s"
@@ -48,7 +43,13 @@ def fetch_budget(user):
         result = cursor.fetchone()
         cursor.close()
         if result:
-            return Budget(user, str(result[1]), result[2], result[3], result[4], result[5])
+            budget = Budget(user)
+            budget.monthly_budget_amount = str(result[1])
+            budget.yearly_budget_amount = result[2]
+            budget.total_amount_paid_monthly = result[3]
+            budget.total_amount_paid_yearly = result[4]
+            budget.over_the_limit = result[5]
+            return budget
         else:
             return None
     except Exception as e:

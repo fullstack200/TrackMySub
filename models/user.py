@@ -1,7 +1,8 @@
+import re
+from datetime import date
 from models.subscription import Subscription
 from models.budget import Budget
-import re
-
+from datetime import datetime
 class User:
     """
     Represents a user in the TrackMySubs application.
@@ -22,10 +23,11 @@ class User:
         subscription_list (list): Gets the list of subscriptions.
         budget (Budget): Gets or sets the user's budget with validation.
     """
-    def __init__(self, username, email_id, password):
-        self.username = username
-        self.email_id = email_id
-        self.password = password
+    def __init__(self):
+        self.username = None
+        self.email_id = None
+        self.password = None
+        self.created_at = date.today()
         self._subscription_list = []
         self._budget = None
         
@@ -35,6 +37,9 @@ class User:
     
     @username.setter
     def username(self, username):
+        if username is None:
+            self._username = None
+            return
         correct_pattern = r"^[A-Za-z0-9]+$"
         if not username:
             raise ValueError("Username cannot be empty")
@@ -49,6 +54,9 @@ class User:
     
     @email_id.setter
     def email_id(self, email_id):
+        if email_id is None:
+            self._email_id = None
+            return
         correct_pattern = r"^[A-Za-z0-9\.]+@[A-Za-z]+\.[A-Za-z]+"
         if not email_id:
             raise ValueError("Email ID cannot be empty")
@@ -63,13 +71,26 @@ class User:
     
     @password.setter
     def password(self, password):
+        if password is None:
+            self._password = None
+            return
         if not password:
             raise ValueError("Password cannot be empty")
         elif len(password) < 8:
             raise ValueError('Password must have atleast 8 characters')
         else:
             self._password = password
-            
+    
+    @property
+    def created_at(self):
+        return self._created_at
+    
+    @created_at.setter
+    def created_at(self, created_at):
+        if isinstance(created_at, date):
+            self._created_at = created_at
+        else:
+            raise ValueError("Invalid date")
     @property
     def subscription_list(self):
         return self._subscription_list

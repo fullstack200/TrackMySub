@@ -32,33 +32,51 @@ Functions:
             None
 """
 
-def fetch_user(username):
+def fetch_user(username, password):
     try:
         cursor = db_connection.cursor()
-        query = "SELECT username, email_id, password FROM user WHERE username = %s"
-        cursor.execute(query, (username,))
+        query = "SELECT * FROM user WHERE username = %s AND password = %s"
+        cursor.execute(query, (username, password))
         result = cursor.fetchone()
         cursor.close()
         if result:
-            username, email_id, password = result
-            return User(username, email_id, password)
+            user = User()
+            user.username, user.email_id, user.password, user.created_at = result
+            return user
         else:
             return None 
     except Exception as e:
         print(f"Error fetching user: {e}")
         return None
+    
+def fetch_all_users():
+    try:
+        cursor = db_connection.cursor()
+        query = "SELECT * FROM user"
+        cursor.execute(query)
+        results = cursor.fetchall()
+        cursor.close()
+        users = []
+        for row in results:
+            user = User()
+            user.username, user.email_id, user.password, user.created_at = row
+            users.append(user)
+        return users
+    except Exception as e:
+        print(f"Error fetching all users: {e}")
+        return []
 
 def insert_user(user):
     try:
         cursor = db_connection.cursor()
-        is_unique = fetch_user(user.username)
+        is_unique = fetch_user(user.username, user.password)
         if is_unique:
             print(f"User with username {user.username} already exists.")
             return
         
         cursor.execute(
-            "INSERT INTO user (username, email_id, password) VALUES (%s, %s, %s)",
-            (user.username, user.email_id, user.password)
+            "INSERT INTO user (username, email_id, password, created_at) VALUES (%s, %s, %s, %s)",
+            (user.username, user.email_id, user.password, user.created_at)
         )
         db_connection.commit()
         cursor.close()

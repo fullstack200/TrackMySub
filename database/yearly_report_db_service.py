@@ -16,34 +16,81 @@ def get_latest_yearly_report_id():
         print(f"Error fetching latest yearly_report_id: {e}")
         return None
 
-def fetch_yearly_report(user, yearly_report):
+def fetch_yearly_report(user, year):
     from models.yearly_report import YearlyReport
     try:
         cursor = db_connection.cursor()
-        query = "SELECT date_report_generated, total_amount, report_data, username, year FROM yearly_report WHERE username = %s AND year = %s"
-        cursor.execute(query, (user.username, yearly_report.year))
+        query = """
+            SELECT date_report_generated, total_amount, report_data, username, year
+            FROM yearly_report
+            WHERE username = %s AND year = %s
+        """
+        cursor.execute(query, (user.username, year))
         result = cursor.fetchone()
         cursor.close()
+
         if result:
-            date_report_generated, total_amount, report_data, user, year = result
-            return YearlyReport(date_report_generated, total_amount, report_data, fetch_user(user), year)
-        else:
-            return None
+            date_report_generated, total_amount, report_data, username, year = result
+            if report_data is not None and not isinstance(report_data, bytes):
+                report_data = bytes(report_data)  # convert memoryview/bytearray to bytes
+
+            return YearlyReport(
+                date_report_generated,
+                total_amount,
+                report_data,
+                fetch_user(username, user.password),
+                year
+            )
+        return None
     except Exception as e:
-        print(f"Error fetching report: {e}")
+        print(f"Error fetching yearly report: {e}")
         return None
 
+def fetch_all_yearly_reports(user):
+    from models.yearly_report import YearlyReport
+    try:
+        cursor = db_connection.cursor()
+        query = "SELECT date_report_generated, total_amount, report_data, username, year FROM yearly_report WHERE username = %s"
+        cursor.execute(query, (user.username,))
+        result = cursor.fetchall()
+        cursor.close()
+
+        if result:
+            report_list = []
+            for report in result:
+                date_report_generated, total_amount, report_data, username, year = report
+                report_bytes = bytes(report_data) if report_data else None
+                report_list.append(YearlyReport(date_report_generated, total_amount, report_bytes, fetch_user(username, user.password), year))
+            return report_list
+        else:
+            return None
+
+    except Exception as e:
+        print(f"Error fetching yearly report: {e}")
+        return None
+    
 def insert_yearly_report(report, report_id, user):
     try:
         cursor = db_connection.cursor()
-        cursor.execute(
-            "INSERT INTO yearly_report (yearly_report_id, date_report_generated, total_amount, report_data, username, year) VALUES (%s, %s, %s, %s, %s, %s)",
-            (report_id, report.date_report_generated, report.total_amount, report.report_data, user.username, report.year)
-        )
+        query = """
+            INSERT INTO yearly_report 
+            (yearly_report_id, date_report_generated, total_amount, report_data, username, year_name)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        pdf_bytes = report.report_data if isinstance(report.report_data, bytes) else None
+
+        cursor.execute(query, (
+            report_id,
+            report.date_report_generated,
+            report.total_amount,
+            pdf_bytes,  # pass bytes directly
+            user.username,
+            report.year
+        ))
         db_connection.commit()
         cursor.close()
     except Exception as e:
-        print(f"Error inserting report: {e}")
+        print(f"Error inserting yearly report: {e}")
 
 def delete_yearly_report(user, yearly_report):
     try:
@@ -54,3 +101,13 @@ def delete_yearly_report(user, yearly_report):
         cursor.close()
     except Exception as e:
         print(f"Error deleting report: {e}")
+
+def delete_all_yearly_reports(user):
+    try:
+        cursor = db_connection.cursor()
+        query = "DELETE FROM yearly_report WHERE username = %s"
+        cursor.execute(query, (user.username,))
+        db_connection.commit()
+        cursor.close()
+    except Exception as e:
+        print(f"Error deleting yearly reports for user {user.username}. Exception: {e}")

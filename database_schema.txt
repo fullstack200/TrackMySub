@@ -4,6 +4,7 @@
 username VARCHAR(20)
 email_id VARCHAR(20)
 password VARCHAR(20)
+created_at date
 
 -----------------------------------------
 2. Subscription Table

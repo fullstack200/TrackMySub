@@ -75,17 +75,16 @@ class YearlyReport(Report):
             cursor.close()
             for row in results:
                 date_report_generated, total_amount, report_data, username, month = row
-                monthly_report = MonthlyReport(date_report_generated, total_amount, report_data, fetch_user(username), month)
+                monthly_report = MonthlyReport(date_report_generated, total_amount, report_data, fetch_user(self.user.username, self.user.password), month)
                 self.monthly_reports.append(monthly_report)
-                self.total_amount += monthly_report.total_amount
-        
+                self.total_amount += float(monthly_report.total_amount)
+
         except Exception as e:
             print(f"Error fetching yearly reports: {e}")
             
     def generate_yearly_report(self):
         lambda_client = boto3.client('lambda', region_name='ap-south-1')
         function_name = 'generate-yearly-report'
-        function_name2 = 'send_report'
         monthly_reports_data = []
         for report in self.monthly_reports:
             monthly_reports_data.append({
@@ -93,8 +92,8 @@ class YearlyReport(Report):
                 "total_amount": report.total_amount
             })
             
-        budget = fetch_budget(self.user.username)
-        yearly_budget_amount = budget.yearly_budget_amount
+        budget = fetch_budget(self.user)
+        yearly_budget_amount = float(budget.yearly_budget_amount)
         
         if self.total_amount > yearly_budget_amount:
             note = "Your subscriptions amount has exceeded your yearly budget! Please verify your subscriptions."
@@ -123,30 +122,49 @@ class YearlyReport(Report):
                 self.report_data = base64.b64decode(pdf_b64)
             else:
                 self.report_data = None
-            
-            payload2 = {
-                "report_data": pdf_b64,
-                "email_to": getattr(self.user, "email_id", None),
-                "subject": f"Yearly Report for {self.year}",
-                "username": getattr(self.user, "username", None),
-                "body": f"Dear {getattr(self.user, 'username', 'User')},\n\nPlease find attached your yearly report for {self.year}.\n\nBest regards,\nTrackMySubs Team"
-            }
-            
-            try:
-                print("Sending report via Lambda function...")
-                response2 = lambda_client.invoke(
-                    FunctionName=function_name2,
-                    InvocationType='Event',
-                    Payload=json.dumps(payload2).encode('utf-8')
-                )
-                print("Report sent successfully.")
-            
-            except Exception as e:
-                print(f"Error sending report: {e}")
-                return {"error": str(e)}
-            
             return result
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")
             return {"error": str(e)} 
-        
+    
+    def send_yearly_report(self, result):
+        import boto3
+        import json
+        import base64
+
+        lambda_client = boto3.client('lambda', region_name='ap-south-1')
+        function_name = 'send_report'
+
+        if not self.report_data:
+            print("No report data available to send.")
+            return {"error": "No report data"}
+
+        # Encode raw PDF bytes to base64 string
+        pdf_b64 = base64.b64encode(self.report_data).decode('utf-8')
+
+        # Debug: write PDF to /tmp to verify integrity
+        try:
+            with open("/tmp/test_yearly.pdf", "wb") as f:
+                f.write(self.report_data)
+            print("Yearly PDF written to /tmp/test_yearly.pdf for verification")
+        except Exception as e:
+            print(f"Failed to write debug PDF: {e}")
+
+        payload = {
+            "report_data": pdf_b64,
+            "email_to": getattr(self.user, "email_id", None),
+            "subject": f"Yearly Report for {self.year}",
+            "username": getattr(self.user, "username", None),
+            "body": f"Dear {getattr(self.user, 'username', 'User')},\n\nPlease find your attached yearly report for {self.year}.\n\nBest regards,\nTrackMySubs Team"
+        }
+
+        try:
+            lambda_client.invoke(
+                FunctionName=function_name,
+                InvocationType='Event',
+                Payload=json.dumps(payload).encode('utf-8')
+            )
+            print("Yearly report sent successfully via Lambda")
+        except Exception as e:
+            print(f"Error sending yearly report: {e}")
+            return {"error": str(e)}
