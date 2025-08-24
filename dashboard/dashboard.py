@@ -27,7 +27,10 @@ class Dashboard:
     def show_reminders(self):
         clear_screen_with_banner()
         print("\n🔔 Payment Reminders\n" + "=" * 30)
-
+        if not self.reminders:
+            print("No payment reminders found.")
+            return
+        
         for reminder in self.reminders:
             status = reminder.check_payment_date()
             print(status)

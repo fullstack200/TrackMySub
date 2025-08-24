@@ -81,7 +81,7 @@ def fetch_all_usages(user):
                 usage_list.append(u)
             return usage_list 
         else:
-            return None
+            return []
     except Exception as e:
         print(f"Error fetching usage: {e}")
         return None
