@@ -1,26 +1,37 @@
-import os
+# Database modules
 from database.db_connection import db_connection
+
+# Models
 from models.budget import Budget
 
 """
 budget_db_service.py
+
 This module provides services for interacting with the 'budget' table in the database.
 It includes functions to fetch, insert, update, and delete budget records, as well as
 to generate the next available budget ID.
+
 Functions:
     get_latest_budget_id():
         Retrieves the latest budget ID from the database and generates the next ID in sequence.
-    fetch_budget(username):
-        Fetches the budget information for a given username and returns a Budget object.
-    insert_budget(budget, budget_id, usename):
+    fetch_budget(user):
+        Fetches the budget information for a given user and returns a Budget object.
+    insert_budget(budget, user):
         Inserts a new budget record into the database for the specified user.
-    update_budget(dic, username):
-        Updates specified fields in the budget record for the given username.
-    delete_budget(username):
-        Deletes the budget record associated with the given username.
+    update_budget(dic, user):
+        Updates specified fields in the budget record for the given user.
+    delete_budget(user):
+        Deletes the budget record associated with the given user.
 """
 
 def get_latest_budget_id():
+    """
+    Retrieves the latest budget ID from the database and generates the next ID in sequence.
+
+    Returns:
+        str: The next budget ID (e.g., "budg02").
+        None: If an error occurs while fetching the budget ID.
+    """
     try:
         cursor = db_connection.cursor()
         cursor.execute("SELECT budget_id FROM budget ORDER BY budget_id DESC LIMIT 1")
@@ -35,10 +46,26 @@ def get_latest_budget_id():
         print(f"Error fetching latest budget_id: {e}")
         return None
 
+
 def fetch_budget(user):
+    """
+    Fetches the budget information for a given user.
+
+    Args:
+        user (User): The user whose budget is being fetched.
+
+    Returns:
+        Budget: A Budget object populated with the user's budget details.
+        None: If no budget record exists or an error occurs.
+    """
     try:
         cursor = db_connection.cursor()
-        query = "SELECT username, monthly_budget_amount, yearly_budget_amount, total_amount_paid_monthly, total_amount_paid_yearly, over_the_limit FROM budget WHERE username= %s"
+        query = """
+            SELECT username, monthly_budget_amount, yearly_budget_amount,
+            total_amount_paid_monthly, total_amount_paid_yearly, over_the_limit
+            FROM budget
+            WHERE username = %s
+        """
         cursor.execute(query, (user.username,))
         result = cursor.fetchone()
         cursor.close()
@@ -56,19 +83,49 @@ def fetch_budget(user):
         print(f"Error fetching budget: {e}")
         return None
 
+
 def insert_budget(budget, user):
+    """
+    Inserts a new budget record into the database for the given user.
+
+    Args:
+        budget (Budget): The Budget object containing budget details.
+        user (User): The user for whom the budget is being created.
+
+    Returns:
+        None
+    """
     try:
         cursor = db_connection.cursor()
         cursor.execute(
-            "INSERT INTO budget (budget_id, username, monthly_budget_amount, yearly_budget_amount, total_amount_paid_monthly, total_amount_paid_yearly, over_the_limit) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-            (get_latest_budget_id(), user.username, budget.monthly_budget_amount, budget.yearly_budget_amount, budget.total_amount_paid_monthly, budget.total_amount_paid_yearly, budget.over_the_limit)
+            """
+            INSERT INTO budget (budget_id, username, monthly_budget_amount,
+                                yearly_budget_amount, total_amount_paid_monthly,
+                                total_amount_paid_yearly, over_the_limit)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (get_latest_budget_id(), user.username,
+             budget.monthly_budget_amount, budget.yearly_budget_amount,
+             budget.total_amount_paid_monthly, budget.total_amount_paid_yearly,
+             budget.over_the_limit)
         )
         db_connection.commit()
         cursor.close()
     except Exception as e:
         print(f"Error inserting budget: {e}")
 
+
 def update_budget(dic, user):
+    """
+    Updates specific fields in the budget record for the given user.
+
+    Args:
+        dic (dict): Dictionary containing key-value pairs of fields to update.
+        user (User): The user whose budget record is being updated.
+
+    Returns:
+        None
+    """
     try:
         cursor = db_connection.cursor()
         for i, j in dic.items():
@@ -79,7 +136,17 @@ def update_budget(dic, user):
     except Exception as e:
         print(f"Error updating budget: {e}")
 
+
 def delete_budget(user):
+    """
+    Deletes the budget record associated with the given user.
+
+    Args:
+        user (User): The user whose budget record is being deleted.
+
+    Returns:
+        None
+    """
     try:
         cursor = db_connection.cursor()
         query = "DELETE FROM budget WHERE username = %s"

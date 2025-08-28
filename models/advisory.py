@@ -1,43 +1,95 @@
+# Models
 from models.user import User
 from models.usage import Usage
 
 class Advisory:
     """
-    Represents an advisory entity that analyzes a user's subscription usage and provides advice.
-    Attributes:
-        user (User): The user associated with this advisory. Must be an instance of the User class.
-        usage (Usage): The usage data associated with this advisory. Must be an instance of the Usage class.
-    Methods:
-        generate_advice():
-            Generates personalized advice for the user based on analysis and comparison.
+    Advisory class that analyzes a user's subscription usage and generates 
+    recommendations on whether to continue or downgrade a plan.
     """
+
     def __init__(self, user, usage):
+        """
+        Initialize Advisory with a user and usage object.
+
+        Args:
+            user (User): The user associated with the subscription.
+            usage (Usage): The usage data for the subscription.
+        """
         self.user = user
         self.usage = usage
-        
+
     @property
     def user(self):
+        """
+        Get the user object.
+
+        Returns:
+            User: The user associated with the subscription.
+        """
         return self._user
-    
+
     @user.setter
     def user(self, user):
+        """
+        Set the user object with validation.
+
+        Args:
+            user (User): The user object to assign.
+
+        Raises:
+            ValueError: If the object is not an instance of User.
+        """
         if isinstance(user, User):
             self._user = user
         else:
             raise ValueError("Not a valid user")
-        
+
     @property
     def usage(self):
+        """
+        Get the usage object.
+
+        Returns:
+            Usage: The usage data associated with the subscription.
+        """
         return self._usage
-    
+
     @usage.setter
     def usage(self, usage):
+        """
+        Set the usage object with validation.
+
+        Args:
+            usage (Usage): The usage data object to assign.
+
+        Raises:
+            ValueError: If the object is not an instance of Usage.
+        """
         if isinstance(usage, Usage):
             self._usage = usage
         else:
             raise ValueError("Invalid usage object")
-        
+
     def generate_advice(self):
+        """
+        Analyze subscription usage and generate a detailed advisory report.
+
+        The analysis considers:
+        - Usage frequency
+        - Average session duration
+        - Benefit rating
+        - Subscription category
+        - Plan type (with penalties for higher tiers)
+        - Subscription price
+
+        Returns:
+            str: A detailed advisory report including:
+                - Subscription details
+                - Usage overview
+                - Score breakdown
+                - Final recommendation (continue or downgrade)
+        """
         usage = self.usage
         sub = usage.subscription
 
@@ -48,6 +100,15 @@ class Advisory:
 
         # --- Define category-specific weights ---
         def get_category_weights(category):
+            """
+            Map subscription categories to specific scoring weights.
+
+            Args:
+                category (str): Subscription category.
+
+            Returns:
+                tuple: (dict of weights, str category_type)
+            """
             category = category.strip().lower()
             if category in {"entertainment", "music", "video"}:
                 return {"usage": 0.4, "duration": 0.3, "benefit": 0.3}, "Entertainment"
@@ -105,5 +166,3 @@ class Advisory:
             f"- Final score: {final_score:.2f}/10\n"
             f"\n{recommendation}"
         )
-
-

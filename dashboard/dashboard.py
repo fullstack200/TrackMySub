@@ -1,4 +1,7 @@
+# Utils module
 from utils.utils import clear_screen_with_banner
+
+# Database service modules
 from database.user_db_service import update_user, delete_user
 from database.subscription_db_service import *
 from database.budget_db_service import *
@@ -6,14 +9,18 @@ from database.monthly_report_db_service import delete_all_monthly_reports
 from database.yearly_report_db_service import delete_all_yearly_reports, fetch_all_yearly_reports
 from database.usage_db_service import *
 from database.reminder_db_service import *
+
+# Models
 from models.subscription import Subscription
 from models.advisory import Advisory
+
 import getpass
 import time
 import boto3
 import base64
 import json
 import tempfile
+
 class Dashboard:
     def __init__(self, user, subscriptions, budget, monthly_reports, yearly_reports, usages, reminders):
         self.user = user 
@@ -332,14 +339,29 @@ class Dashboard:
             usage = Usage(self.user, selected_subscription)
 
             # Get user input with property validation
-            try:
-                usage.session_duration_hours = float(input("Enter average session duration (hours): "))
-                usage.times_used_per_month = int(input("Enter times used per month: "))
-                usage.benefit_rating = int(input("Enter benefit rating (1-5): "))
-            except ValueError as ve:
-                print(f"\n❌ Error: {ve}")
-                time.sleep(3)
-                return
+            while True:
+                try:
+                    usage.times_used_per_month = input("Enter number of times used per month: ")
+                    break
+                except ValueError as ve:
+                    print(f"\n❌ Error: {ve}")
+                    time.sleep(3)
+                    
+            while True:
+                try:
+                    usage.session_duration_hours = input("Enter average session duration (hours): ")
+                    break
+                except ValueError as ve:
+                    print(f"\n❌ Error: {ve}")
+                    time.sleep(3)
+                    
+            while True:
+                try:
+                    usage.benefit_rating = input("Enter benefit rating (0-5): ")
+                    break
+                except ValueError as ve:
+                    print(f"\n❌ Error: {ve}")
+                    time.sleep(3)
 
             # Get latest usage ID
             usage_id = get_latest_usage_id()
@@ -394,7 +416,7 @@ class Dashboard:
                 except ValueError:
                     print("\n❌ Invalid input. Please enter the correct option number.\n")
                     time.sleep(3)
-                    return
+                    continue
 
                 if field_choice == 4:
                     break
@@ -413,9 +435,7 @@ class Dashboard:
 
                 new_value = input(f"Enter new value for {attr_name.replace('_', ' ').title()}: ")
 
-                # Convert to correct type before assigning
                 try:
-                    # Do NOT convert new_value here; let the setter handle it
                     setattr(usage, attr_name, new_value)
                     updated_fields[attr_name] = getattr(usage, attr_name)
                     print(f"✅ {attr_name} updated successfully.")
@@ -423,7 +443,6 @@ class Dashboard:
                 except ValueError as ve:
                     print(f"\n❌ Error: {ve}")
                     time.sleep(3)
-                    return
 
             if updated_fields:
                 print("\n🔄 The following fields were updated:")
@@ -433,6 +452,7 @@ class Dashboard:
                 update_usage(updated_fields, usage.user, usage.subscription)
             else:
                 print("No fields were updated.")
+                time.sleep(3)
         
         def reset_usage():
             print("\n✏️  Reset Subscription Usage")
@@ -769,6 +789,7 @@ class Dashboard:
                     print(f"❌ {e}")
 
             self.subscriptions.append(subscription)
+            self.reminders.append(Reminder(self.user, subscription))
             print("Adding your subscription in database...")
             time.sleep(3)
             insert_subscription(self.user, subscription)
@@ -869,12 +890,12 @@ class Dashboard:
                 update_subscription(updated_fields, self.user, subscription)
             else:
                 print("No fields were updated.")
+                time.sleep(3)
                 
             self.budget = fetch_budget(self.user)
             if self.budget.over_the_limit:
                 self.budget.alert_over_the_limit()
                 
-            time.sleep(10)
         
         def remove_subscription():
             print("\n❌ Delete Subscription")
@@ -913,8 +934,11 @@ class Dashboard:
                     self.budget = fetch_budget(self.user)
                     if self.budget.over_the_limit:
                         self.budget.alert_over_the_limit()
-        
                     self.subscriptions = fetch_all_subscription(self.user)
+                    for reminder in self.reminders:
+                        if reminder.subscription.subscription_id == subscription.subscription_id:
+                            self.reminders.remove(reminder)
+
                 elif choice == 2:
                     return
             except ValueError:

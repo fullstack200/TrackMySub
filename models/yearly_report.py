@@ -1,34 +1,44 @@
+# Database modules
 from database.db_connection import db_connection
 from database.budget_db_service import fetch_budget
 from database.user_db_service import fetch_user
+
+# Models
 from models.monthly_report import MonthlyReport
 from models.user import User
 from models.report import Report
-import boto3, json
-import base64
 
+import boto3, json, base64
 class YearlyReport(Report):
+    """
+    Represents a yearly report generated for a user, including aggregation of monthly reports.
+    
+    Attributes:
+        year (int): The year of the report.
+        monthly_reports (list): A list of MonthlyReport objects for the year.
+    
+    Inherits:
+        Report: Contains basic report attributes like date_report_generated, total_amount, report_data, and user.
+    """
+
     def __init__(self, date_report_generated, total_amount, report_data, user, year):
         """
         Initializes a YearlyReport instance.
 
         Args:
-            date_report_generated (datetime): The date when the report was generated.
-            total_amount (float): The total amount for the yearly report.
-            report_data (dict): The data associated with the report.
-            user (User): The user for whom the report is generated.
-            year (int): The year for which the report is generated.
-
-        Attributes:
-            year (int): The year of the report.
-            monthly_reports (list): A list to store monthly reports for the year.
+            date_report_generated (datetime): Date when the report was generated.
+            total_amount (float): Total amount for the yearly report.
+            report_data (bytes): Data associated with the report (PDF blob).
+            user (User): User for whom the report is generated.
+            year (int): Year for which the report is generated.
         """
         super().__init__(date_report_generated, total_amount, report_data, user)
         self.year = year
         self.monthly_reports = []
-        
+
     @property
     def year(self):
+        """int: Year of the report (2000-2100)."""
         return self._year
     
     @year.setter
@@ -40,6 +50,7 @@ class YearlyReport(Report):
         
     @property
     def user(self):
+        """User: User associated with this report."""
         return self._user
     
     @user.setter
@@ -51,6 +62,7 @@ class YearlyReport(Report):
         
     @property
     def monthly_reports(self):
+        """list: List of MonthlyReport objects for the year."""
         return self._monthly_reports
     
     @monthly_reports.setter
@@ -61,11 +73,15 @@ class YearlyReport(Report):
             raise ValueError("monthly_reports must be a list of Report objects")
 
     def fetch_all_monthly_reports(self):
+        """
+        Fetches all monthly reports for the user for the given year from the database.
+        Populates self.monthly_reports and updates the total_amount of the yearly report.
+        """
         try:
             cursor = db_connection.cursor()
             query = """
                 SELECT date_report_generated,
-                total_amount, report_data, username, month_name
+                       total_amount, report_data, username, month_name
                 FROM monthly_report
                 WHERE username = %s
                 AND YEAR(date_report_generated) = %s
@@ -73,32 +89,35 @@ class YearlyReport(Report):
             cursor.execute(query, (self.user.username, self.year))
             results = cursor.fetchall()
             cursor.close()
+            user_obj = fetch_user(self.user.username, self.user.password)
             for row in results:
                 date_report_generated, total_amount, report_data, username, month = row
-                monthly_report = MonthlyReport(date_report_generated, total_amount, report_data, fetch_user(self.user.username, self.user.password), month)
+                monthly_report = MonthlyReport(date_report_generated, total_amount, report_data, user_obj, month)
                 self.monthly_reports.append(monthly_report)
                 self.total_amount += float(monthly_report.total_amount)
-
         except Exception as e:
             print(f"Error fetching yearly reports: {e}")
             
     def generate_yearly_report(self):
+        """
+        Generates a yearly PDF report by invoking the 'generate-yearly-report' AWS Lambda function.
+        
+        Returns:
+            dict: Lambda response containing the generated PDF in base64 or error information.
+        """
         lambda_client = boto3.client('lambda', region_name='ap-south-1')
         function_name = 'generate-yearly-report'
-        monthly_reports_data = []
-        for report in self.monthly_reports:
-            monthly_reports_data.append({
-                "month_name": report.month,
-                "total_amount": report.total_amount
-            })
+        monthly_reports_data = [
+            {"month_name": report.month, "total_amount": report.total_amount}
+            for report in self.monthly_reports
+        ]
             
         budget = fetch_budget(self.user)
         yearly_budget_amount = float(budget.yearly_budget_amount)
         
-        if self.total_amount > yearly_budget_amount:
-            note = "Your subscriptions amount has exceeded your yearly budget! Please verify your subscriptions."
-        else:
-            note = "Your subscriptions amount is within your yearly budget."
+        note = ("Your subscriptions amount has exceeded your yearly budget! Please verify your subscriptions."
+                if self.total_amount > yearly_budget_amount
+                else "Your subscriptions amount is within your yearly budget.")
             
         payload = {
             "year": self.year,
@@ -107,31 +126,31 @@ class YearlyReport(Report):
             "yearly_budget_amount": yearly_budget_amount,
             "grand_total": self.total_amount,
             "note": note
-            }
+        }
         try:
             response = lambda_client.invoke(
                 FunctionName=function_name,
                 InvocationType='RequestResponse',
-                # We convert the payload to JSON and encode it to bytes since lambda expects bytes stream
                 Payload=json.dumps(payload).encode('utf-8')
             )
-            # Then we convert the response got from the lambda function to a dictionary
             result = json.loads(response['Payload'].read())
             pdf_b64 = result.get("pdf", None)
-            if pdf_b64:
-                self.report_data = base64.b64decode(pdf_b64)
-            else:
-                self.report_data = None
+            self.report_data = base64.b64decode(pdf_b64) if pdf_b64 else None
             return result
         except Exception as e:
             print(f"Error invoking Lambda function: {e}")
             return {"error": str(e)} 
     
     def send_yearly_report(self, result):
-        import boto3
-        import json
-        import base64
+        """
+        Sends the generated yearly PDF report to the user's email via AWS Lambda 'send_report'.
 
+        Args:
+            result (dict): The response from generate_yearly_report (optional, for logging/debugging).
+
+        Returns:
+            dict: Error info if sending fails; otherwise None.
+        """
         lambda_client = boto3.client('lambda', region_name='ap-south-1')
         function_name = 'send_report'
 
@@ -139,10 +158,8 @@ class YearlyReport(Report):
             print("No report data available to send.")
             return {"error": "No report data"}
 
-        # Encode raw PDF bytes to base64 string
         pdf_b64 = base64.b64encode(self.report_data).decode('utf-8')
 
-        # Debug: write PDF to /tmp to verify integrity
         try:
             with open("/tmp/test_yearly.pdf", "wb") as f:
                 f.write(self.report_data)

@@ -1,27 +1,25 @@
+# Database modules
 from database.db_connection import db_connection
-from models.usage import Usage
-from database.user_db_service import fetch_user
 from database.subscription_db_service import fetch_specific_subscription
+
+# Models
+from models.usage import Usage
 
 """
 usage_db_service.py
 This module provides database service functions for managing subscription usage data in the application.
 It interacts with the database to perform CRUD operations on the 'subscriptionusage' table, as well as
 fetching related user and subscription information.
-Functions:
-    get_latest_usage_id():
-        Retrieves the latest usage_id from the 'subscriptionusage' table and generates the next usage_id.
-    fetch_usage(username, service_name):
-        Fetches the usage record for a given username and service name, returning a Usage object if found.
-    insert_usage(usage, usage_id, username, subscription_id):
-        Inserts a new usage record into the 'subscriptionusage' table.
-    update_usage(dic, username, service_name):
-        Updates fields in the usage record for a given username and service name based on the provided dictionary.
-    delete_usage(username, service_name):
-        Deletes the usage record for a given username and service name from the 'subscriptionusage' table.
 """
 
 def get_latest_usage_id():
+    """
+    Retrieve the latest usage ID from the database and generate the next usage ID.
+
+    Returns:
+        str: A new usage ID in the format 'usgXX' where XX is zero-padded.
+        None: If an error occurs during database query.
+    """
     try:
         cursor = db_connection.cursor()
         cursor.execute("SELECT usage_id FROM subscriptionusage ORDER BY usage_id DESC LIMIT 1")
@@ -37,6 +35,17 @@ def get_latest_usage_id():
         return None
 
 def fetch_usage(user, subscription):
+    """
+    Fetch usage details for a given user and subscription.
+
+    Args:
+        user (User): The user whose usage record to fetch.
+        subscription (Subscription): The subscription associated with the usage.
+
+    Returns:
+        Usage: A populated Usage object if found.
+        None: If no usage record exists or an error occurs.
+    """
     try:
         cursor = db_connection.cursor()
         query = """
@@ -58,8 +67,19 @@ def fetch_usage(user, subscription):
     except Exception as e:
         print(f"Error fetching usage: {e}")
         return None
-    
+
 def fetch_all_usages(user):
+    """
+    Fetch all usage records for a given user.
+
+    Args:
+        user (User): The user whose usage records to fetch.
+
+    Returns:
+        list[Usage]: A list of Usage objects if found.
+        list: An empty list if no usage records exist.
+        None: If an error occurs during database query.
+    """
     from database.subscription_db_service import fetch_specific_subscription
     try:
         cursor = db_connection.cursor()
@@ -79,7 +99,7 @@ def fetch_all_usages(user):
                 u.session_duration_hours = usage[3]
                 u.benefit_rating = usage[4]
                 usage_list.append(u)
-            return usage_list 
+            return usage_list
         else:
             return []
     except Exception as e:
@@ -87,6 +107,15 @@ def fetch_all_usages(user):
         return None
 
 def insert_usage(usage, usage_id, user, subscription):
+    """
+    Insert a new usage record into the database.
+
+    Args:
+        usage (Usage): The usage object containing usage details.
+        usage_id (str): The unique usage ID to assign.
+        user (User): The user associated with the usage.
+        subscription (Subscription): The related subscription.
+    """
     try:
         cursor = db_connection.cursor()
         cursor.execute(
@@ -99,8 +128,15 @@ def insert_usage(usage, usage_id, user, subscription):
         print(f"Error inserting usage: {e}")
 
 def update_usage(dic, user, subscription):
+    """
+    Update usage fields for a given user and subscription.
+
+    Args:
+        dic (dict): Dictionary of fields to update with their new values.
+        user (User): The user associated with the usage.
+        subscription (Subscription): The related subscription.
+    """
     try:
-        # Fetch subscription_id for the given username and service_name
         cursor = db_connection.cursor()
         for i, j in dic.items():
             query = f"UPDATE subscriptionusage SET {i} = %s WHERE username = %s AND subscription_id = %s"
@@ -111,6 +147,13 @@ def update_usage(dic, user, subscription):
         print(f"Error updating usage: {e}")
 
 def delete_usage(user, subscription):
+    """
+    Delete a specific usage record for a user and subscription.
+
+    Args:
+        user (User): The user whose usage record is to be deleted.
+        subscription (Subscription): The subscription whose usage record is to be deleted.
+    """
     try:
         cursor = db_connection.cursor()
         query = "DELETE FROM subscriptionusage WHERE username = %s AND subscription_id = %s"
@@ -121,6 +164,12 @@ def delete_usage(user, subscription):
         print(f"Error deleting usage: {e}")
 
 def delete_all_usages(user):
+    """
+    Delete all usage records for a given user.
+
+    Args:
+        user (User): The user whose usage records are to be deleted.
+    """
     try:
         cursor = db_connection.cursor()
         query = "DELETE FROM subscriptionusage WHERE username = %s"
@@ -129,5 +178,3 @@ def delete_all_usages(user):
         cursor.close()
     except Exception as e:
         print(f"Error deleting usages for user {user.username}. Exception: {e}")
-        
-        

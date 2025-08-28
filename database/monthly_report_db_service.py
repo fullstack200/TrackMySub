@@ -1,7 +1,36 @@
+# Database modules
 from database.db_connection import db_connection
 from database.user_db_service import fetch_user
 
+"""
+monthly_report_db_service.py
+
+This module provides services for interacting with the 'monthly_report' table in the database.
+It includes functions to fetch, insert, and delete monthly reports for users.
+
+Functions:
+    get_latest_monthly_report_id():
+        Retrieves the latest monthly report ID and generates the next ID in sequence.
+    fetch_monthly_report(user, month_name):
+        Fetches a monthly report for a specific user and month.
+    fetch_all_monthly_reports(user):
+        Retrieves all monthly reports associated with a given user.
+    insert_monthly_report(report, report_id, user):
+        Inserts a new monthly report record into the database.
+    delete_monthly_report(user, monthly_report):
+        Deletes a specific monthly report for the given user.
+    delete_all_monthly_reports(user):
+        Deletes all monthly reports for the given user.
+"""
+
 def get_latest_monthly_report_id():
+    """
+    Retrieves the latest monthly report ID and generates the next in sequence.
+
+    Returns:
+        str: The next monthly report ID (e.g., "mntrpt02").
+        None: If an error occurs.
+    """
     try:
         cursor = db_connection.cursor()
         cursor.execute("SELECT monthly_report_id FROM monthly_report ORDER BY monthly_report_id DESC LIMIT 1")
@@ -16,7 +45,19 @@ def get_latest_monthly_report_id():
         print(f"Error fetching latest monthly_report_id: {e}")
         return None
 
+
 def fetch_monthly_report(user, month_name):
+    """
+    Fetches a monthly report for a specific user and month.
+
+    Args:
+        user (User): The user whose monthly report is being fetched.
+        month_name (str): The month name (e.g., "January").
+
+    Returns:
+        MonthlyReport: A MonthlyReport object if found.
+        None: If no record exists or an error occurs.
+    """
     from models.monthly_report import MonthlyReport
     try:
         cursor = db_connection.cursor()
@@ -32,7 +73,7 @@ def fetch_monthly_report(user, month_name):
         if result:
             date_report_generated, total_amount, report_data, username, month = result
             if report_data is not None and not isinstance(report_data, bytes):
-                report_data = bytes(report_data)  # convert memoryview/bytearray to bytes
+                report_data = bytes(report_data)  # Convert memoryview/bytearray to bytes
 
             return MonthlyReport(
                 date_report_generated,
@@ -46,7 +87,18 @@ def fetch_monthly_report(user, month_name):
         print(f"Error fetching monthly report: {e}")
         return None
     
+
 def fetch_all_monthly_reports(user):
+    """
+    Retrieves all monthly reports for the given user.
+
+    Args:
+        user (User): The user whose reports are being fetched.
+
+    Returns:
+        list[MonthlyReport]: List of MonthlyReport objects if records exist.
+        None: If no records are found or an error occurs.
+    """
     from models.monthly_report import MonthlyReport
     try:
         cursor = db_connection.cursor()
@@ -64,7 +116,6 @@ def fetch_all_monthly_reports(user):
             reports_list = []
             for report in result:
                 date_report_generated, total_amount, report_data, username, month = report
-                # Convert BLOB/memoryview to bytes
                 report_bytes = bytes(report_data) if report_data else None
                 reports_list.append(
                     MonthlyReport(date_report_generated, total_amount, report_bytes, fetch_user(username, user.password), month)
@@ -76,7 +127,19 @@ def fetch_all_monthly_reports(user):
         print(f"Error fetching report monthly. I am culprit: {e}")
         return None
     
+
 def insert_monthly_report(report, report_id, user):
+    """
+    Inserts a new monthly report into the database.
+
+    Args:
+        report (MonthlyReport): The report to insert.
+        report_id (str): The unique monthly report ID.
+        user (User): The user associated with the report.
+
+    Returns:
+        None
+    """
     try:
         cursor = db_connection.cursor()
         query = """
@@ -99,7 +162,18 @@ def insert_monthly_report(report, report_id, user):
     except Exception as e:
         print(f"Error inserting monthly report: {e}")
 
+
 def delete_monthly_report(user, monthly_report):
+    """
+    Deletes a specific monthly report for the given user.
+
+    Args:
+        user (User): The user whose report is being deleted.
+        monthly_report (MonthlyReport): The report object to delete.
+
+    Returns:
+        None
+    """
     try:
         cursor = db_connection.cursor()
         query = "DELETE FROM monthly_report WHERE username = %s AND month_name = %s"
@@ -109,7 +183,17 @@ def delete_monthly_report(user, monthly_report):
     except Exception as e:
         print(f"Error deleting report: {e}")
 
+
 def delete_all_monthly_reports(user):
+    """
+    Deletes all monthly reports for the given user.
+
+    Args:
+        user (User): The user whose reports are being deleted.
+
+    Returns:
+        None
+    """
     try:
         cursor = db_connection.cursor()
         query = "DELETE FROM monthly_report WHERE username = %s"
@@ -118,4 +202,3 @@ def delete_all_monthly_reports(user):
         cursor.close()
     except Exception as e:
         print(f"Error deleting monthly reports for user {user.username}. Exception: {e}")
-        

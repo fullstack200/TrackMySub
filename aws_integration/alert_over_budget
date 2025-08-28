@@ -1,14 +1,40 @@
-# The function requires the following packages:
-# boto3, smtplib, email, and their dependencies.
-# The function sends an email alert when the user's subscription spending exceeds their budget.
-# The function uses environment variables for sensitive data like email credentials.
+# AWS Lambda function to send email alerts when subscription spending exceeds budget.
+# Required packages: boto3, smtplib, email (standard library), and their dependencies.
+# Sensitive information like email credentials should be stored in environment variables.
 
 import smtplib
 from email.message import EmailMessage
 import os
 
 def lambda_handler(event, context):
+    """
+    Sends an email alert to the user when their subscription spending exceeds budget limits.
+
+    Parameters:
+        event (dict): Event data passed to the Lambda function. Must contain:
+            - 'monthly_budget_amount' (float): User's monthly budget.
+            - 'yearly_budget_amount' (float): User's yearly budget.
+            - 'total_amount_paid_monthly' (float): Total spent monthly.
+            - 'total_amount_paid_yearly' (float): Total spent yearly.
+            - 'monthly_difference' (float): Amount over monthly budget.
+            - 'yearly_difference' (float): Amount over yearly budget.
+            - 'username' (str): User's username.
+            - 'email_to' (str): Recipient email address.
+            - 'subject' (str): Email subject line.
+        context (object): Lambda Context runtime methods and attributes. Not used in this function.
+
+    Returns:
+        dict: Status of the email sending operation.
+            - {'status': 'Email sent'} on success.
+            - {'status': 'Error', 'message': str(e)} on failure.
+
+    Notes:
+        - Uses Gmail SMTP server for sending email.
+        - 'password' environment variable must be set with the sender email password.
+        - Ensure the sender email allows less secure apps or uses an app-specific password.
+    """
     try:
+        # Extract data from event payload
         monthly_budget = event['monthly_budget_amount']
         yearly_budget = event['yearly_budget_amount']
         total_paid_monthly = event['total_amount_paid_monthly']
@@ -16,9 +42,10 @@ def lambda_handler(event, context):
         monthly_diff = event['monthly_difference']
         yearly_diff = event['yearly_difference']
         username = event['username']
-        
         email_to = event['email_to']
         subject = event['subject']
+
+        # Construct the email body
         body = (
             f"Hello {username},\n\n"
             f"Your subscription spending has exceeded your budget limits.\n\n"
@@ -32,23 +59,31 @@ def lambda_handler(event, context):
             "Team\n"
             "TrackMySubs"
         )
+
+        # Sender email and password from environment variable
         email_from = 'fullstackdeveloper404@gmail.com'
         password = os.environ['password']
 
+        # Create the email message object
         msg = EmailMessage()
         msg['Subject'] = subject
         msg['From'] = email_from
         msg['To'] = email_to
         msg.set_content(body)
 
+        # Configure SMTP server
         smtp_server = 'smtp.gmail.com'
         port = 587
 
+        # Connect to the SMTP server and send the email
         with smtplib.SMTP(smtp_server, port) as server:
-            server.starttls()
-            server.login(email_from, password)
-            server.send_message(msg)
+            server.starttls()          # Start TLS encryption
+            server.login(email_from, password)  # Login using credentials
+            server.send_message(msg)   # Send the email
             print("Email sent successfully")
+
         return {'status': 'Email sent'}
+
     except Exception as e:
+        # Catch any exception and return an error response
         return {'status': 'Error', 'message': str(e)}

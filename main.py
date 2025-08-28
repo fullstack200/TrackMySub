@@ -1,7 +1,9 @@
-import time
-import os
+# Auth modules
 from auth.SignIn import SignIn
 from auth.SignUp import SignUp
+
+import time
+import os
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -42,7 +44,5 @@ def main():
             print("\n👋 Exiting application. Goodbye!")
             break
 
-
-    
 if __name__ == "__main__":
     main()
