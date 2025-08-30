@@ -793,14 +793,12 @@ class Dashboard:
             print("Adding your subscription in database...")
             time.sleep(3)
             insert_subscription(self.user, subscription)
+            
             self.budget = fetch_budget(self.user)
             if self.budget.over_the_limit:
                 self.budget.alert_over_the_limit()
         
             print("✅ Subscription added successfully!")
-            self.budget.total_amount_paid_monthly = None
-            self.budget.total_amount_paid_yearly = None
-            self.budget.over_the_limit = None
             time.sleep(5)
 
         def modify_subscription():
@@ -895,7 +893,6 @@ class Dashboard:
             self.budget = fetch_budget(self.user)
             if self.budget.over_the_limit:
                 self.budget.alert_over_the_limit()
-                
         
         def remove_subscription():
             print("\n❌ Delete Subscription")

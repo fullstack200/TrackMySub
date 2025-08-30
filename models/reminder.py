@@ -153,17 +153,17 @@ class Reminder:
             print("Unknown billing frequency")
             return
 
-        # ── Send reminders on 3 days before renewal ──
         days_before_renewal = (renewal_date - today).days
+        month_name = renewal_date.strftime("%B")
 
         if 1 <= days_before_renewal <= 3:
             self.reminder_acknowledged = True
-            return f"🔔 {self.subscription.service_name} — Renewal due on {self.subscription.renewal_date} ({days_before_renewal} days left)"
+            return f"🔔 {self.subscription.service_name} — Renewal due on {renewal_date.day} {month_name} ({days_before_renewal} days left)"
         elif today >= renewal_date:
             self.reminder_acknowledged = False
-            return f"❌ {self.subscription.service_name} — Payment overdue!"
+            return f"❌ {self.subscription.service_name} — Payment overdue! (was due on {renewal_date.day} {month_name})"
         else:
-            return f"✅ {self.subscription.service_name} — No pending payments"
+            return f"✅ {self.subscription.service_name} — No pending payments (next due on {renewal_date.day} {month_name})"
 
     def remind_payment(self):
         """
