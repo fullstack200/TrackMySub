@@ -62,7 +62,7 @@ def lambda_handler(event, context):
 
     # 2. Download template PDF from S3
     s3 = boto3.client('s3')
-    bucket = 'trackmysubs-bucket'
+    bucket = 'trackmysu6s-bucket'
     key = 'TrackMySubs-Monthly.pdf'
     template_stream = io.BytesIO()
     s3.download_fileobj(Bucket=bucket, Key=key, Fileobj=template_stream)
