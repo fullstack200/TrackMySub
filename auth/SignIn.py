@@ -96,7 +96,6 @@ class SignIn:
             yearly_reports = fetch_all_yearly_reports(self.user)
             usages = fetch_all_usages(self.user)
             reminders = fetch_all_reminders(self.user)
-
             # Initialize and show the user dashboard
             dashboard = Dashboard(
                 self.user, subscriptions, budget, 

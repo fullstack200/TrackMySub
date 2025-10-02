@@ -111,7 +111,7 @@ def fetch_subscriptions_with_no_usage(user):
             renewal_date = sub[9]
             if subscription.billing_frequency == "Yearly" and renewal_date and "-" in str(renewal_date):
                 try:
-                    dt = datetime.strptime(str(renewal_date), "%Y-%m-%d")
+                    dt = datetime.strptime(str(renewal_date), "-%m-%d")
                     subscription.renewal_date = dt.strftime("%d/%m")
                 except Exception:
                     subscription.renewal_date = renewal_date
@@ -141,8 +141,8 @@ def fetch_all_subscription(user):
         cursor = db_connection.cursor()
         query = """
             SELECT subscription_id, service_type, category, service_name, plan_type,
-                   active_status, subscription_price, billing_frequency,
-                   start_date, renewal_date, auto_renewal_status
+                active_status, subscription_price, billing_frequency,
+                start_date, renewal_date, auto_renewal_status
             FROM subscription
             WHERE username = %s;
         """
@@ -183,7 +183,7 @@ def fetch_all_subscription(user):
             renewal_date = sub[9]
             if subscription.billing_frequency == "Yearly" and renewal_date and "-" in str(renewal_date):
                 try:
-                    dt = datetime.strptime(str(renewal_date), "%Y-%m-%d")
+                    dt = datetime.strptime(str(renewal_date), "%m-%d")
                     subscription.renewal_date = dt.strftime("%d/%m")
                 except Exception:
                     subscription.renewal_date = renewal_date
@@ -252,12 +252,13 @@ def fetch_specific_subscription(subscription_id):
         renewal_date = result[9]
         if subscription.billing_frequency == "Yearly" and renewal_date and "-" in str(renewal_date):
             try:
-                dt = datetime.strptime(str(renewal_date), "%Y-%m-%d")
+                dt = datetime.strptime(str(renewal_date), "%m-%d")
                 subscription.renewal_date = dt.strftime("%d/%m")
             except Exception:
                 subscription.renewal_date = renewal_date
         else:
             subscription.renewal_date = renewal_date
+            
 
         subscription.auto_renewal_status = "Yes" if result[10] in [1, True] else "No"
         return subscription
@@ -292,15 +293,16 @@ def insert_subscription(user, subscription):
         # Format renewal_date
         renewal_date = subscription.renewal_date
         if subscription.billing_frequency == "Yearly":
-            subscription.subscription_price = str(subscription.subscription_price / 12)
+            subscription.subscription_price = str(round(subscription.subscription_price / 12, 2))
             if isinstance(renewal_date, str) and "/" in renewal_date:
-                year = start_date_obj.year if 'start_date_obj' in locals() else datetime.now().year
-                renewal_date_obj = datetime.strptime(f"{renewal_date}/{year}", "%d/%m/%Y")
-                renewal_date_sql = renewal_date_obj.strftime("%Y-%m-%d")
+                renewal_date_obj = datetime.strptime(f"{renewal_date}", "%d/%m")
+                renewal_date_sql = renewal_date_obj.strftime("%m-%d")
             else:
                 renewal_date_sql = renewal_date
         else:
             renewal_date_sql = renewal_date
+            import time
+            time.sleep(10)
 
         cursor.execute(
             "INSERT INTO subscription (subscription_id, username, service_type, category, service_name, plan_type, active_status, subscription_price, billing_frequency, start_date, renewal_date, auto_renewal_status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
@@ -355,8 +357,7 @@ def update_subscription(dic, user, subscription):
             elif i == "renewal_date":
                 from datetime import datetime
                 if isinstance(j, str) and "/" in j:
-                    year = datetime.now().year
-                    j = datetime.strptime(f"{j}/{year}", "%d/%m/%Y").strftime("%Y-%m-%d")
+                    j = datetime.strptime(f"{j}", "%d/%m").strftime("-%m-%d")
             query = f"UPDATE subscription SET {i} = %s WHERE username = %s AND subscription_id = %s"
             cursor.execute(query, (j, user.username, subscription.subscription_id))
         
