@@ -74,8 +74,8 @@ def lambda_handler(event, context):
 
     # Add year and generation date
     c.setFont("Montserrat", 12)
-    c.drawString(280, 654, str(event['year']))
-    c.drawString(280, 630, event['date_report_generated'])
+    c.drawString(280, 661, str(event['year']))
+    c.drawString(280, 637, event['date_report_generated'])
 
     # Insert monthly report data
     y = 510
@@ -87,9 +87,9 @@ def lambda_handler(event, context):
 
     # Add bold text for grand total, budget, and note
     c.setFont("Montserrat-Bold", 12)
-    c.drawString(382, 235, f"$ {event['grand_total']}")
-    c.drawString(382, 198, f"$ {event['yearly_budget_amount']}")
-    c.drawString(100, 126, event['note'])
+    c.drawString(382, 242, f"$ {event['grand_total']}")
+    c.drawString(382, 205, f"$ {event['yearly_budget_amount']}")
+    c.drawString(100, 133, event['note'])
 
     c.save()
     overlay_stream.seek(0)

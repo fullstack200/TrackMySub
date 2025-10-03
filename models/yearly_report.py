@@ -81,7 +81,7 @@ class YearlyReport(Report):
             cursor = db_connection.cursor()
             query = """
                 SELECT date_report_generated,
-                       total_amount, report_data, username, month_name
+                total_amount, report_data, username, month_name
                 FROM monthly_report
                 WHERE username = %s
                 AND YEAR(date_report_generated) = %s
@@ -100,13 +100,13 @@ class YearlyReport(Report):
             
     def generate_yearly_report(self):
         """
-        Generates a yearly PDF report by invoking the 'generate-yearly-report' AWS Lambda function.
+        Generates a yearly PDF report by invoking the 'generate_yearly_report' AWS Lambda function.
         
         Returns:
             dict: Lambda response containing the generated PDF in base64 or error information.
         """
         lambda_client = boto3.client('lambda', region_name='ap-south-1')
-        function_name = 'generate-yearly-report'
+        function_name = 'generate_yearly_report'
         monthly_reports_data = [
             {"month_name": report.month, "total_amount": report.total_amount}
             for report in self.monthly_reports
@@ -121,7 +121,7 @@ class YearlyReport(Report):
             
         payload = {
             "year": self.year,
-            "date_report_generated": self.date_report_generated.strftime('%Y-%m-%d'),
+            "date_report_generated": self.date_report_generated.strftime('%d-%m-%Y'),
             "monthly_reports": monthly_reports_data,
             "yearly_budget_amount": yearly_budget_amount,
             "grand_total": self.total_amount,
@@ -141,7 +141,7 @@ class YearlyReport(Report):
             print(f"Error invoking Lambda function: {e}")
             return {"error": str(e)} 
     
-    def send_yearly_report(self, result):
+    def send_yearly_report(self, result=None):
         """
         Sends the generated yearly PDF report to the user's email via AWS Lambda 'send_report'.
 

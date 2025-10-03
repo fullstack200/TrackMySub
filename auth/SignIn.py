@@ -56,9 +56,9 @@ class SignIn:
         Notes:
             - Uses `getpass.getpass` to securely input passwords without echo.
             - Assumes that `fetch_user`, `fetch_all_subscription`, `fetch_budget`,
-              `fetch_all_monthly_reports`, `fetch_all_yearly_reports`, 
-              `fetch_all_usages`, `fetch_all_reminders`, and `Dashboard` 
-              are defined and available globally.
+            `fetch_all_monthly_reports`, `fetch_all_yearly_reports`, 
+            `fetch_all_usages`, `fetch_all_reminders`, and `Dashboard` 
+            are defined and available globally.
         """
         print("\n🔐 Sign In")
         username = input("Enter username: ").strip()

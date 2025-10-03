@@ -61,7 +61,7 @@ class MonthlyReport(Report):
         - Gathers subscription data for the user.
         - Adjusts yearly subscriptions to a monthly equivalent.
         - Compares total spending with the user's budget.
-        - Sends payload to Lambda function `generate-monthly-report`.
+        - Sends payload to Lambda function `generate_monthly_report`.
         - Stores generated PDF data (base64-decoded) in `self.report_data`.
 
         Returns:
@@ -90,11 +90,11 @@ class MonthlyReport(Report):
             note = "Your subscriptions amount is within your monthly budget."
             
         lambda_client = boto3.client('lambda', region_name='ap-south-1')
-        function_name = 'generate-monthly-report'
+        function_name = 'generate_monthly_report'
         payload = {
             "subscriptions": subscriptions,
             "month": self.month,
-            "date_generated": self.date_report_generated.strftime("%d/%m/%Y"),
+            "date_generated": self.date_report_generated.strftime("%d-%m-%Y"),
             "grand_total": self.total_amount,
             "budget": budget_amount,
             "note": note
@@ -116,7 +116,7 @@ class MonthlyReport(Report):
             print(f"Error invoking Lambda function: {e}")
             return {"error": str(e)}
 
-    def send_monthly_report(self, result):
+    def send_monthly_report(self, result=None):
         """
         Send the generated monthly report to the user's email using AWS Lambda.
 
