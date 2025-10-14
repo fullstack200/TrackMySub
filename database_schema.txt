@@ -39,7 +39,7 @@ over_the_limit BOOLEAN
 monthly_report_id VARCHAR(10) PRIMARY KEY
 date_report_generated DATE 
 total_amount DECIMAL(10, 2) 
-report_data BLOB
+report_data MEDIUMBLOB
 username VARCHAR(50) REFERENCES user(username)
 month_name CHAR(20)
 FOREIGN KEY (username) REFERENCES user(username)
@@ -50,7 +50,7 @@ FOREIGN KEY (username) REFERENCES user(username)
 yearly_report_id VARCHAR(10) PRIMARY KEY
 date_report_generated DATE 
 total_amount DECIMAL(10, 2) 
-report_data BLOB
+report_data MEDIUMBLOB
 username VARCHAR(50) REFERENCES user(username) 
 year INT(10) 
 
