@@ -1,9 +1,7 @@
 # TrackMySubs 📊🧾
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
-![Status](https://img.shields.io/badge/Status-Active-success.svg)
-![Build](https://img.shields.io/badge/Build-Passing-brightgreen.svg)
+
 
 **TrackMySubs** is a smart subscription tracking and budgeting system that helps users take control of their digital spending. The system monitors active subscriptions, evaluates usage behavior, provides budget management tools, and delivers actionable advice based on personalized data insights.
 
