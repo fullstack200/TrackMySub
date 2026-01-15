@@ -1,5 +1,5 @@
 -----------------------------------------
-1. User Table
+1. user Table
 -----------------------------------------
 username VARCHAR(20)
 email_id VARCHAR(20)
@@ -7,7 +7,7 @@ password VARCHAR(20)
 created_at date
 
 -----------------------------------------
-2. Subscription Table
+2. subscription Table
 -----------------------------------------
 subscription_id VARCHAR(10) PRIMARY KEY
 username VARCHAR(20) REFERENCES User(username)
@@ -23,18 +23,18 @@ renewal_date DATE
 auto_renewal_status BOOLEAN
 
 -----------------------------------------
-3. Budget Table
+3. budget Table
 -----------------------------------------
 budget_id VARCHAR(10) PRIMARY KEY
 username VARCHAR(20) REFERENCES User(username)
 monthly_budget_amount DECIMAL(8,2)
 yearly_budget_amount DECIMAL(8,2)
-total_amount_paid_mothly DECIMAL(8,2)
+total_amount_paid_monthly DECIMAL(8,2)
 total_amount_paid_yearly DECIMAL(8,2)
 over_the_limit BOOLEAN
 
 -----------------------------------------
-4. Monthly Report Table
+4. monthly_report Table
 -----------------------------------------
 monthly_report_id VARCHAR(10) PRIMARY KEY
 date_report_generated DATE 
@@ -45,7 +45,7 @@ month_name CHAR(20)
 FOREIGN KEY (username) REFERENCES user(username)
 
 -----------------------------------------
-5. Yearly Report Table
+5. yearly_report Table
 -----------------------------------------
 yearly_report_id VARCHAR(10) PRIMARY KEY
 date_report_generated DATE 
@@ -55,7 +55,7 @@ username VARCHAR(50) REFERENCES user(username)
 year INT(10) 
 
 -----------------------------------------
-6. Usage Table
+6. subscriptionusage Table
 -----------------------------------------
 usage_id VARCHAR(10) PRIMARY KEY
 username VARCHAR(20) REFERENCES User(username)
@@ -65,7 +65,7 @@ session_duration_hours FLOAT
 benefit_rating INT
 
 -----------------------------------------
-7. ReminderAcknowledgement Table
+7. reminder_acknowledgement Table
 -----------------------------------------
 ack_id INT AUTO_INCREMENT PRIMARY KEY
 username VARCHAR(20)  REFERENCES User(username)

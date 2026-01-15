@@ -195,7 +195,7 @@ def fetch_all_subscription(user):
         return subscription_list
 
     except Exception as e:
-        print(f"Error fetching subscription: {e}")
+        print(f"Error fetching all subscription: {e}")
         return None
 
 

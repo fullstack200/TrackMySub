@@ -7,8 +7,9 @@ dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
 db_connection = mysql.connector.connect(
-    host="trackmysubs.c3uiw08eicpi.ap-south-1.rds.amazonaws.com",
+    host=os.getenv("host"),
     user="admin",
     password=os.getenv("password"),
-    database="trackmysubs"
+    database="trackmysubs",
+    port=3307
 )

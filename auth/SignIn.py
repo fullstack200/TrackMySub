@@ -78,6 +78,7 @@ class SignIn:
 
         if self.user:
             subscriptions = fetch_all_subscription(self.user)
+            time.sleep(5)
             budget = fetch_budget(self.user)
 
             # Associate subscriptions and budget with the user

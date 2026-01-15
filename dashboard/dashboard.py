@@ -936,6 +936,9 @@ class Dashboard:
                         if reminder.subscription.subscription_id == subscription.subscription_id:
                             self.reminders.remove(reminder)
 
+                    for usage in self.usages:
+                        if usage.subscription.subscription_id == subscription.subscription_id:
+                            self.usages.remove(usage)
                 elif choice == 2:
                     return
             except ValueError:

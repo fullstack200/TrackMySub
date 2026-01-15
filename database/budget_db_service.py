@@ -105,9 +105,9 @@ def insert_budget(budget, user):
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
             (get_latest_budget_id(), user.username,
-             budget.monthly_budget_amount, budget.yearly_budget_amount,
-             budget.total_amount_paid_monthly, budget.total_amount_paid_yearly,
-             budget.over_the_limit)
+            budget.monthly_budget_amount, budget.yearly_budget_amount,
+            budget.total_amount_paid_monthly, budget.total_amount_paid_yearly,
+            budget.over_the_limit)
         )
         db_connection.commit()
         cursor.close()

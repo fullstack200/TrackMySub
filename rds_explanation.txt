@@ -1,0 +1,163 @@
+## 🧩 Objective
+
+Connect **MySQL Workbench (on your laptop)** → **RDS (private subnet)**
+without exposing RDS to the internet.
+
+---
+
+## ⚙️ Prerequisites
+
+Before starting, make sure:
+
+1. You have a **VPC** with at least:
+
+   * **1 public subnet** (for EC2 bastion)
+   * **1 private subnet** (for RDS)
+2. You have:
+
+   * A **key pair** (`mykey.pem`)
+   * An **EC2 instance** in the **public subnet**
+   * An **RDS instance** in the **private subnet**
+3. Both are in the **same VPC**
+
+---
+
+## 🧠 Step-by-Step Process
+
+---
+
+### 🪄 Step 1: Create the RDS (Private)
+
+While creating your RDS:
+
+* **VPC:** Choose the same VPC as EC2
+* **Subnets:** Use the **private subnet group**
+* **Public Access:** ❌ **No**
+* **Port:** 3306 (default)
+* Create a DB name, username, and password.
+
+After creation, copy the **RDS endpoint** (e.g., `trackmysubs.xxxxxx.ap-south-1.rds.amazonaws.com`).
+
+---
+
+### 🛡️ Step 2: Configure Security Groups
+
+#### For the EC2 instance:
+
+* Inbound:
+
+  * **SSH (22)** → Source: `Your Laptop’s Public IP`
+    (You can find it via [https://checkip.amazonaws.com](https://checkip.amazonaws.com))
+
+#### For the RDS instance:
+
+* Inbound:
+
+  * **MySQL/Aurora (3306)** → Source: **EC2’s security group**
+
+✅ This ensures only your EC2 can reach the RDS internally.
+
+---
+
+### 💻 Step 3: Install MySQL client on EC2
+
+SSH into EC2:
+
+```bash
+ssh -i mykey.pem ec2-user@<ec2-public-ip>
+```
+
+Then install:
+
+```bash
+sudo yum update -y
+sudo yum install mariadb105 -y
+```
+
+Verify:
+
+```bash
+mysql --version
+```
+
+Test RDS connection (inside EC2):
+
+```bash
+mysql -h <rds-endpoint> -u <db-username> -p
+```
+
+✅ If this works → EC2 can reach your RDS internally.
+
+---
+
+### 🔒 Step 4: Create SSH Tunnel from Laptop
+
+On your **local terminal (not EC2)**, run:
+
+```bash
+ssh -i /path/to/mykey.pem -L 3306:<rds-endpoint>:3306 ec2-user@<ec2-public-ip>
+```
+
+Explanation:
+
+* `-L` → creates local port forwarding
+* `3306` → port on your laptop
+* `<rds-endpoint>:3306` → destination inside VPC
+* `ec2-user@<ec2-public-ip>` → EC2 as the bridge
+
+Keep this terminal **open** (it’s your active tunnel).
+
+---
+
+### 🧰 Step 5: Connect from MySQL Workbench
+
+In **MySQL Workbench** → New Connection:
+
+* **Hostname:** `127.0.0.1`
+* **Port:** `3306`
+* **Username:** (RDS username)
+* **Password:** (RDS password)
+
+✅ Click *Test Connection* → should succeed.
+
+---
+
+### 🔁 Step 6: (Optional) Keep Tunnel Alive
+
+If you want the SSH tunnel to stay alive even if you close the terminal:
+
+```bash
+ssh -i /path/to/mykey.pem -f -N -L 3306:<rds-endpoint>:3306 ec2-user@<ec2-public-ip>
+```
+
+* `-f` → run in background
+* `-N` → don’t open a remote shell (just tunnel)
+
+To close it later:
+
+```bash
+ps aux | grep ssh
+kill <pid>
+```
+
+---
+
+### 🎯 Final Architecture Summary
+
+```
+Laptop (MySQL Workbench)
+        │
+        ▼
+   SSH Tunnel (Port 3306)
+        │
+        ▼
+EC2 Bastion (Public Subnet)
+        │
+        ▼
+RDS Instance (Private Subnet)
+```
+
+✅ Secure
+✅ No public access to RDS
+✅ Easy to re-create anytime
+
